@@ -12,7 +12,7 @@ import { getSchedules, type Schedule } from "@/app/actions/schedules"
 import { isSameDay, parseISO, format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays } from "date-fns"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 
-export default function CalendarPage() {
+function CalendarContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -267,5 +267,13 @@ export default function CalendarPage() {
         schedule={selectedEvent}
       />
     </PageContainer>
+  )
+}
+
+export default function CalendarPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <CalendarContent />
+    </React.Suspense>
   )
 }

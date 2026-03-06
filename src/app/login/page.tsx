@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 
-export default function LoginPage() {
+function LoginContent() {
   const [loading, setLoading] = useState(false)
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
@@ -55,5 +55,13 @@ export default function LoginPage() {
         </Button>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   )
 }
