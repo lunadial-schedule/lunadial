@@ -117,7 +117,7 @@ export function WeeklyCalendarCard() {
                 )}>
                   {isLoading ? (
                     <div className="flex items-center justify-center h-full">
-                      <span className="text-xs text-muted-foreground animate-pulse">로딩 중...</span>
+                      <span className="h-[734px] text-xs text-muted-foreground animate-pulse">로딩 중...</span>
                     </div>
                   ) : (
                     <>

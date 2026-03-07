@@ -44,7 +44,7 @@ export function LiveNowCard() {
   }, [])
 
   return (
-    <Card className="border-border/50 shadow-sm flex flex-col">
+    <Card className="h-[468px] border-border/50 shadow-sm flex flex-col">
       <CardHeader className="py-1 shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -58,7 +58,7 @@ export function LiveNowCard() {
             onClick={fetchLiveStreamers}
             disabled={isLoading}
           >
-            <RefreshCw className={`w-3 h-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-[468px] w-3 h-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
             새로고침
           </Button>
         </div>
