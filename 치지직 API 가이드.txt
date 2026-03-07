@@ -1,0 +1,1670 @@
+# About CHZZK Developers
+
+치지직 API는 치지직과의 연동 및 기능 사용을 제공합니다. \
+개발자는 치지직의 API를 사용하여 라이브 조회, 방송 설정 조회 및 변경, 채팅 발송 및 공지 등록 등 치지직에서 제공하는 다양한 기능과 리소스를 활용하는 애플리케이션을 개발할 수 있습니다.
+
+***
+
+## API 문서
+
+API 문서는 각 API 기능과 요청 방법, 응답 값 등의 정보를 제공하며, API를 사용하기 전에 반드시 확인해야 합니다.
+
+### API 카테고리
+
+치지직 API는 여러 카테고리로 분류됩니다. 각 카테고리 설명 링크는 다음과 같습니다.
+
+<table><thead><tr><th width="169">Category</th><th>Description</th></tr></thead><tbody><tr><td><a href="../chzzk-api/user">User</a></td><td>로그인 유저의 치지직 채널 정보를 조회할 수 있습니다.</td></tr><tr><td><a href="../chzzk-api/channel">Channel</a></td><td>타 채널 정보를 조회할 수 있습니다.</td></tr><tr><td><a href="../chzzk-api/category">Category</a></td><td>카테고리 목록 및 정보를 조회할 수 있습니다.</td></tr><tr><td><a href="../chzzk-api/live">Live</a></td><td>라이브 목록을 조회하고, 방송 설정을 관리할 수 있습니다.</td></tr><tr><td><a href="../chzzk-api/chat">Chat</a></td><td>채팅 메세지를 전송하고, 채팅 공지를 등록하고, 채팅 설정을 관리할 수 있습니다.</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+## 용어
+
+API 문서에서는 기본적인 치지직의 정보를 나타내기 위해 다음과 같은 용어를 사용합니다.
+
+* 채널(Channel) : 치지직의  모든 사용자가 기본적으로 소유하고 있는 채널
+  * 채널 ID : 채널 식별자
+* 라이브(Live) : 현재 실시간으로 진행 중인 방송
+* 카테고리(Category) : 방송 분류 카테고리
+* 드롭스(Drops) : 치지직의 시청자가 특정 게임의 방송을 시청하고 해당 게임의 전리품 등 리워드를 받을 수 있도록 제공하는 시스템
+
+
+# Updates
+
+<table><thead><tr><th width="154">날짜</th><th>내용</th></tr></thead><tbody><tr><td>2025.12</td><td><ul><li>Chat > 채팅 설정 변경 : 최소 팔로잉 기간(minFollowerMinute) 조건 변경</li></ul></td></tr><tr><td>2025.07</td><td><ul><li>Session > 세션 목록 조회(클라이언트) : eventType 에 구독 추가</li><li>Session > 세션 목록 조회(유저) : eventType 에 구독 추가</li><li>Session : 이벤트 구독(구독) 추가</li><li>Session : 이벤트 구독 취소(구독) 추가</li><li>Session > 시스템 메시지(이벤트 구독 메시지) : eventType에 구독 추가</li><li>Session > 시스템 메시지(이벤트 구독 취소 메시지) : eventType에 구독 추가</li><li>Session > 시스템 메시지(이벤트 권한 취소 메시지) : eventType에 구독 추가</li><li>Session > 구독 이벤트 메시지(채팅 이벤트 메시지) : 유저 채널 권한 추가</li><li>Session : 구독 이벤트 메시지(구독 이벤트 메시지) 추가</li><li>Channel > 채널 정보 조회 : 채널 인증 마크 여부 추가</li><li>Channel : 채널 팔로워 목록 조회 추가</li><li>Channel : 채널 구독자 목록 조회 추가</li><li>Chat > 채팅 설정 변경 : 저속 모드 채팅, 이모티콘 채팅 추가</li><li>Restrction : 시청자 활동 제한 등록 추가</li><li>Restriction : 시청자 활동 제한 삭제 추가</li><li>Restriction : 시청자 활동 제한 목록 조회 추가</li><li>API Scope 신청 절차 간소화</li><li>최근 90일간 API Scope 사용량이 0인 애플리케이션의 삭제 정책 추가</li><li>애플리케이션 ID 및 이름에 입력 불가 단어 추가</li></ul></td></tr><tr><td>2025.02</td><td>개발 문서에 다크모드 추가</td></tr><tr><td>2025.02</td><td><p>Session 추가</p><ul><li>세션 생성 및 조회</li><li>이벤트 구독 및 취소</li></ul></td></tr><tr><td>2024.12</td><td>개발자센터 런칭 및 OpenAPI 제공</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+
+# Authorization
+
+치지직 Open API 사용과 인증에 관련된 문서입니다.\
+가이드에 작성된 API 명세와 인증 플로우는 이후 개발 상황에 따라 변경 될 수 있습니다.
+
+***
+
+## 인증 코드 요청 및 발급
+
+치지직 Access Token 발급을 위한 인증 코드(Authorization Code)를 요청합니다.\
+요청 redirectUri 로 Access Token 발급을 위한 code 와 state 가 전달됩니다.\
+인증 코드를 요청할 도메인은 아래와 같으며, OPEN API와는 다른 별도의 도메인을 사용합니다.
+
+\*주의사항:  요청 redirectUri 는 애플리케이션 등록시 입력한 로그인 리디렉션 URL 과 일치해야합니다.<br>
+
+**URL Path**
+
+```
+GET https://chzzk.naver.com/account-interlock
+```
+
+**Request Param**
+
+<table><thead><tr><th width="134">Key</th><th width="122">Type</th><th width="109">Required</th><th>Example</th></tr></thead><tbody><tr><td>clientId</td><td>String</td><td>*</td><td>fefb6bbb-00c2-497c-afc2-XXXXXXXXXXXX</td></tr><tr><td>redirectUri</td><td>String</td><td>*</td><td>http://localhost:8080/api/path</td></tr><tr><td>state</td><td>String</td><td>*</td><td>zxclDasdfA25</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Parameter**
+
+<table><thead><tr><th width="172">Key</th><th width="124">Type</th><th>Example</th></tr></thead><tbody><tr><td>code</td><td>String</td><td>ygKEQQk3p0DjUsBjJradJmXXXXXXXX</td></tr><tr><td>state</td><td>String</td><td>zxclDasdfA25</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 치지직 Access Token 발급
+
+Open API 사용 중, 유저 인증을 위한 토큰을 발급 받습니다.\
+Access Token 의 만료기간은 1일, Refresh Token 의 만료기간은 30일 입니다.<br>
+
+**URL Path**
+
+```
+POST /auth/v1/token
+```
+
+**Request Body**
+
+<table><thead><tr><th width="164">Key</th><th width="124">Type</th><th>Example</th></tr></thead><tbody><tr><td>grantType</td><td>String</td><td>authorization_code 고정</td></tr><tr><td>clientId</td><td>String</td><td>fefb6bbb-00c2-497c-afc2-XXXXXXXXXXXX</td></tr><tr><td>clientSecret</td><td>String</td><td>VeIMuc9XGle7PSxIVYNwPpI2OEk_9gXoW_XXXXXXXXX</td></tr><tr><td>code</td><td>String</td><td>ygKEQQk3p0DjUsBjJradJmXXXXXXXX</td></tr><tr><td>state</td><td>String</td><td>zxclDasdfA25</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="165">Key</th><th width="125">Type</th><th>Example</th></tr></thead><tbody><tr><td>accessToken</td><td>String</td><td>FFok65zQFQVcFvH2eJ7SS7SBFlTXt0EZ10L5XXXXXXXX</td></tr><tr><td>refreshToken</td><td>String</td><td>NWG05CKHAsz4k4d3PB0wQUV9ugGlp0YuibQ4XXXXXXXX</td></tr><tr><td>tokenType</td><td>String</td><td>Bearer 고정</td></tr><tr><td>expiresIn</td><td>String</td><td>86400</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 치지직 Access Token 갱신
+
+Access Token은 만료 주기를 갖습니다. 해당 만료 주기가 지나면 해당 Access Token을 사용한 API 호출은 401(INVALID\_TOKEN) 응답을 반환합니다. \
+Access Token이 만료되면, Refresh Token을 통하여 Access Token을 재발급 받아 사용해야 합니다.
+
+Refresh Token은 Access Token 보다 긴 만료기간을 가지며, 일회용으로 사용됩니다. \
+Refresh Token 또한 만료되면 Access Token 발급 과정을 통해 새로운 Access Token을 발급받아야 합니다.<br>
+
+**URL Path**
+
+```
+POST /auth/v1/token
+```
+
+**Request Body**
+
+<table><thead><tr><th width="160">Key</th><th width="118">Type</th><th>Example</th></tr></thead><tbody><tr><td>grantType</td><td>String</td><td>refresh_token 고정</td></tr><tr><td>refreshToken</td><td>String</td><td>NWG05CKHAsz4k4d3PB0wQUV9ugGlp0YuibQ4XXXXXXXX</td></tr><tr><td>clientId</td><td>String</td><td>fefb6bbb-00c2-497c-afc2-XXXXXXXXXXXX</td></tr><tr><td>clientSecret</td><td>String</td><td>VeIMuc9XGle7PSxIVYNwPpI2OEk_9gXoW_XXXXXXXXX</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="158">Key</th><th width="118">Type</th><th>Example</th></tr></thead><tbody><tr><td>accessToken</td><td>String</td><td>motTJ-NZ-fev3cmaTMydzYk_zyw524C9ZYdNXXXXXXXX</td></tr><tr><td>refreshToken</td><td>String</td><td>EDpM_1RxiOwhbNBpNUbiuEZOrb7Dbd6Y7rivXXXXXXXX</td></tr><tr><td>tokenType</td><td>String</td><td>Bearer 고정</td></tr><tr><td>expiresIn</td><td>String</td><td>86400</td></tr><tr><td>scope</td><td>String</td><td>채널 조회</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 치지직 Access Token 삭제
+
+유저가 로그아웃하는 등, 해당 Access Token, Refresh Token 의 revoke 가 필요할 경우 호출합니다. \
+요청한 Token 과 동일한 인증 과정을 거친 모든 Token 이 제거됩니다. (clientId 와 user 가 동일한 Token)<br>
+
+**URL Path**
+
+```
+POST /auth/v1/token/revoke
+```
+
+**Request Body**
+
+<table><thead><tr><th width="166">Key</th><th width="112">Type</th><th>Example</th></tr></thead><tbody><tr><td>clientId</td><td>String</td><td>fefb6bbb-00c2-497c-afc2-XXXXXXXXXXXX</td></tr><tr><td>clientSecret</td><td>String</td><td>VeIMuc9XGle7PSxIVYNwPpI2OEk_9gXoW_XXXXXXXXX</td></tr><tr><td>token</td><td>String</td><td>motTJ-NZ-fev3cmaTMydzYk_zyw524C9ZYdNXXXXXXXX</td></tr><tr><td>tokenTypeHint</td><td>String</td><td><ul><li>access_token (default)</li><li>refresh_token</li></ul></td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+
+# 참고사항
+
+치지직 개발자 센터 및 Open API 이용 시 알아야 할 규격을 설명합니다.
+
+\*최근 90일간 API Scope 사용량이 0인 애플리케이션은 삭제됩니다.
+
+## 애플리케이션 ID 및 이름
+
+애플리케이션 등록 시 ID 및 이름에 'chzzk', '치지직', 'naver', 네이버' 등 공식 서비스명이 포함될 수 없습니다. 또한, 부적절한 단어가 포함될 경우 애플리케이션이 정지될 수 있으니 유의해 주세요.
+
+## Open API 도메인
+
+```
+https://openapi.chzzk.naver.com
+```
+
+## API 호출
+
+특정 API Scope를 호출하려면 Access Token 또는 Client 인증이 필요합니다. Access Token 인증이 필요한 API Scope 호출 시 Authorization 헤더에 Bearer와 함께 Access Token을 지정해야 합니다.
+
+{% hint style="warning" %}
+**주의사항**\
+Access Token 인증 API 사용 시 Bearer를 반드시 명시해야 하며, Bearer와 Access Token 사이에 공백( )을 빠뜨리지 않도록 주의해야 합니다.
+{% endhint %}
+
+### Access Token 인증 API
+
+**Request Header**
+
+<table><thead><tr><th width="148">Key</th><th width="96">Type</th><th>Example</th></tr></thead><tbody><tr><td>Authorization</td><td>String</td><td>Bearer FFok65zQFQVcFvH2eJ7SS7SBFlTXt0EZ10L5XXXXXXXX</td></tr><tr><td>Content-Type</td><td>String</td><td>application/json</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+### Client 인증 API
+
+**Request Header**
+
+<table><thead><tr><th width="152">Key</th><th width="93">Type</th><th>Example</th></tr></thead><tbody><tr><td>Client-Id</td><td>String</td><td>fefb6bbb-00c2-497c-afc2-XXXXXXXXXXXX</td></tr><tr><td>Client-Secret</td><td>String</td><td>VeIMuc9XGle7PSxIVYNwPpI2OEk_9gXoW_XXXXXXXXX</td></tr><tr><td>Content-Type</td><td>String</td><td>application/json</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## API 공통 응답 구조
+
+**성공 시**&#x20;
+
+```
+{
+    "code": 200,
+    "message": null,
+    "content": {responseBody}
+}
+```
+
+**실패 시**
+
+```
+{
+    "code": "integer",
+    "message": "string"
+}
+```
+
+## Error Code
+
+<table><thead><tr><th width="153">HTTP Code</th><th width="254">Error Message</th><th>Description</th></tr></thead><tbody><tr><td>400</td><td>잘못된 값을 입력했습니다.</td><td>요청 파라미터 에러</td></tr><tr><td>401</td><td>UNAUTHORIZED</td><td>필요 인증 정보 없음</td></tr><tr><td>401</td><td>INVALID_CLIENT</td><td>Client 정보 비정상</td></tr><tr><td>401</td><td>INVALID_TOKEN</td><td>존재하지 않는 token, 기한 만료<br>( Access Token, Refresh_token)<br>- 만료된 Access Token<br>- 만료된 Refresh Token<br>- Delete 요청 된 Access Token<br>- 존재하지 않는 Token</td></tr><tr><td>403</td><td>FORBIDDEN</td><td>호출 권한 없음</td></tr><tr><td>404</td><td>NOT_FOUND</td><td>검색 결과 없음</td></tr><tr><td>429</td><td>TOO_MANY_REQUESTS</td><td>Quota 제한 초과</td></tr><tr><td>500</td><td>INTERNAL_SERVER_ERROR</td><td>서버 내부 에러</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+
+# Session
+
+세션 생성, 세션 목록 조회, 이벤트 구독 및 취소를 할 수 있습니다.\
+세션 API 중 아래 API Scope를 호출하려면 사용자 계정으로 인증하여 얻은 Access Token이 필요합니다.\
+API Scope는 `채팅 메시지 조회`, `후원 조회`, `구독 조회`입니다.
+
+***
+
+## 세션 생성(클라이언트)
+
+Client 인증을 통해 소켓 연결을 위한 URL을 요청합니다. 생성된 URL은 일정 시간 동안만 유효합니다. \
+최대 10개의 연결을 유지할 수 있습니다.\
+세션 생성(클라이언트)를 호출하려면 애플리케이션 등록 후 Client 인증이 필요합니다. ([Client 인증 API 참조](https://chzzk.gitbook.io/chzzk/chzzk-api/tips#client-api))
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/sessions/auth/client</strong></td><td>세션 생성(클라이언트)</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="266">Field</th><th width="119">Type</th><th>Description</th></tr></thead><tbody><tr><td>url</td><td>String</td><td>소켓 연결을 위한 URL</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 세션 생성(유저)
+
+Access Token 인증을 통해 소켓 연결을 위한 URL을 요청합니다. 생성된 URL은 일정 시간 동안만 유효합니다. \
+연결된 세션은 세션 생성에 사용된 Access Token과 동일한 유저 이벤트만 구독할 수 있습니다. \
+유저별 최대 3개의 연결을 유지할 수 있습니다
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/sessions/auth</strong></td><td>세션 생성(유저)</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="266">Field</th><th width="119">Type</th><th>Description</th></tr></thead><tbody><tr><td>url</td><td>String</td><td>소켓 연결을 위한 URL</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 세션 연결 가이드
+
+[Socket.IO-client](https://github.com/socketio/socket.io-client) 1.0.0+ 2.0.3 버전까지 지원합니다.
+
+**소켓 연결**
+
+```markup
+// api를 통해 얻은 연결 url
+const sessionURL = 'https://ssio08.nchat.naver.com:443?auth=TOKEN';
+ 
+// 옵션 설정
+const socketOption = {
+      reconnection: false,
+      'force new connection': true,
+      'connect timeout': 3000,
+      transports: ['websocket'],
+};
+ 
+ 
+// ...
+ 
+// 세션 연결
+socket = io.connect(sessionURL, socketOption)
+socket.on('connect', function() { 
+              // on connected
+       });
+```
+
+연결이 완료될 경우 세션으로 [연결 완료 메시지](#undefined-11)가 전달 됩니다. 해당 메시지의 sessionKey 값을 통해 연결된 세션에 이벤트를 구독할 수 있습니다.
+
+**메시지 수신**
+
+```
+// eventType 메시지
+socket.on("SYSTEM", function(data) {
+    /* on system event */
+});
+```
+
+## 세션 목록 조회(클라이언트)
+
+Client 인증 기반의 생성된 세션을 조회합니다. 연결이 끊어진 세션은 90일 동안만 조회가 가능합니다.\
+세션 목록 조회(클라이언트)를 호출하려면 애플리케이션 등록 후 Client 인증이 필요합니다. ([Client 인증 API 참조](https://chzzk.gitbook.io/chzzk/chzzk-api/tips#client-api))
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/sessions/client</strong></td><td>세션 목록 조회(클라이언트)</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="266">Field</th><th width="119">Type</th><th>Description</th></tr></thead><tbody><tr><td>size</td><td>Int</td><td><p>조회할 세션 개수. 최소 1 ~ 최대 50 요청 가능</p><p>default : 20</p></td></tr><tr><td>page</td><td>String</td><td><p>조회할 페이지. 0부터 조회 가능</p><p>default : 0</p></td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="265">Field</th><th width="119">Type</th><th>Description</th></tr></thead><tbody><tr><td>data</td><td>Object[]</td><td>세션 목록 결과</td></tr><tr><td>    sessionKey</td><td>String</td><td>세션 식별자</td></tr><tr><td>    connectedDate</td><td>String</td><td>연결 시간</td></tr><tr><td>    disconnectedDate</td><td>String</td><td>연결 해제 시간</td></tr><tr><td>    subscribedEvents</td><td>Object[]</td><td>구독 이벤트 목록</td></tr><tr><td>        eventType</td><td>String</td><td><p>이벤트 종류</p><ul><li>CHAT</li><li>DONATION</li><li>SUBSCRIPTION</li></ul></td></tr><tr><td>        channelId</td><td>String</td><td>이벤트 채널 ID(채널 식별자)</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 세션 목록 조회(유저)
+
+Access Token 인증 기반의 생성된 세션을 조회합니다. 연결이 끊어진 세션은 90일동안만 조회 가능합니다.
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/sessions</strong></td><td>세션 목록 조회(유저)</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="266">Field</th><th width="119">Type</th><th>Description</th></tr></thead><tbody><tr><td>size</td><td>Int</td><td><p>조회할 세션 개수. 최소 1 ~ 최대 50 요청 가능</p><p>default : 20</p></td></tr><tr><td>page</td><td>String</td><td><p>조회할 페이지. 0부터 조회 가능</p><p>default : 0</p></td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="265">Field</th><th width="119">Type</th><th>Description</th></tr></thead><tbody><tr><td>data</td><td>Object[]</td><td>세션 목록 결과</td></tr><tr><td>    sessionKey</td><td>String</td><td>세션 식별자</td></tr><tr><td>    connectedDate</td><td>String</td><td>연결 시간</td></tr><tr><td>    disconnectedDate</td><td>String</td><td>연결 해제 시간</td></tr><tr><td>    subscribedEvents</td><td>Object[]</td><td>구독 이벤트 목록</td></tr><tr><td>        eventType</td><td>String</td><td><p>이벤트 종류</p><ul><li>CHAT</li><li>DONATION</li><li>SUBSCRIPTION</li></ul></td></tr><tr><td>        channelId</td><td>String</td><td>이벤트 채널 ID(채널 식별자)</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+***
+
+## 이벤트 구독(채팅)
+
+요청한 세션에 사용자의 채팅 이벤트를 구독합니다. \
+구독이 완료될 경우 요청한 세션으로 [이벤트 구독 메시지](#message-event-subscribe)가 전달 됩니다. \
+채팅 이벤트 구독 시, 구독한 채널에 채팅이 발생할 때 [채팅 이벤트 메시지](#message-event-subscribe-chat)가 전달됩니다.
+
+관련 Scope : 채팅 메시지 조회
+
+\*세션당 최대 30개의 이벤트(채팅, 후원, 구독)를 구독할 수 있습니다.
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>POST /open/v1/sessions/events/subscribe/chat</strong></td><td>이벤트 구독(채팅)</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th width="138">Required</th><th>Description</th></tr></thead><tbody><tr><td>sessionKey</td><td>String</td><td>*</td><td>세션 식별자</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+## 이벤트 구독 취소(채팅)
+
+요청한 세션에 사용자의 채팅 이벤트를 구독 취소합니다. \
+구독이 취소될 경우 요청한 세션으로 [이벤트 구독 취소 메시지](#message-event-unsubscribe)가 전달 됩니다.
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>POST /open/v1/sessions/events/unsubscribe/chat</strong></td><td>이벤트 구독 취소(채팅)</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th width="138">Required</th><th>Description</th></tr></thead><tbody><tr><td>sessionKey</td><td>String</td><td>*</td><td>세션 식별자</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+## 이벤트 구독(후원)
+
+요청한 세션에 사용자의 후원 이벤트를 구독합니다. \
+구독이 완료될 경우 요청한 세션으로 [이벤트 구독 메시지](#message-event-subscribe)가 전달 됩니다. \
+이벤트 구독 시, 구독한 채널에 후원이 발생할 때 [후원 이벤트 메시지](#message-event-subscribe-donation)가 전달됩니다.
+
+관련 Scope : 후원 조회
+
+\*세션당 최대 30개의 이벤트(채팅, 후원, 구독)를 구독할 수 있습니다.
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>POST /open/v1/sessions/events/subscribe/donation</strong></td><td>이벤트 구독(후원)</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th width="138">Required</th><th>Description</th></tr></thead><tbody><tr><td>sessionKey</td><td>String</td><td>*</td><td>세션 식별자</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+## 이벤트 구독 취소(후원)
+
+요청한 세션에 사용자의 후원 이벤트를 구독 취소합니다.\
+구독이 취소될 경우 요청한 세션으로 [이벤트 구독 취소 메시지](#message-event-unsubscribe)가 전달 됩니다.
+
+<table><thead><tr><th width="266">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>POST /open/v1/sessions/events/unsubscribe/donation</strong></td><td>이벤트 구독 취소(후원)</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th width="138">Required</th><th>Description</th></tr></thead><tbody><tr><td>sessionKey</td><td>String</td><td>*</td><td>세션 식별자</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+## 이벤트 구독(구독)
+
+요청한 세션에 사용자의 구독 이벤트를 구독합니다. \
+구독이 완료될 경우 요청한 세션으로 [이벤트 구독 메시지](#message-event-subscribe)가 전달 됩니다. \
+이벤트 구독 시, 구독한 채널에 구독이 발생할 때 [구독 이벤트 메시지](#message-event-subscribe-subscription)가 전달됩니다.
+
+관련 Scope : 후원 조회
+
+\*세션당 최대 30개의 이벤트(채팅, 후원, 구독)를 구독할 수 있습니다.
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>POST /open/v1/sessions/events/subscribe/subscription</strong></td><td>이벤트 구독(구독)</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th width="138">Required</th><th>Description</th></tr></thead><tbody><tr><td>sessionKey</td><td>String</td><td>*</td><td>세션 식별자</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+## 이벤트 구독 취소(구독)
+
+요청한 세션에 사용자의 구독 이벤트를 구독 취소합니다.\
+구독이 취소될 경우 요청한 세션으로 [이벤트 구독 취소 메시지](#message-event-unsubscribe)가 전달 됩니다.
+
+<table><thead><tr><th width="266">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>POST /open/v1/sessions/events/unsubscribe/subscription</strong></td><td>이벤트 구독 취소(구독)</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th width="138">Required</th><th>Description</th></tr></thead><tbody><tr><td>sessionKey</td><td>String</td><td>*</td><td>세션 식별자</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+***
+
+## 세션 메시지
+
+세션으로 전달되는 메시지에는 시스템 메시지, 구독 이벤트 메시지가 존재합니다.
+
+## 시스템 메시지(공통)
+
+`Event Type : SYSTEM`
+
+**Message Body**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th>Description</th></tr></thead><tbody><tr><td>type</td><td>String</td><td><p>시스템 메시지 종류</p><ul><li>connected</li><li>subscribed</li><li>unsubscribed</li><li>revoked</li></ul></td></tr><tr><td>data</td><td>Object</td><td>시스템 메시지 정보</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 시스템 메시지(연결 완료 메시지)
+
+소켓 연결이 정상적으로 완료 되었을 때 전달됩니다. 전달된 세션 식별자를 통해 이벤트를 구독/취소 할 수 있습니다.
+
+**Message Body**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th>Description</th></tr></thead><tbody><tr><td>type</td><td>String</td><td>connected</td></tr><tr><td>data</td><td>Object</td><td>시스템 메시지 정보</td></tr><tr><td>    sessionKey</td><td>String</td><td>세션 식별자</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 시스템 메시지(이벤트 구독 메시지) <a href="#message-event-subscribe" id="message-event-subscribe"></a>
+
+이벤트 구독이 완료 되었을 때 전달됩니다.
+
+**Message Body**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th>Description</th></tr></thead><tbody><tr><td>type</td><td>String</td><td>subscribed</td></tr><tr><td>data</td><td>Object</td><td>시스템 메시지 정보</td></tr><tr><td>    eventType</td><td>String</td><td><p>이벤트 종류</p><ul><li>CHAT</li><li>DONATION</li><li>SUBSCRIPTION</li></ul></td></tr><tr><td>    channelId</td><td>String</td><td>이벤트 채널 ID(채널 식별자)</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 시스템 메시지(이벤트 구독 취소 메시지) <a href="#message-event-unsubscribe" id="message-event-unsubscribe"></a>
+
+이벤트 구독이 취소 되었을 때 전달됩니다.
+
+**Message Body**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th>Description</th></tr></thead><tbody><tr><td>type</td><td>String</td><td>unsubscribed</td></tr><tr><td>data</td><td>Object</td><td>시스템 메시지 정보</td></tr><tr><td>    eventType</td><td>String</td><td><p>이벤트 종류</p><ul><li>CHAT</li><li>DONATION</li><li>SUBSCRIPTION</li></ul></td></tr><tr><td>    channelId</td><td>String</td><td>이벤트 채널 ID(채널 식별자)</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 시스템 메시지(이벤트 권한 취소 메시지)
+
+사용자의 동의 철회, 스코프 변경 등 권한 회수로 이벤트 구독이 취소 되었을 때 전달됩니다.
+
+**Message Body**
+
+<table><thead><tr><th width="173">Field</th><th width="92">Type</th><th>Description</th></tr></thead><tbody><tr><td>type</td><td>String</td><td>revoked</td></tr><tr><td>data</td><td>Object</td><td>시스템 메시지 정보</td></tr><tr><td>    eventType</td><td>String</td><td><p>이벤트 종류</p><ul><li>CHAT</li><li>DONATION</li><li>SUBSCRIPTION</li></ul></td></tr><tr><td>    channelId</td><td>String</td><td>이벤트 채널 ID(채널 식별자)</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 구독 이벤트 메시지(채팅 이벤트 메시지) <a href="#message-event-subscribe-chat" id="message-event-subscribe-chat"></a>
+
+구독한 채널의 채팅 메시지가 전달됩니다.
+
+`Event Type : CHAT`
+
+**Message Body**
+
+<table><thead><tr><th width="173">Field</th><th width="98">Type</th><th>Description</th></tr></thead><tbody><tr><td>channelId</td><td>String</td><td>이벤트 채널 ID(채널 식별자)</td></tr><tr><td>senderChannelId</td><td>String</td><td>채팅 메시지 작성자 채널 ID</td></tr><tr><td>profile</td><td>Object</td><td>채팅 메시지 작성자 프로필 정보</td></tr><tr><td>    nickname</td><td>String</td><td>닉네임</td></tr><tr><td>    badges</td><td>Object[]</td><td>배지</td></tr><tr><td>    verifiedMark</td><td>boolean</td><td>인증여부</td></tr><tr><td>userRoleCode</td><td>String</td><td><p>유저 채널 권한</p><ul><li>streamer : 스트리머</li><li>common_user : 일반 유저</li><li>streaming_channel_manager : 채널 관리자</li><li>streaming_chat_manager : 채팅 운영자</li></ul></td></tr><tr><td>content</td><td>String</td><td>채팅 메시지 내용</td></tr><tr><td>emojis</td><td>Map</td><td>사용된 치지직 이모티콘 정보</td></tr><tr><td>    key</td><td>String</td><td>치지직 이모티콘 식별자</td></tr><tr><td>    value</td><td>String</td><td>치지직 이모티콘 URL</td></tr><tr><td>messageTime</td><td>Int64</td><td>메시지 시간 (ms)</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 구독 이벤트 메시지(후원 이벤트 메시지) <a href="#message-event-subscribe-donation" id="message-event-subscribe-donation"></a>
+
+구독한 채널의 후원 메시지가 전달됩니다.
+
+`Event Type : DONATION`
+
+**Message Body**
+
+<table><thead><tr><th width="184">Field</th><th width="98">Type</th><th>Description</th></tr></thead><tbody><tr><td>donationType</td><td>String</td><td><p>후원 종류</p><ul><li>CHAT</li><li>VIDEO</li></ul></td></tr><tr><td>channelId</td><td>String</td><td>이벤트 채널 ID(채널 식별자)</td></tr><tr><td>donatorChannelId</td><td>String</td><td>후원자 채널 ID</td></tr><tr><td>donatorNickname</td><td>String</td><td>후원자 닉네임</td></tr><tr><td>payAmount</td><td>String</td><td>후원 금액 (원)</td></tr><tr><td>donationText</td><td>String</td><td>후원 메시지 내용</td></tr><tr><td>emojis</td><td>Map</td><td>사용된 치지직 이모티콘 정보</td></tr><tr><td>    key</td><td>String</td><td>치지직 이모티콘 식별자</td></tr><tr><td>    value</td><td>String</td><td>치지직 이모티콘 URL</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 구독 이벤트 메시지(구독 이벤트 메시지) <a href="#message-event-subscribe-subscription" id="message-event-subscribe-subscription"></a>
+
+구독한 채널의 구독 메시지가 전달됩니다.
+
+`Event Type : SUBSCRIPTION`
+
+**Message Body**
+
+<table><thead><tr><th width="184">Field</th><th width="98">Type</th><th>Description</th></tr></thead><tbody><tr><td>channelId</td><td>String</td><td>이벤트 채널 ID(채널 식별자)</td></tr><tr><td>subscriberChannelId</td><td>String</td><td>구독자 채널 ID</td></tr><tr><td>subscriberNickname</td><td>String</td><td>구독자 닉네임</td></tr><tr><td>tierNo</td><td>Int</td><td><p>구독 상품</p><ul><li>1 (티어1 구독)</li><li>2 (티어2 구독)</li></ul></td></tr><tr><td>tierName</td><td>String</td><td>구독 브랜드명</td></tr><tr><td>month</td><td>Int</td><td>사용된구독 기간치지직 이모티콘 정보</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+
+# User
+
+유저 API로 로그인 유저의 치지직 채널 정보를 조회할 수 있습니다.\
+유저 API를 호출하려면 사용자 계정으로 인증하여 얻은 Access Token이 필요합니다.\
+API Scope는 `유저 정보 조회`입니다.
+
+## 유저 정보 조회
+
+유저의 채널 정보를 조회할 수 있습니다.\
+치지직의 모든 유저는 채널을 소유합니다. 채널ID는 채널의 고유 식별자이며 유저의 고유 식별자로 사용할 수 있습니다.
+
+<table><thead><tr><th width="262">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/users/me</strong></td><td>유저 정보 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="182">Key</th><th width="174">Type</th><th>Example</th></tr></thead><tbody><tr><td>channelId</td><td>String</td><td>909501f048b44cf0d5c1d28XXXXXXXX</td></tr><tr><td>channelName</td><td>String</td><td>치지직유저 3121</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+
+# Channel
+
+채널 API로 채널 정보 조회, 채널 관리자 조회, 채널 팔로워 조회, 채널 구독자를 조회할 수 있습니다.\
+채널 API 중 아래 API Scope를 호출하려면 사용자 계정으로 인증하여 얻은 Access Token이 필요합니다.\
+API Scope는 `채널 관리자 조회`, `채널 팔로워 조회`, `채널 구독자 조회`입니다.
+
+***
+
+## 채널 정보 조회
+
+채널 정보를 조회할 수 있습니다.\
+채널 정보 조회 API를 호출하려면 애플리케이션 등록 후 Client 인증이 필요합니다. ([Client 인증 API 참조](https://chzzk.gitbook.io/chzzk/chzzk-api/tips#client-api))
+
+<table><thead><tr><th width="262">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/channels</strong></td><td>채널 정보 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="134">Field</th><th width="126">Type</th><th width="94">required</th><th>Description</th></tr></thead><tbody><tr><td>channelIds</td><td>String[]</td><td>*</td><td>조회할 채널 ID 목록. 최대 20개까지 요청 가능</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="261">Field</th><th width="98">Type</th><th>Description</th></tr></thead><tbody><tr><td>data</td><td>Object[]</td><td>요청한 채널 정보 목록. 일치하는 채널을 찾지 못할 경우 결과 미반환</td></tr><tr><td>    channelId</td><td>String</td><td>채널 식별자</td></tr><tr><td>    channelName</td><td>String</td><td>채널 이름</td></tr><tr><td>    channelImageUrl</td><td>String</td><td>채널 이미지 URL</td></tr><tr><td>    followerCount</td><td>Int</td><td>채널의 팔로워 수</td></tr><tr><td>    verifiedMark</td><td>Boolean</td><td>채널 인증 마크 여부</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 채널 관리자 조회
+
+채널 관리자를 조회할 수 있습니다.
+
+<table><thead><tr><th width="355">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/channels/streaming-roles</strong></td><td>채널 관리자 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="261">Field</th><th width="98">Type</th><th>Description</th></tr></thead><tbody><tr><td>data</td><td>Object[]</td><td>요청한 채널 관리자 목록</td></tr><tr><td>    managerChannelId</td><td>String</td><td>관리자 채널 식별자</td></tr><tr><td>    managerChannelName</td><td>String</td><td>관리자 채널 이름</td></tr><tr><td>    userRole</td><td>String</td><td><p>관리자 역할</p><ul><li>STREAMING_CHANNEL_OWNER - 채널 소유자</li><li>STREAMING_CHANNEL_MANAGER - 채널 관리자</li><li>STREAMING_CHAT_MANAGER - 채팅 운영자</li><li>STREAMING_SETTLEMENT_MANAGER - 정산 관리자</li></ul></td></tr><tr><td>    createdDate</td><td>Date</td><td>등록일</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 채널 팔로워 조회
+
+채널의 팔로워 목록을 조회할 수 있습니다.
+
+<table><thead><tr><th width="355">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/channels/followers</strong></td><td>채널 팔로워 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="134">Field</th><th width="126">Type</th><th width="94">required</th><th>Description</th></tr></thead><tbody><tr><td>page</td><td>Int</td><td>optional</td><td><p>요청하는 페이지. 0부터 시작</p><p>디폴트 값 : 0</p></td></tr><tr><td>size</td><td>Int</td><td>optional</td><td>조회할 카테고리 개수. 최소 1 ~ 최대 50 요청 가능<br>디폴트 값 : 30</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="261">Field</th><th width="98">Type</th><th>Description</th></tr></thead><tbody><tr><td>data</td><td>Object[]</td><td>요청한 채널의 팔로워 목록</td></tr><tr><td>    channelId</td><td>String</td><td>팔로워 채널 식별자</td></tr><tr><td>    channelName</td><td>String</td><td>팔로워 채널 이름</td></tr><tr><td>    createdDate</td><td>Date</td><td>팔로우 일자</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 채널 구독자 조회
+
+채널의 구독자 목록을 조회할 수 있습니다.
+
+<table><thead><tr><th width="355">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/channels/subscribers</strong></td><td>채널 구독자 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="134">Field</th><th width="126">Type</th><th width="94">required</th><th>Description</th></tr></thead><tbody><tr><td>page</td><td>Int</td><td>optional</td><td><p>요청하는 페이지. 0부터 시작</p><p>디폴트 값 : 0</p></td></tr><tr><td>size</td><td>Int</td><td>optional</td><td>조회할 카테고리 개수. 최소 1 ~ 최대 50 요청 가능<br>디폴트 값 : 30</td></tr><tr><td>sort</td><td>String</td><td>optional</td><td><p>정렬 방식</p><ul><li>RECENT (최신 구독 순)</li><li>LONGER (구독 개월 순)</li></ul></td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="261">Field</th><th width="98">Type</th><th>Description</th></tr></thead><tbody><tr><td>data</td><td>Object[]</td><td>요청한 채널의 구독자 목록</td></tr><tr><td>    channelId</td><td>String</td><td>구독자 채널 식별자</td></tr><tr><td>    channelName</td><td>String</td><td>구독자 채널 이름</td></tr><tr><td>    month</td><td>Int</td><td>구독 개월 수</td></tr><tr><td>    tierNo</td><td>Int</td><td><p>구독 상품</p><ul><li>1 (티어1 구독)</li><li>2 (티어2 구독)</li></ul></td></tr><tr><td>    createdDate</td><td>Date</td><td>팔로우 일자</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+
+# Category
+
+카테고리 검색 API로 카테고리 목록 및 정보를 조회할 수 있습니다.
+
+{% hint style="info" %}
+방송은 개별 게임 카테고리 또는 종합 게임, 데모 게임, 고전 게임, 스포츠, 축구, 야구, talk, ASMR, 음악/노래, 그림/아트, 운동/건강, 과학/기술, 시사/경제, 먹방/쿡방, 뷰티, 여행/캠페인 카테고리로 분류될 수 있습니다.
+{% endhint %}
+
+## 카테고리 검색
+
+카테고리를 검색하여 목록 및 정보를 조회할 수 있습니다.\
+카테고리 검색 API를 호출하려면 애플리케이션 등록 후 Client 인증이 필요합니다. ([Client 인증 API 참조](https://chzzk.gitbook.io/chzzk/chzzk-api/tips#client-api))
+
+<table><thead><tr><th width="355">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/categories/search</strong></td><td>카테고리 검색</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="134">Field</th><th width="126">Type</th><th width="94">required</th><th>Description</th></tr></thead><tbody><tr><td>size</td><td>Int</td><td>optional</td><td>조회할 카테고리 개수. 최소 1 ~ 최대 50 요청 가능<br>디폴트 값 : 20</td></tr><tr><td>query</td><td>String</td><td>*</td><td>검색할 카테고리 이름. 해당 값을 포함하는 카테고리 목록 반환</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="182">Field</th><th width="174">Type</th><th>Description</th></tr></thead><tbody><tr><td>data</td><td>Object[]</td><td>카테고리 목록 결과</td></tr><tr><td>categoryType</td><td>String</td><td><p>카테고리 종류</p><ul><li>GAME</li><li>SPORTS</li><li>ETC</li></ul></td></tr><tr><td>categoryId</td><td>String</td><td>카테고리 ID(카테고리 식별자)</td></tr><tr><td>categoryValue</td><td>String</td><td>카테고리 이름</td></tr><tr><td>posterImageUrl</td><td>String</td><td>카테고리 이미지 URL</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+
+# Live
+
+라이브 API로 전체 라이브 목록 조회, 방송 스트림키 조회, 방송 설정 조회, 방송 설정을 변경할 수 있습니다.\
+라이브 API 중 아래 API Scope를 호출하려면 사용자 계정으로 인증하여 얻은 Access Token이 필요합니다.\
+API Scope는 `방송 스트림키 조회`, `방송 설정 조회`, `방송 설정 변경`입니다.
+
+***
+
+## 라이브 목록 조회
+
+현재 진행 중인 라이브의 전체 목록을 조회할 수 있습니다.\
+라이브 목록 조회 API를 호출하려면 애플리케이션 등록 후 Client 인증이 필요합니다. ([Client 인증 API 참조](https://chzzk.gitbook.io/chzzk/chzzk-api/tips#client-api))
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/lives</strong></td><td>라이브 목록 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="134">Field</th><th width="130">Type</th><th width="119">Required</th><th>Description</th></tr></thead><tbody><tr><td>size</td><td>Int</td><td>Optional</td><td>조회할 라이브 개수. 최소 1 ~ 최대 20 요청 가능<br>디폴트 값 : 20</td></tr><tr><td>next</td><td>String</td><td>Optional</td><td>다음 목록을 호출하기 위한 값입니다. api 응답 중 page.next 값을 통해 호출 가능</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="265">Field</th><th width="119">Type</th><th>Description</th></tr></thead><tbody><tr><td>data</td><td>Object[]</td><td>라이브 목록 결과. 시청자 수 높은 순 정렬</td></tr><tr><td>    liveId </td><td>Int</td><td>라이브 식별자</td></tr><tr><td>    liveTitle </td><td>String</td><td>라이브 제목</td></tr><tr><td>    liveThumbnailImageUrl </td><td>String</td><td>라이브 썸네일로 사용되는 이미지 URL</td></tr><tr><td>    concurrentUserCount </td><td>Int</td><td>라이브 현재 시청자 수</td></tr><tr><td>    openDate </td><td>String</td><td>라이브 시작 시간</td></tr><tr><td>    adult </td><td>boolean</td><td>연령 제한 설정 여부</td></tr><tr><td>    tags </td><td>String[]</td><td>라이브에 설정된 태그 목록</td></tr><tr><td>    categoryType </td><td>String</td><td><p>카테고리 종류</p><ul><li>GAME</li><li>SPORTS</li><li>ETC</li></ul></td></tr><tr><td>    liveCategory</td><td>String</td><td>라이브 카테고리 식별자</td></tr><tr><td>    liveCategoryValue</td><td>String</td><td>라이브 카테고리 이름</td></tr><tr><td>    channelId</td><td>String</td><td>채널 ID(채널 식별자)</td></tr><tr><td>    channelName</td><td>String</td><td>채널명</td></tr><tr><td>    channelImageUrl</td><td>String</td><td>채널 이미지 URL</td></tr><tr><td>page</td><td>Object</td><td></td></tr><tr><td>    next</td><td>String</td><td>다음 목록 호출을 위한 값</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 방송 스트림키 조회
+
+스트리밍 채널의 스트림키를 조회할 수 있습니다.
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/streams/key</strong></td><td>방송 스트림키 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="264">Field</th><th width="123">Type</th><th>Description</th></tr></thead><tbody><tr><td>streamKey</td><td>String</td><td>스트림키 값</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 방송 설정 조회
+
+스트리밍 채널의 방송 설정을 조회할 수 있습니다.
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/lives/setting</strong></td><td>방송 설정 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="263">Field</th><th width="123">Type</th><th>Description</th></tr></thead><tbody><tr><td>defaultLiveTitle</td><td>String</td><td>라이브 제목</td></tr><tr><td>category</td><td>Object</td><td>라이브 카테고리</td></tr><tr><td>    categoryType </td><td>String</td><td><p>카테고리 종류</p><ul><li>GAME</li><li>SPORTS</li><li>ETC</li></ul></td></tr><tr><td>    categoryId</td><td>String</td><td>카테고리 식별자</td></tr><tr><td>    categoryValue</td><td>String</td><td>카테고리 이름</td></tr><tr><td>    posterImageUrl</td><td>String</td><td>카테고리 이미지 URL</td></tr><tr><td>tags </td><td>String[]</td><td>라이브 태그 목록</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 방송 설정 변경
+
+스트리밍 채널의 방송 설정을 변경할 수 있습니다.\
+설정 변경 시 API 요청을 통해 필요한 특정 값만 변경하는 것도 가능합니다.
+
+<table><thead><tr><th width="371">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>PATCH /open/v1/lives/setting</strong></td><td>방송 설정 변경</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Body**
+
+<table><thead><tr><th width="163">Field</th><th width="103">Type</th><th width="105">Required</th><th>Description</th></tr></thead><tbody><tr><td>defaultLiveTitle</td><td>String</td><td>optional</td><td>라이브 제목. 빈 값으로 설정 불가</td></tr><tr><td>categoryType </td><td>String</td><td>optional</td><td><p>카테고리 종류. 유효한 카테고리 종류로만 설정 가능</p><ul><li>GAME</li><li>SPORTS</li><li>ETC</li></ul></td></tr><tr><td>categoryId</td><td>String</td><td>optional</td><td>카테고리 식별자. 유효한 카테고리 종류로만 설정 가능. ""으로 전송할 경우 카테고리 설정 제거</td></tr><tr><td>tags </td><td>String[]</td><td>optional</td><td>라이브 태그 목록. empty list로 전송할 경우 태그 설정 제거. 공백 및 특수문자 비허용</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+
+# Chat
+
+채팅 API로 채팅 전송, 채팅 공지 등록, 채팅 설정 조회, 채팅 설정 변경을 할 수 있습니다.\
+채팅 API를 호출하려면 사용자 계정으로 인증하여 얻은 Access Token이 필요합니다.\
+API Scope는 `채팅 메시지 전송`, `채팅 공지 등록`, `채팅 설정 조회`, `채팅 설정 변경`입니다.
+
+***
+
+## 채팅 메시지 전송
+
+채팅 메시지를 전송할 수 있습니다.
+
+<table><thead><tr><th width="262">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>POST /open/v1/chats/send</strong></td><td>채팅 메시지 전송</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Body**
+
+<table><thead><tr><th width="134">Field</th><th width="126">Type</th><th>Description</th></tr></thead><tbody><tr><td>message</td><td>String</td><td>전송할 메시지 내용. 메시지 내용은 최대 100자로 제한</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="134">Field</th><th width="129">Type</th><th>Description</th></tr></thead><tbody><tr><td>messageId</td><td>String</td><td>전송된 메시지 ID</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 채팅 공지 등록
+
+채팅 공지사항을 등록할 수 있습니다.\
+신규 메시지 또는 전송된 기존메시지로 공지사항을 등록이 가능합니다.
+
+<table><thead><tr><th width="263">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>POST /open/v1/chats/notice</strong></td><td>채팅 공지사항 등록</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Body**
+
+<table><thead><tr><th width="134">Field</th><th width="131">Type</th><th width="110">Required</th><th>Description</th></tr></thead><tbody><tr><td>message</td><td>String</td><td>Optional</td><td>신규 메시지로 공지사항 등록 시 전송할 메시지 내용. 메시지 내용은 최대 100자로 제한</td></tr><tr><td>messageId</td><td>String</td><td>Optional</td><td>기존 메시지로 공지사항 등록 시 사용하는 전송된 메시지 ID</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+**Response**
+
+<table><thead><tr><th width="266">Code</th><th>Description</th></tr></thead><tbody><tr><td>200</td><td>공지사항 등록 성공</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+## 채팅 설정 조회
+
+채널의 채팅 설정을 조회할 수 있습니다.
+
+<table><thead><tr><th width="269">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/chats/settings</strong></td><td>채팅 설정 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="290">Field</th><th width="100">Type</th><th>Description</th></tr></thead><tbody><tr><td>chatAvailableCondition</td><td>String</td><td><p>본인인증 여부 설정 조건</p><ul><li>NONE (제한 없음)</li><li>REAL_NAME (네이버 본인인증한 시청자만 채팅 허용)</li></ul></td></tr><tr><td>chatAvailableGroup</td><td>String</td><td><p>채팅 참여 범위 설정 조건</p><ul><li>ALL (모든 시청자)</li><li>FOLLOWER (팔로워 전용)</li><li>MANAGER (운영자 전용)</li><li>SUBSCRIBER (구독자 전용)</li></ul></td></tr><tr><td>minFollowerMinute</td><td>Int</td><td>FOLLOWER 모드 설정된 경우 적용된 최소 팔로잉 기간 조건</td></tr><tr><td>allowSubscriberInFollowerMode</td><td>boolean</td><td>FOLLOWER 모드 설정된 경우 구독자는 최소 팔로잉 기간 조건 대상에서 제외 허용 할지 여부</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+## 채팅 설정 변경
+
+채널의 채팅 설정을 변경할 수 있습니다.
+
+<table><thead><tr><th width="271">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>PUT /open/v1/chats/settings</strong></td><td>채팅 설정 변경</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Body**
+
+<table><thead><tr><th width="300">Field</th><th width="100">Type</th><th>Description</th></tr></thead><tbody><tr><td>chatAvailableCondition</td><td>String</td><td><p>본인인증 여부 설정 조건</p><ul><li>NONE (제한 없음)</li><li>REAL_NAME (네이버 본인인증한 시청자만 채팅 허용)</li></ul></td></tr><tr><td>chatAvailableGroup</td><td>String</td><td><p>채팅 참여 범위 설정 조건</p><ul><li>ALL (모든 시청자)</li><li>FOLLOWER (팔로워 전용)</li><li>MANAGER (운영자 전용)</li><li>SUBSCRIBER (구독자 전용)</li></ul></td></tr><tr><td>minFollowerMinute</td><td>Int</td><td>FOLLOWER 모드 설정된 경우 적용된 최소 팔로잉 기간 조건<br>0, 5, 10, 30, 60, 1440, 10080, 43200, 86400, 129600, 172800, 216000, 259200 값만 허용</td></tr><tr><td>allowSubscriberInFollowerMode</td><td>boolean</td><td>FOLLOWER 모드 설정된 경우 구독자는 최소 팔로잉 기간 조건 대상에서 제외 허용 할지 여부</td></tr><tr><td>chatSlowModeSec</td><td>int</td><td><p>시청자의 채팅 전송 간격 (초) </p><ul><li>0 (저속모드 Off), 3, 5, 10, 30, 60, 120, 300 값만 허용</li></ul></td></tr><tr><td>chatEmojiMode</td><td>boolean</td><td>이모티콘 모드 사용 여부</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+
+# Drops
+
+치지직에서 인앱보상 유형의 드롭스 이벤트 진행 시 지급 여부 검증을 위한 가이드 문서입니다.
+
+드롭스의 기본적인 설명 및 연동 가이드는 다음 문서를 참고해 주세요.
+
+* [드롭스 개요](https://chzzk.gitbook.io/chzzk/drops/overview)
+* [드롭스 연동 및 절차](https://chzzk.gitbook.io/chzzk/drops/guide)
+
+## 1.1 리워드 지급 요청 이벤트 받기
+
+치지직에서 사용자가 드롭스 리워드를 획득하는 과정에서, 게임사에 지급 요청을 할 수 있습니다. 이때 치지직에서는 등록된 게임사의 webhook URL로 notification 메시지를 전달합니다.
+
+\*Note : 상세 내용은 ‘치지직 Webhook Event 가이드’ 문서를 참고해주세요.
+
+notification 메시지는 별도 callback을 요구하지 않습니다. 따라서 드롭스 리워드 지급 상태를 변경하기 위해서는 드롭스 리워드 지급 API를 호출해야 합니다.<br>
+
+## 1.2 드롭스 리워드 지급 요청 조회 API
+
+치지직 사용자의 드롭스 리워드 지급 요청을 조회합니다.  드롭스 API를 호출하기 위해서는 드롭스 API Scope 신청이 필요합니다. 해당 API Scope는 개발자 센터에 로그인된 사용자가 단체 ID로 법인 인증된 사용자여야만 신청할 수 있습니다.
+
+드롭스 리워드 지급 요청 API를 호출하려면 애플리케이션 등록 후 Client 인증이 필요합니다. ([Client 인증 API 참조](https://chzzk.gitbook.io/chzzk/chzzk-api/tips#client-api))
+
+<table><thead><tr><th width="395">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/drops/reward-claims</strong></td><td>드롭스 리워드 지급 요청 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Param**
+
+<table><thead><tr><th width="221">Field</th><th width="174">Type</th><th width="109">Required</th><th>Description</th></tr></thead><tbody><tr><td>page</td><td>Object</td><td>Optional</td><td>페이징 조회를 위해 사용</td></tr><tr><td>    from</td><td>String</td><td>Optional</td><td>페이징 조회 시, 조회 첫 기준 식별자</td></tr><tr><td>    size</td><td>Int</td><td>Optional</td><td>페이징 조회 시, 조회 할 전체 크기. 기본 20</td></tr><tr><td>claimId</td><td>String</td><td>Optional</td><td>조회할 지급 요청 ID. 콤마(,)로 구분된 배열로 최대 100개까지 요청 가능합니다.</td></tr><tr><td>channelId</td><td>String</td><td>Optional</td><td>조회할 유저의 채널 ID</td></tr><tr><td>campaignId<br>or<br>categoryId</td><td>String</td><td>Optional</td><td><p>특정 캠페인 및 카테고리로 조회할 때 조건으로 사용합니다. 동시에 두가지 조건을 사용할 수 없습니다.</p><ul><li>campaignId: 조회할 드롭스 캠페인 ID</li><li>category: 치지직 카테고리 기준, 조회할 방송(게임) 카테고리 ID</li></ul></td></tr><tr><td>fulfillmentState</td><td>String</td><td>Optional</td><td><p>조회할 리워드 상태 조건. 명시되지 않으면 모든 상태에 대해 조회합니다.</p><ul><li><code>CLAIMED</code>: 지급 요청된 리워드</li><li><code>FULFILLED</code>: 지급 완료</li></ul></td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="218">Field</th><th width="177">Type</th><th width="110">Required</th><th>Description</th></tr></thead><tbody><tr><td>data</td><td>Object[]</td><td>*</td><td>응답 정보가 담긴 객체 배열. 조회 결과가 없으면 빈 배열이 응답될 수 있습니다.</td></tr><tr><td>    claimId</td><td>String</td><td>*</td><td>드롭스 캠페인 지급 요청 ID</td></tr><tr><td>    campaignId</td><td>String</td><td>*</td><td>드롭스 캠페인 ID</td></tr><tr><td>    rewardId</td><td>String</td><td>*</td><td>드롭스 캠페인에 포함된 리워드 ID</td></tr><tr><td>    categoryId</td><td>String</td><td>*</td><td>드롭스 캠페인에 할당된 카테고리 ID</td></tr><tr><td>    categoryName</td><td>String</td><td>*</td><td>드롭스 캠페인에 할당된 노출 가능한 카테고리 이름</td></tr><tr><td>    channelId</td><td>String</td><td>*</td><td>사용자의 치지직 채널 ID</td></tr><tr><td>    fulfillmentState</td><td>String</td><td>*</td><td><p>조회할 리워드 상태 조건</p><p>  CLAIMED: 지급 요청된 리워드</p><p>  FULFILLED: 지급 완료</p></td></tr><tr><td>    claimedDate</td><td>String</td><td>*</td><td>마지막으로 지급 요청된 시간. RFC3339 형식 UTC 시간</td></tr><tr><td>    updatedDate</td><td>String</td><td>*</td><td>마지막으로 fulfillmentState 값이 변경된 시간. RFC3339 형식 UTC 시간</td></tr><tr><td>page</td><td>Object</td><td>*</td><td>페이징 조회를 위해 사용.</td></tr><tr><td>    cursor</td><td>String</td><td>Optional</td><td>페이징 조회 시, 다음 조회 시 page.from으로 사용. Request Param에서 claimId 항목이 정의된 경우 값이 없거나 빈 문자열일 수 있습니다.</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+```json
+{
+    "data": [
+        {
+            "claimId": "1ce167db-8c58-4a37-8662-48d4e2398503",
+            "campaignId": "bb3a5e21-b18a-4b31-851b-adbecd7dfae5",
+            "rewardId": "068598a1-36b2-4bb4-ab8b-dd875e621862",
+            "categoryId": "CATEGORY_CHZZK",
+            "categoryName": "치지직",
+            "channelId": "34d7ff19-1b63-4b32-85fb-d44880195533",
+            "fulfillmentState": "CLAIMED",
+            "claimedDate": "2024-08-01T09:20:26Z",
+            "updatedDate": "2024-08-01T09:20:26Z"
+        },
+        {
+            "claimId": "6dd13087-d811-479d-8c4d-52d9f3a54c24",
+            "campaignId": "bb3a5e21-b18a-4b31-851b-adbecd7dfae5",
+            "rewardId": "13708b6d-e0ba-4180-982b-f16aa3521d15",
+            "categoryId": "CATEGORY_CHZZK",
+            "categoryName": "치지직",
+            "channelId": "34d7ff19-1b63-4b32-85fb-d44880195533",
+            "fulfillmentState": "FULFILLED",
+            "claimedDate": "2024-08-01T09:21:26Z",
+            "updatedDate": "2024-08-01T09:22:26Z"
+        },
+        {
+            "claimId": "477fe295-30c2-4670-a3a6-6ad8305d36ad",
+            "campaignId": "bb3a5e21-b18a-4b31-851b-adbecd7dfae5",
+            "rewardId": "13708b6d-e0ba-4180-982b-f16aa3521d15",
+            "categoryId": "CATEGORY_CHZZK",
+            "categoryName": "치지직",
+            "channelId": "991cd681-527d-43e5-9758-adae7905a005",
+            "fulfillmentState": "FULFILLED",
+            "claimedDate": "2024-08-01T09:22:26Z",
+            "updatedDate": "2024-08-01T09:23:26Z"
+        }
+    ],
+    "page": {
+        "cursor": "2af178e3-a620-43da-b4b6-90fe11fa0737"
+    }
+}
+
+```
+
+## 1.3 드롭스 리워드 지급 API
+
+치지직 사용자의 드롭스 리워드의 지급 상태를 관리합니다. 드롭스 API를 호출하기 위해서는 드롭스 API Scope 신청이 필요합니다. 해당 API Scope는 개발자 센터에 로그인된 사용자가 단체 ID로 법인 인증된 사용자여야만 신청할 수 있습니다.
+
+드롭스 리워드 지급 API는 별도의 헤더가 존재합니다. \
+드롭스 리워드 지급 API를 호출하려면 애플리케이션 등록 후 Client 인증이 필요합니다. ([Client 인증 API 참조](https://chzzk.gitbook.io/chzzk/chzzk-api/tips#client-api))
+
+<table><thead><tr><th width="340">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>PUT /open/v1/drops/reward-claims</strong></td><td>드롭스 리워드 지급</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Body**
+
+<table><thead><tr><th width="195">Field</th><th width="144">Type</th><th width="106">Required</th><th>Description</th></tr></thead><tbody><tr><td>claimIds</td><td>String[]</td><td>*</td><td>드롭스 캠페인 지급 요청 ID 배열</td></tr><tr><td>fulfillmentState</td><td>String</td><td>*</td><td><p>조회할 리워드 상태 조건</p><ul><li><code>CLAIMED</code>: 지급 요청된 리워드</li><li><code>FULFILLED</code>: 지급 완료</li></ul></td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+```json
+{
+    "claimIds": ["6dd13087-d811-479d-8c4d-52d9f3a54c24"]
+    "fulfillmentState": "FULFILLED"
+}
+```
+
+**Response Body**
+
+<table><thead><tr><th width="195">Field</th><th width="141">Type</th><th width="109">Required</th><th>Description</th></tr></thead><tbody><tr><td>data</td><td>Object[]</td><td>*</td><td>결과가 담긴 배열. data[].status의 따라 구분</td></tr><tr><td>    status</td><td>String</td><td>*</td><td><p>지급 상태를 명시</p><ul><li><code>INVALID_ID</code>: 잘못된 지급 요청 ID 입니다.</li><li><code>NOT_FOUND</code>: 해당하는 지급 ID를 찾을 수 없습니다.</li><li><code>SUCCESS</code>: 성공적으로 변경했습니다.</li><li><code>UNAUTHORIZ</code>ED: 요청한 유저가 계정 연동을 해제한 경우입니다.</li><li><code>UPDATE_FAILED</code>: 에러가 발생하여 상태 변경이 실패했습니다.</li></ul></td></tr><tr><td>    ids</td><td>String[]</td><td>*</td><td>지급 상태에 해당하는 지급 요청 ID 배열</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+```json
+{
+    "data": [
+        {
+            "status": "SUCCESS",
+            "ids": ["1ce167db-8c58-4a37-8662-48d4e2398503", "6dd13087-d811-479d-8c4d-52d9f3a54c24", "477fe295-30c2-4670-a3a6-6ad8305d36ad"]
+        },
+        {
+            "status": "UNAUTHORIZED",
+            "ids": ["3ff167ah-912g-9112-1001-1k2fmvakppzp", "9avlake5-9z1s-8710-b0ba-1ga99b1123fd", "ab98c1z5-mz21-1219-nex0-akem19am7bb"]
+        }
+    ]
+}
+
+```
+
+
+# Restriction
+
+활동 제한 API로 활동 제한 추가, 삭제, 목록 조회를 할 수 있습니다.\
+활동 제한을 호출하려면 사용자 계정으로 인증하여 얻은 Access Token이 필요합니다.\
+API Scope는 `활동 제한 추가`, `활동 제한 삭제`, `활동 제한 목록 조회`입니다.
+
+***
+
+## 활동 제한 추가
+
+사용자를 활동 제한 대상으로 추가할 수 있습니다.
+
+<table><thead><tr><th width="284">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>POST /open/v1/restrict-channels</strong></td><td>활동 제한 추가</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Body**
+
+<table><thead><tr><th width="159.33331298828125">Field</th><th width="126">Type</th><th>Description</th></tr></thead><tbody><tr><td>targetChannelId</td><td>String</td><td>활동 제한 대상 channelId</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="160">Code</th><th>Description</th></tr></thead><tbody><tr><td>200</td><td>활동 제한 추가 성공</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+## 활동 제한 삭제
+
+사용자를 활동 제한 대상에서 삭제할 수 있습니다.
+
+<table><thead><tr><th width="287">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>DELETE /open/v1/restrict-channels</strong></td><td>활동 제한 삭제</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Body**
+
+<table><thead><tr><th width="166.6666259765625">Field</th><th width="119">Type</th><th>Description</th></tr></thead><tbody><tr><td>targetChannelId</td><td>String</td><td>활동 제한 대상 channelId</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Response**
+
+<table><thead><tr><th width="166.666748046875">Code</th><th>Description</th></tr></thead><tbody><tr><td>200</td><td>활동 제한 삭제 성공</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+## 활동 제한 목록 조회
+
+채널의 활동   제한 목록을 조회할 수 있습니다.
+
+<table><thead><tr><th width="285">HTTP Request</th><th>Description</th></tr></thead><tbody><tr><td><strong>GET /open/v1/restrict-channels</strong></td><td>활동 제한 목록 조회</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+**Request Body**
+
+<table><thead><tr><th width="166.6666259765625">Field</th><th width="119">Type</th><th>Description</th></tr></thead><tbody><tr><td>size</td><td>Integer</td><td>활동 제한 대상 channelId</td></tr><tr><td>next</td><td>String</td><td>다음 페이징 값으로 사용</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Response Body**
+
+<table><thead><tr><th width="290">Field</th><th width="100">Type</th><th>Description</th></tr></thead><tbody><tr><td>restrictedChannelId</td><td>String</td><td>활동 제한 대상 channelId</td></tr><tr><td>restrictedChannelName</td><td>String</td><td>활동 제한 대상 채널명</td></tr><tr><td>createdDate</td><td>Date</td><td>활동 제한 일자</td></tr><tr><td>releaseDate</td><td>Date</td><td>활동 제한 해제 일자</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+
+# 드롭스 개요
+
+***
+
+## 드롭스란?
+
+치지직의 시청자가 특정 게임의 방송을 시청하고 다양한 게임 전리품 등의 리워드를 받을 수 있도록 제공하는 시스템입니다. 이는 스트리머와 게임사 모두에게 유용한 도구로, 방송 참여를 촉진하고 게임의 홍보 효과를 극대화할 수 있습니다. 드롭스를 통해 시청자는 보상을 받는 즐거움을, 게임사는 더 많은 시청자와 인지도를 확보하는 이점을 누릴 수 있습니다.
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FGzXeU1v2eOOiAGoADePG%2Fimage.png?alt=media&#x26;token=b031d47b-ee7e-49e1-946d-f2621df0a9e2" alt=""><figcaption><p>치지직 메인화면의 드롭스 방송 예시</p></figcaption></figure>
+
+## 드롭스의 효과
+
+드롭스 캠페인을 진행한 게임은 평균적으로 이전 대비 몇 배 더 많은 시청자 수를 기록하는 경향을 보이며, 효과적으로 게임을 홍보할 수 있는 마케팅 성과를 이뤄낼 수 있습니다.
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FSO5UFKejeuJ2VWFPfkRE%2Fimage.png?alt=media&#x26;token=6e717b13-0498-4b15-be8a-1764d049ec1f" alt=""><figcaption><p>T게임의 드롭스 진행 전/후 일일 시청자 수 증가 비교</p></figcaption></figure>
+
+***
+
+## 드롭스의 유형 및 용어
+
+드롭스는 크게 두 가지 유형으로 구분됩니다.
+
+1. 인앱보상 유형
+2. 쿠폰코드 유형
+
+<table><thead><tr><th width="163">용어</th><th>설명</th></tr></thead><tbody><tr><td>인앱보상 유형</td><td>드롭스 캠페인의 종류. 치지직에서 방송을 시청한 후 게임 내에서 직접 리워드를 지급받는 유형</td></tr><tr><td>쿠폰코드 유형</td><td>드롭스 캠페인의 종류. 치지직에서 방송을 시청한 후 치지직 내에서 쿠폰코드를 즉시 확인할 수 있는 유형</td></tr><tr><td>리워드</td><td>방송을 시청하고 얻을 수 있는 보상을 지칭</td></tr><tr><td>드롭스 보관함</td><td>진행 중이거나 획득 완료한 드롭스를 확인할 수 있는 페이지</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+***
+
+## 인앱보상 유형 드롭스
+
+인앱보상 유형의 드롭스는 시청자가 치지직에서 방송을 시청한 후, 게임 내에서 직접 리워드를 지급받는 방식입니다.
+
+드롭스 캠페인을 자주 진행하거나, 지급할 리워드를 자유롭게 설계하고 싶은 게임사에게 추천하는 유형입니다.
+
+<table><thead><tr><th width="215">항목</th><th>설명</th></tr></thead><tbody><tr><td>특징</td><td>시청시간을 충족한 유저에게 게임사가 게임 내에서 리워드를 직접 지급</td></tr><tr><td>필요사항</td><td>게임사는 치지직 개발자 센터에 서비스를 등록한 후, OpenAPI 인증 연동과 드롭스 관련 API 연동 등 별도의 기술 개발 필요</td></tr><tr><td>장점</td><td>드롭스의 보상으로 지급할 리워드를 게임사가 자유롭게 설계하고 지급할 수 있어 더욱 유연한 보상 구조 제공</td></tr><tr><td>시청자의 리워드 획득 조건</td><td>게임사가 설정한 리워드별 시청 시간 조건 충족</td></tr></tbody></table>
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2Fgdh3oaDylf7SzyvPyIiM%2Fimage.png?alt=media&#x26;token=4d302458-b222-4a4a-9025-8d0674046d6d" alt=""><figcaption><p>시청자가 획득한 인앱보상 리워드 예시</p></figcaption></figure>
+
+## 쿠폰코드 유형 드롭스
+
+쿠폰코드 유형의 드롭스는 시청자가 치지직에서 방송을 시청한 후, 게임사가 별도로 등록한 쿠폰코드를 치지직에서 지급받고 즉시 확인할 수 있는 방식입니다.
+
+별도의 기술 개발 없이 빠르게 드롭스 캠페인을 진행하고 싶은 게임사에게 추천하는 유형입니다.
+
+<table><thead><tr><th width="215">항목</th><th>설명</th></tr></thead><tbody><tr><td>특징</td><td>시청시간을 충족한 유저에게 치지직이 쿠폰코드 리워드를 지급<br>*게임사는 사전에 치지직 어드민에서 쿠폰코드 별도 업로드 필요</td></tr><tr><td>필요사항</td><td>게임사는 별도의 기술적 개발이나 연동이 필요하지 않으며, 치지직 개발자 센터에 서비스를 등록하는 간단한 절차만으로 드롭스 캠페인 시작 가능</td></tr><tr><td>장점</td><td>준비 과정이 간단하며 빠르게 드롭스 캠페인을 개최 가능</td></tr><tr><td>시청자의 리워드 획득 조건</td><td>게임사가 설정한 리워드별 시청 시간 조건 충족</td></tr></tbody></table>
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FBIn5VfadgDu3MXuk5S4c%2Fimage.png?alt=media&#x26;token=429cfdc3-050d-4d72-891e-b6405c4d29f4" alt=""><figcaption><p>시청자가 획득한 쿠폰코드 리워드 예시</p></figcaption></figure>
+
+***
+
+## 드롭스 캠페인 홍보 방법
+
+치지직의 다양한 유료광고를 통해 드롭스 캠페인을 더 홍보할 수 있습니다.
+
+자세한 내용은 '[Chzzk AD(치지직 유료광고)](https://chzzk.gitbook.io/chzzk/resources/chzzk-ad)'를 참고해 주세요.
+
+## 자주 묻는 질문
+
+<details>
+
+<summary>드롭스 캠페인을 개최하기 위해 필요한 절차는 무엇인가요?</summary>
+
+드롭스 캠페인을 개최하기 위해 게임사는 아래 절차를 진행해야 합니다.\
+\
+1\.  치지직 개발자 센터에 서비스 등록\
+2\. (인앱보상 유형 진행 시) 드롭스 개발 연동\
+3\. 드롭스 캠페인을 생성/관리할 수 있는 네이버 파트너 어드민 계정 신청\
+4\. 드롭스 캠페인 생성\
+\
+자세한 내용은 '[드롭스 연동 가이드](https://chzzk.gitbook.io/chzzk/drops/guide)' 를 참고해 주세요.
+
+</details>
+
+<details>
+
+<summary> 게임사가 아닌 개인도 드롭스 캠페인을 개최할 수 있나요?</summary>
+
+게임을 소유한 게임사, 퍼블리셔, 또는 제작자만 드롭스 캠페인을 개최할 수 있습니다.\
+개인 제작자의 경우 치지직 고객센터를 통해 게임의 제작자 및 소유자임을 인증해 주세요.
+
+</details>
+
+<details>
+
+<summary>치지직 개발자 센터에 서비스를 어떻게 등록하나요?</summary>
+
+<https://developers.chzzk.naver.com> 에 접속  후, 애플리케이션을 생성 및 드롭스 API 사용을 신청해 주세요. 드롭스 API의 경우 게임사, 퍼블리셔, 또는 제작자만 승인받을 수 있습니다.
+
+</details>
+
+<details>
+
+<summary>특정 스트리머(채널)만 지정해서 드롭스를 진행할 수 있나요?</summary>
+
+네, 특정 스트리머(채널)만 지정해서 드롭스를 진행할 수 있습니다. 자세한 내용은 '[드롭스 캠페인 생성 및 관리 가이드](https://chzzk.gitbook.io/chzzk/drops/manual)' 를 참고해 주세요.
+
+</details>
+
+<details>
+
+<summary>드롭스 캠페인 시작 전에 테스트를 해볼 수 있나요?</summary>
+
+네, 캠페인을 테스트 상태로 등록한 후, 특정 아이디로만 방송 및 시청을 테스트해볼 수 있습니다. 자세한 내용은 '[드롭스 캠페인 생성 및 관리 가이드](https://chzzk.gitbook.io/chzzk/drops/manual)' 를 참고해 주세요.
+
+</details>
+
+
+# 드롭스 연동 및 절차
+
+아래 탭을 선택하여 유형별 드롭스 연동 및 진행 절차를 확인해 주세요.
+
+{% tabs %}
+{% tab title="인앱보상 유형" %}
+
+1. **치지직 개발자 센터에 애플리케이션 등록**\
+   \
+   <https://developers.chzzk.naver.com> 에 접속 후, 애플리케이션을 생성 및 드롭스 API 사용을 신청해 주세요. 드롭스 API의 경우 게임사, 퍼블리셔, 또는 제작자만 승인받을 수 있습니다.\
+   \*게임사 또는 퍼블리셔는 법인을 인증하기 위해 네이버 단체 ID로 개발자 센터에 로그인 및 치지직 스튜디오에서 비즈니스 채널을 신청해 주세요.\
+   　<br>
+2. **치지직에서 드롭스 캠페인을 생성/관리할 수 있는 네이버 파트너 어드민 계정 신청**\
+   \
+   드롭스 캠페인을 생성/관리하기 위해서는 네이버 파트너 어드민인 Friend 서비스에 접속할 수 있는 계정을 생성하고 드롭스 관리 권한을 부여받아야 합니다.\
+   이미 Friend 어드민 계정이 있는 게임사의 경우에는 어드민 계정 생성 단계는 생략 후 드롭스 캠페인 관리 권한 부여에 필요한 정보만 전달해 주세요.\
+   \
+   ▶ 파트너 어드민 계정 생성 및 드롭스 권한 부여 신청 방법 :  \
+   아래 정보와 함께dl\_<chzzk_dropsadmin@navercorp.com> 로 요청해 주세요.\
+   \*위 메일은 계정 생성 및 권한 부여 신청 목적의 메일입니다. 캠페인 생성 및 관리 등 드롭스에 대한 일반 문의는 <dl_chzzk_drops@navercorp.com> 로 요청해 주세요<br>
+
+   <pre data-overflow="wrap"><code>1. 치지직 어드민 접근권한 (FRA 계정) 보유 여부 : Yes/No 로 입력해 주세요.
+
+   - 1번 항목이 Yes 인 경우 필요한 추가 정보
+   1-1. 드롭스 관리에 사용할 Friend 어드민 계정 ID : FRAOOOOO 형식으로 입력해 주세요.
+   2. 연동 희망하는 게임 타이틀명 : 드롭스 캠페인을 진행하고자 하는 게임의 타이틀명을 치지직에 등록된 방송 카테고리명 기준으로 적어주세요. 복수로 신청하고자 하는 경우 쉼표(,)로 구분하여 적어주세요.
+   3. 연동할 치지직 개발자센터 애플리케이션 ID : 치지직 개발자 센터에 등록한 애플리케이션ID를 동일하게 입력해 주세요.
+
+   - 1번 항목이 No 인 경우 필요한 추가 정보
+   1-2. 신청 담당자 성함(국문)
+   1-3. 신청 담당자 성함(영문)
+   1-4. 회사명(국문)
+   1-5. 회사명(영문)
+   1-6. 신청 담당자 이메일
+   1-7. 신청 담당자 전화번호
+   2. 연동 희망하는 게임 타이틀명 : 드롭스 캠페인을 진행하고자 하는 게임의 타이틀명을 치지직에 등록된 방송 카테고리명 기준으로 적어주세요. 복수로 신청하고자 하는 경우 쉼표(,)로 구분하여 적어주세요.
+   3. 연동할 치지직 개발자센터 애플리케이션 ID : 치지직 개발자 센터에 등록한 애플리케이션ID를 동일하게 입력해 주세요.
+   </code></pre>
+
+   \*전달해주신 정보를 확인한 후, 파트너 어드민 계정 초대 메일을 발송하게 됩니다. 해당 절차는 최대 1\~2일 정도가 소요될 수 있습니다.\
+   **\***&#xCE58;지직 드롭스 관리를 위한 프렌드 계정 생성 지원을 위해 개인정보 보호법 제15조제1항제4호(계약 체결/이행)에 따라, 다음과 같은 개인정보를 수집·이용합니다.\
+   &#x20; ■ 수집하는 개인정보 항목 : 신청자의 이름, 소속회사, 전화번호, 이메일 주소\
+   &#x20;      자세한 사항은 [개인정보 처리방침](https://policy.naver.com/policy/privacy.html)을 참고해주시기 바랍니다.\
+   　<br>
+3. **인앱보상 리워드 지급을 위한 기술적인 적용**\
+   \
+   아래 가이드를 참고하여 기술 연동을 진행해 주세요. Webhook 이벤트만으로 드롭스 지급이 가능합니다. 보다 더 정확한 지급 여부 검증을 위해 드롭스 API까지 추가로 사용할 수 있습니다.\
+   ▶ [Webhook 가이드](https://chzzk.gitbook.io/chzzk/drops/webhook)\
+   ▶ [드롭스 API 가이드](https://chzzk.gitbook.io/chzzk/chzzk-api/drops)\
+   　<br>
+4. **Friends 서비스에 접속 후 드롭스 캠페인 생성**\
+   \
+   파트너 어드민인 Friend 서비스에 접속하여 드롭스 캠페인을 생성 및 관리할 수 있으며, 테스트 캠페인도 생성할 수 있습니다. 또한 파트너 어드민에서 API 호출 테스트, 인앱보상 드롭스 리워드의 지급 테스트 등도 진행 가능합니다.\
+   캠페인 생성/관리 관련한 자세한 내용은 '[드롭스 캠페인 생성 및 관리 가이드](https://chzzk.gitbook.io/chzzk/drops/manual)'를 참고해 주세요.
+   {% endtab %}
+
+{% tab title="쿠폰코드 유형" %}
+
+1. **치지직 개발자 센터에 애플리케이션 등록**\
+   \
+   <https://developers.chzzk.naver.com> 에 접속 후, 애플리케이션을 생성해 주세요.\
+   \*게임사 또는 퍼블리셔는 법인을 인증하기 위해 네이버 단체 ID로 개발자 센터에 로그인 및 치지직 스튜디오에서 비즈니스 채널을 신청해 주세요.\
+   　<br>
+2. **치지직에서 드롭스 캠페인을 생성/관리할 수 있는 네이버 파트너 어드민 계정 신청**\
+   \
+   드롭스 캠페인을 생성/관리하기 위해서는 네이버 파트너 어드민인 Friend 서비스에 접속할 수 있는 계정을 생성하고 드롭스 관리 권한을 부여받아야 합니다. \
+   이미 Friend 어드민 계정이 있는 게임사의 경우에는 어드민 계정 생성 단계는 생략 후 드롭스 캠페인 관리 권한 부여에 필요한 정보만 전달해 주세요.\
+   \
+   ▶ 파트너 어드민 계정 생성 및 드롭스 권한 부여 신청 방법 :  아래 정보와 함께dl\_<chzzk_dropsadmin@navercorp.com> 로 요청해 주세요.\
+   \*위 메일은 계정 생성 및 권한 부여 신청 목적의 메일입니다. 캠페인 생성 및 관리 등 드롭스에 대한 일반 문의는 <dl_chzzk_drops@navercorp.com> 로 요청해 주세요<br>
+
+   <pre data-overflow="wrap"><code>1. 치지직 어드민 접근권한 (FRA 계정) 보유 여부 : Yes/No 로 입력해 주세요.
+
+   - 1번 항목이 Yes 인 경우 필요한 추가 정보
+   1-1. 드롭스 관리에 사용할 Friend 어드민 계정 ID : FRAOOOOO 형식으로 입력해 주세요.
+   2. 연동 희망하는 게임 타이틀명 : 드롭스 캠페인을 진행하고자 하는 게임의 타이틀명을 치지직에 등록된 방송 카테고리명 기준으로 적어주세요. 복수로 신청하고자 하는 경우 쉼표(,)로 구분하여 적어주세요.
+   3. 연동할 치지직 개발자센터 애플리케이션 ID : 치지직 개발자 센터에 등록한 애플리케이션ID를 동일하게 입력해 주세요.
+
+   - 1번 항목이 No 인 경우 필요한 추가 정보
+   1-2. 신청 담당자 성함(국문)
+   1-3. 신청 담당자 성함(영문)
+   1-4. 회사명(국문)
+   1-5. 회사명(영문)
+   1-6. 신청 담당자 이메일
+   1-7. 신청 담당자 전화번호
+   2. 연동 희망하는 게임 타이틀명 : 드롭스 캠페인을 진행하고자 하는 게임의 타이틀명을 치지직에 등록된 방송 카테고리명 기준으로 적어주세요. 복수로 신청하고자 하는 경우 쉼표(,)로 구분하여 적어주세요.
+   3. 연동할 치지직 개발자센터 애플리케이션 ID : 치지직 개발자 센터에 등록한 애플리케이션ID를 동일하게 입력해 주세요.
+   </code></pre>
+
+   \*전달해주신 정보를 확인한 후, 파트너 어드민 계정 초대 메일을 발송하게 됩니다. 해당 절차는 최대 1\~2일 정도가 소요될 수 있습니다.\
+   **\***&#xCE58;지직 드롭스 관리를 위한 프렌드 계정 생성 지원을 위해 개인정보 보호법 제15조제1항제4호(계약 체결/이행)에 따라, 다음과 같은 개인정보를 수집·이용합니다.\
+   &#x20; ■ 수집하는 개인정보 항목 : 신청자의 이름, 소속회사, 전화번호, 이메일 주소\
+   &#x20;      자세한 사항은 [개인정보 처리방침](https://policy.naver.com/policy/privacy.html)을 참고해주시기 바랍니다.\
+   　<br>
+3. **Friends 서비스에 접속 후 드롭스 캠페인 생성**\
+   \
+   파트너 어드민인 Friend 서비스에 접속하여 드롭스 캠페인을 생성 및 관리할 수 있으며, 테스트 캠페인도 생성할 수 있습니다. 또한 파트너 어드민에서 쿠폰코드 드롭스 리워드의 지급 테스트도 가능합니다.\
+   캠페인 생성/관리 관련한 자세한 내용은 '[드롭스 캠페인 생성 및 관리 가이드](https://chzzk.gitbook.io/chzzk/drops/manual)'를 참고해 주세요.
+   {% endtab %}
+   {% endtabs %}
+
+
+# Webhook Event
+
+치지직 Webhook을 이용하여 이벤트 알림(Notification Message)을 받는 방법을 안내하기 위한 가이드 문서입니다.
+
+## 1.1 Event Subscription
+
+이벤트 발생 알림을 받기 위해 이벤트를 구독할 수 있는 기능을 제공합니다.&#x20;
+
+* Webhook을 이용하여 이벤트 알림(Notification Message)을 받는 방법을 우선적 제공하고 있습니다.
+* 치지직 개발자 센터 사용 신청과 이벤트 알림을 받을 Webhook URL 등록이 완료 되어있는지 확인해 주세요.
+
+## 1.2 Handling Webhook Event
+
+* POST 요청 Webhook URL로 이벤트가 전송되게 됩니다.
+* Webhook URL은 반드시 SSL 사용과 443 port가 열려있어야 합니다. (HTTPS 필수)
+* Webhook POST 요청 응답은 반드시 수 초 이내 응답이 전달되어야 하며, 메시지 발송이 제대로 가지 않았다고 판단이 되면 최대 3번의 메시지 재발송이 이루어집니다. (자세한 retry 관련 설명은 Request Header의 Retry 헤더관련 내용 참조)
+* Webhook POST 요청 응답 상태 코드는 2XX 형태의 코드여야 합니다. 그 외는 모두 실패로 간주합니다.
+
+### 1.2.1 Request Header
+
+<table><thead><tr><th width="327">Header</th><th>Description</th></tr></thead><tbody><tr><td>Chzzk-Event-Message-Id</td><td>메시지 식별자 ID</td></tr><tr><td>Chzzk-Event-Message-Timestamp</td><td>메시지 발송 시각 UTC datetime(RFC 3339)</td></tr><tr><td>Chzzk-Event-Message-Signature</td><td>HMAC signature, 치지직에서 보낸 메시지가 맞는지 검증 용도로 사용 필요</td></tr><tr><td>Chzzk-Event-Message-Type</td><td>message type 유형<br>현재 <code>notification</code> value로만 제공</td></tr><tr><td>Chzzk-Event-Message-Data-Type</td><td>이벤트 데이터 유형 (참조 : Event Types)</td></tr><tr><td>Chzzk-Event-Message-Version</td><td>message 형식 버전<br><code>message.version</code> 값과 일치<br>(참조 : Notification Message)</td></tr><tr><td>Chzzk-Event-Message-Data-Version</td><td>eventType 에 따른 data 형식 버전<br><code>message.event.version</code> 값과 일치<br>(참조 : Notification Message)</td></tr><tr><td>Chzzk-Event-Message-Retry</td><td>이벤트 재발송 횟수<br>정상적인 경우 보통 한 번의 메시지만 발송하지만, 알림을 수신 받는 곳에서 정상적으로 응답하지 않는다고 판단했을 경우 다시 한번 이벤트를 재발송함.<br><code>Chzzk-Event-Message-Id</code>헤더에 같은 id의 메시지가 여러 차례 재발송 될 수 있음<br>(참조 : Retry Policy)<br><strong>Note :</strong> 재발송 경우에만 Retry 헤더를 전달함</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+### 1.2.2 Notification Message
+
+* Webhook URL로 POST 요청을 전송하게 됩니다.
+* Reqeust body를 JSON parsing 하여 사용합니다.
+* JSON parsing을 완료할 경우 다음과 같은 형태의 메시지를 응답 받습니다.
+
+예) 메시지 형태
+
+`Chzzk-Event-Message-Type : notification`
+
+```json
+{
+  "message": {
+    "messageId": "eafe79192ab427be4e85e5a825c980af",
+    "version": "1",
+    "event": {
+      "eventTimeMillis": 1722477515159,
+      "version": "1",
+      "eventType": "drop_reward_claim",
+      "data": {
+        "dropsClaimId": "97",
+        "channelId": "${channelId}",
+        "dropsRewardId": "2",
+        "dropsCampaignId": "c91f66d879fb96e39d2f44e0d6094e8a",
+		"dropsCategoryId": "CATEGORY_CHZZK",
+        "dropsCategoryName": "치지직",
+        "dropsClaimDate": "2024-08-01T01:58:33Z"
+      }
+    }
+  },
+  "subscription": {
+    "clientId": "${clientId}",
+    "status": "ENABLED",
+    "method": {
+      "methodType": "WEBHOOK",
+      "url": "${Webhook URL}"
+    }
+  }
+}
+
+```
+
+**Notification Message fields**
+
+<table><thead><tr><th width="174">Name</th><th width="138">Type</th><th>Description</th></tr></thead><tbody><tr><td>message</td><td>Message</td><td>이벤트 정보 및 내용을 포함</td></tr><tr><td>subscription</td><td>Subscription</td><td>이벤트를 수신 받는 client 의 metadata</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Message**
+
+<table><thead><tr><th width="172">Name</th><th width="138">Type</th><th>Description</th></tr></thead><tbody><tr><td>messageId</td><td>String</td><td>메시지 식별자 id</td></tr><tr><td>version</td><td>String</td><td>message 형식 버전 Chzzk-Event-Message-Version 헤더 값과 동일</td></tr><tr><td>event</td><td>Event</td><td>이벤트 정보<br>이벤트 타입에 따라 데이터가 달라질 수 있음</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Event**
+
+<table><thead><tr><th width="171">Name</th><th width="141">Type</th><th>Description</th></tr></thead><tbody><tr><td>eventTimeMillis</td><td>long</td><td>이벤트 발생시각 밀리 초 단위 (UTC)</td></tr><tr><td>version</td><td>String</td><td>Event data 형식 버전 Chzzk-Event-Message-Data-Version 헤더 값과 동일</td></tr><tr><td>eventType</td><td>String</td><td>이벤트 데이터 유형 (참조 : Event Types)</td></tr><tr><td>data</td><td>Data</td><td>이벤트 정보<br>이벤트 타입에 따라 데이터가 달라질 수 있음 (참조 : Event Types)</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Subscription**
+
+<table><thead><tr><th width="172">Name</th><th width="141">Type</th><th>Description</th></tr></thead><tbody><tr><td>clientId</td><td>String</td><td>clientId</td></tr><tr><td>status</td><td>String</td><td>현재 구독상태<br>(DISABLED 경우엔 이벤트가 전달되지 않으므로 ENABLED가 기본값으로 전달됨)</td></tr><tr><td>method</td><td>Method</td><td>이벤트 전송 방법</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Method**
+
+<table><thead><tr><th width="173">Name</th><th width="140">Type</th><th>Description</th></tr></thead><tbody><tr><td>methodType</td><td>String</td><td>Notification type의 경우 현재 WEBHOOK 값으로만 전달됨</td></tr><tr><td>url</td><td>String</td><td>Webhook URL</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+&#x20;
+
+## 1.3 Event Types
+
+<table><thead><tr><th width="199">Name</th><th width="176">Type</th><th width="85">Version</th><th>Description</th></tr></thead><tbody><tr><td>Drop Reward Claim</td><td>drop_reward_claim</td><td>1</td><td>드롭스 리워드 아이템 신청 이벤트</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+### 1.3.1 drops\_reward\_claim
+
+eventType이 drop\_reward\_claim으로 전달됩니다.
+
+&#x20;
+
+**Event Data**
+
+<table><thead><tr><th width="203">Name</th><th width="174">Type</th><th>Description</th></tr></thead><tbody><tr><td>dropsClaimId</td><td>String</td><td>지급 신청 데이터의 고유한 식별자 ID</td></tr><tr><td>channelId</td><td>String</td><td>치지직 프로필을 사용하는 유저의 고유한 식별자 ID</td></tr><tr><td>dropsRewardId</td><td>String</td><td>신청한 리워드 아이템 ID</td></tr><tr><td>dropsCampaignId</td><td>String</td><td>진행하고 있는 캠페인 ID</td></tr><tr><td>dropsCategoryId</td><td>String</td><td>캠페인에 할당된 카테고리 ID</td></tr><tr><td>dropsCategoryName</td><td>String</td><td>캠페인에 할당된 노출 가능한 카테고리 이름</td></tr><tr><td>dropsClaimDate</td><td>String</td><td>지급 신청한 날짜 UTC datetime(RFC 3339)</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+&#x20;
+
+## 1.4 Event Message Verification
+
+* 이벤트 메시지를 처리하기 전에 알림을 수신 받는 곳에서 반드시 치지직에서 보낸 메시지인지 확인하는 과정이 필요합니다.
+* 치지직 개발자 센터 > 서비스 client 등록 시 발급되는 client 의 secret key를 비밀키로 사용하여 HMAC-SHA256 서명을 생성합니다.
+* 아래의 코드 snippet을 확인하여 검증 구현이 필요합니다.
+  * Javascript 에서는 헤더를 소문자로 표기해야 합니다.
+  * Signature 가 매칭되지 않는다면, 2xx 상태코드가 아닌 4xx 상태코드 값으로 반환해야 합니다..
+
+`Javascript`
+
+```javascript
+const crypto = require('crypto');
+const express = require('express');
+const app = express();
+
+// Notification request headers
+const CHZZK_MESSAGE_ID = 'CHZZK-EVENT-MESSAGE-ID'.toLowerCase();
+const CHZZK_MESSAGE_TIMESTAMP = 'CHZZK-EVENT-MESSAGE-TIMESTAMP'.toLowerCase();
+const CHZZK_MESSAGE_SIGNATURE = 'CHZZK-EVENT-MESSAGE-SIGNATURE'.toLowerCase();
+const CHZZK_MESSAGE_TYPE = 'CHZZK-EVENT-MESSAGE-TYPE'.toLowerCase();
+const CHZZK_MESSAGE_TYPE_NOTIFICATION = 'NOTIFICATION'.toLowerCase();
+
+const HMAC_PREFIX = 'sha256=';
+
+......
+
+    let secret = getSecret();
+    let message = getHmacMessage(req);
+    let hmac = HMAC_PREFIX + getHmac(secret, message);
+
+    if (true === verifyMessage(hmac, req.headers[CHZZK_MESSAGE_SIGNATURE])) {
+
+        let notification = JSON.parse(req.body);
+
+        if (CHZZK_MESSAGE_TYPE_NOTIFICATION === req.headers[CHZZK_MESSAGE_TYPE]) {
+            console.log(JSON.stringify(notification));
+            res.sendStatus(200);
+        }
+    } else {
+        console.log('403');
+        res.sendStatus(403);
+    }
+});
+
+function getSecret() {
+    // client 등록 시 발급되는 secret key를 비밀키로 사용 (아래는 예시 실제 시크릿키 아님)
+    return "${secretKey}";
+}
+
+
+function getHmacMessage(request) {
+    return (request.headers[CHZZK_MESSAGE_ID] +
+        request.headers[CHZZK_MESSAGE_TIMESTAMP] +
+        request.body);
+}
+
+
+function getHmac(secret, message) {
+    return crypto.createHmac('sha256', secret)
+        .update(message)
+        .digest('hex');
+}
+
+
+function verifyMessage(hmac, verifySignature) {
+    return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(verifySignature));
+}
+
+```
+
+`Java`
+
+```java
+public class WebhookNotificationSubscriptionTest {
+
+    private static final String CHZZK_MESSAGE_ID = "Chzzk-Event-Message-Id";
+    private static final String CHZZK_MESSAGE_TIMESTAMP = "Chzzk-Event-Message-Timestamp";
+    private static final String CHZZK_MESSAGE_SIGNATURE = "Chzzk-Event-Message-Signature";
+    private static final String CHZZK_MESSAGE_TYPE = "Chzzk-Event-Message-Type";
+    private static final String CHZZK_MESSAGE_TYPE_NOTIFICATION = "notification";
+    private static final String HMAC_PREFIX = "sha256=";
+    private static final String HMAC_ALGORITHM = "HmacSHA256";
+
+    public void handleEvent(String body, HttpServletRequest httpServletRequest) throws NoSuchAlgorithmException, InvalidKeyException {
+
+        String secret = getSecret();
+        String message = getHmacMessage(httpServletRequest, body);
+        String hmac = HMAC_PREFIX + generateHmac(secret, message);
+
+        if (verifyMessage(hmac, httpServletRequest.getHeader(CHZZK_MESSAGE_SIGNATURE))) {
+            if (CHZZK_MESSAGE_TYPE_NOTIFICATION.equals(httpServletRequest.getHeader(CHZZK_MESSAGE_TYPE))) {
+                System.out.println("success: " + body);
+                                // Body Json Parsing
+            }
+        } else {
+            // 검증되지 않은 메시지 확인
+        }
+    }
+
+    private String getSecret() {
+        return "${secretKey}";
+    }
+
+    private String getHmacMessage(HttpServletRequest httpServletRequest, String body) {
+        return httpServletRequest.getHeader(CHZZK_MESSAGE_ID) +
+            httpServletRequest.getHeader(CHZZK_MESSAGE_TIMESTAMP) +
+            body;
+    }
+
+
+    private String generateHmac(String secret, String message) throws NoSuchAlgorithmException, InvalidKeyException {
+        Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM);
+        mac.init(secretKeySpec);
+        byte[] hmacBytes = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
+        return bytesToHex(hmacBytes);
+    }
+
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+    private boolean verifyMessage(String hmac, String verifySignature) {
+        return hmac.equals(verifySignature);
+    }
+}
+
+```
+
+### 1.4.1 Retry Policy
+
+이벤트 발송에 문제가 생겼을 경우(응답 속도가 느리거나, 5xx에러 발생 시) notification message 재발송이 정상적으로 전송될 때까지 최대 3회 발송합니다.
+
+`Chzzk-Event-Message-Retry` 헤더를 참고하여 재발송에 대한 이벤트 확인 및 재발송에 대한 처리(중복 메시지 처리) 구현이 필요합니다.\
+\*이벤트 재발송의 eventTimeMillis(이벤트 발생 시각)는 메시지 전송시각이 아닌 재발송 전 이벤트 전송 시작 시간을 기반으로 전송합니다.
+
+
+# Webhook Event
+
+치지직 Webhook을 이용하여 이벤트 알림(Notification Message)을 받는 방법을 안내하기 위한 가이드 문서입니다.
+
+## 1.1 Event Subscription
+
+이벤트 발생 알림을 받기 위해 이벤트를 구독할 수 있는 기능을 제공합니다.&#x20;
+
+* Webhook을 이용하여 이벤트 알림(Notification Message)을 받는 방법을 우선적 제공하고 있습니다.
+* 치지직 개발자 센터 사용 신청과 이벤트 알림을 받을 Webhook URL 등록이 완료 되어있는지 확인해 주세요.
+
+## 1.2 Handling Webhook Event
+
+* POST 요청 Webhook URL로 이벤트가 전송되게 됩니다.
+* Webhook URL은 반드시 SSL 사용과 443 port가 열려있어야 합니다. (HTTPS 필수)
+* Webhook POST 요청 응답은 반드시 수 초 이내 응답이 전달되어야 하며, 메시지 발송이 제대로 가지 않았다고 판단이 되면 최대 3번의 메시지 재발송이 이루어집니다. (자세한 retry 관련 설명은 Request Header의 Retry 헤더관련 내용 참조)
+* Webhook POST 요청 응답 상태 코드는 2XX 형태의 코드여야 합니다. 그 외는 모두 실패로 간주합니다.
+
+### 1.2.1 Request Header
+
+<table><thead><tr><th width="327">Header</th><th>Description</th></tr></thead><tbody><tr><td>Chzzk-Event-Message-Id</td><td>메시지 식별자 ID</td></tr><tr><td>Chzzk-Event-Message-Timestamp</td><td>메시지 발송 시각 UTC datetime(RFC 3339)</td></tr><tr><td>Chzzk-Event-Message-Signature</td><td>HMAC signature, 치지직에서 보낸 메시지가 맞는지 검증 용도로 사용 필요</td></tr><tr><td>Chzzk-Event-Message-Type</td><td>message type 유형<br>현재 <code>notification</code> value로만 제공</td></tr><tr><td>Chzzk-Event-Message-Data-Type</td><td>이벤트 데이터 유형 (참조 : Event Types)</td></tr><tr><td>Chzzk-Event-Message-Version</td><td>message 형식 버전<br><code>message.version</code> 값과 일치<br>(참조 : Notification Message)</td></tr><tr><td>Chzzk-Event-Message-Data-Version</td><td>eventType 에 따른 data 형식 버전<br><code>message.event.version</code> 값과 일치<br>(참조 : Notification Message)</td></tr><tr><td>Chzzk-Event-Message-Retry</td><td>이벤트 재발송 횟수<br>정상적인 경우 보통 한 번의 메시지만 발송하지만, 알림을 수신 받는 곳에서 정상적으로 응답하지 않는다고 판단했을 경우 다시 한번 이벤트를 재발송함.<br><code>Chzzk-Event-Message-Id</code>헤더에 같은 id의 메시지가 여러 차례 재발송 될 수 있음<br>(참조 : Retry Policy)<br><strong>Note :</strong> 재발송 경우에만 Retry 헤더를 전달함</td></tr><tr><td></td><td></td></tr></tbody></table>
+
+### 1.2.2 Notification Message
+
+* Webhook URL로 POST 요청을 전송하게 됩니다.
+* Reqeust body를 JSON parsing 하여 사용합니다.
+* JSON parsing을 완료할 경우 다음과 같은 형태의 메시지를 응답 받습니다.
+
+예) 메시지 형태
+
+`Chzzk-Event-Message-Type : notification`
+
+```json
+{
+  "message": {
+    "messageId": "eafe79192ab427be4e85e5a825c980af",
+    "version": "1",
+    "event": {
+      "eventTimeMillis": 1722477515159,
+      "version": "1",
+      "eventType": "drop_reward_claim",
+      "data": {
+        "dropsClaimId": "97",
+        "channelId": "${channelId}",
+        "dropsRewardId": "2",
+        "dropsCampaignId": "c91f66d879fb96e39d2f44e0d6094e8a",
+		"dropsCategoryId": "CATEGORY_CHZZK",
+        "dropsCategoryName": "치지직",
+        "dropsClaimDate": "2024-08-01T01:58:33Z"
+      }
+    }
+  },
+  "subscription": {
+    "clientId": "${clientId}",
+    "status": "ENABLED",
+    "method": {
+      "methodType": "WEBHOOK",
+      "url": "${Webhook URL}"
+    }
+  }
+}
+
+```
+
+**Notification Message fields**
+
+<table><thead><tr><th width="174">Name</th><th width="138">Type</th><th>Description</th></tr></thead><tbody><tr><td>message</td><td>Message</td><td>이벤트 정보 및 내용을 포함</td></tr><tr><td>subscription</td><td>Subscription</td><td>이벤트를 수신 받는 client 의 metadata</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Message**
+
+<table><thead><tr><th width="172">Name</th><th width="138">Type</th><th>Description</th></tr></thead><tbody><tr><td>messageId</td><td>String</td><td>메시지 식별자 id</td></tr><tr><td>version</td><td>String</td><td>message 형식 버전 Chzzk-Event-Message-Version 헤더 값과 동일</td></tr><tr><td>event</td><td>Event</td><td>이벤트 정보<br>이벤트 타입에 따라 데이터가 달라질 수 있음</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Event**
+
+<table><thead><tr><th width="171">Name</th><th width="141">Type</th><th>Description</th></tr></thead><tbody><tr><td>eventTimeMillis</td><td>long</td><td>이벤트 발생시각 밀리 초 단위 (UTC)</td></tr><tr><td>version</td><td>String</td><td>Event data 형식 버전 Chzzk-Event-Message-Data-Version 헤더 값과 동일</td></tr><tr><td>eventType</td><td>String</td><td>이벤트 데이터 유형 (참조 : Event Types)</td></tr><tr><td>data</td><td>Data</td><td>이벤트 정보<br>이벤트 타입에 따라 데이터가 달라질 수 있음 (참조 : Event Types)</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Subscription**
+
+<table><thead><tr><th width="172">Name</th><th width="141">Type</th><th>Description</th></tr></thead><tbody><tr><td>clientId</td><td>String</td><td>clientId</td></tr><tr><td>status</td><td>String</td><td>현재 구독상태<br>(DISABLED 경우엔 이벤트가 전달되지 않으므로 ENABLED가 기본값으로 전달됨)</td></tr><tr><td>method</td><td>Method</td><td>이벤트 전송 방법</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+**Method**
+
+<table><thead><tr><th width="173">Name</th><th width="140">Type</th><th>Description</th></tr></thead><tbody><tr><td>methodType</td><td>String</td><td>Notification type의 경우 현재 WEBHOOK 값으로만 전달됨</td></tr><tr><td>url</td><td>String</td><td>Webhook URL</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+&#x20;
+
+## 1.3 Event Types
+
+<table><thead><tr><th width="199">Name</th><th width="176">Type</th><th width="85">Version</th><th>Description</th></tr></thead><tbody><tr><td>Drop Reward Claim</td><td>drop_reward_claim</td><td>1</td><td>드롭스 리워드 아이템 신청 이벤트</td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+
+### 1.3.1 drops\_reward\_claim
+
+eventType이 drop\_reward\_claim으로 전달됩니다.
+
+&#x20;
+
+**Event Data**
+
+<table><thead><tr><th width="203">Name</th><th width="174">Type</th><th>Description</th></tr></thead><tbody><tr><td>dropsClaimId</td><td>String</td><td>지급 신청 데이터의 고유한 식별자 ID</td></tr><tr><td>channelId</td><td>String</td><td>치지직 프로필을 사용하는 유저의 고유한 식별자 ID</td></tr><tr><td>dropsRewardId</td><td>String</td><td>신청한 리워드 아이템 ID</td></tr><tr><td>dropsCampaignId</td><td>String</td><td>진행하고 있는 캠페인 ID</td></tr><tr><td>dropsCategoryId</td><td>String</td><td>캠페인에 할당된 카테고리 ID</td></tr><tr><td>dropsCategoryName</td><td>String</td><td>캠페인에 할당된 노출 가능한 카테고리 이름</td></tr><tr><td>dropsClaimDate</td><td>String</td><td>지급 신청한 날짜 UTC datetime(RFC 3339)</td></tr><tr><td></td><td></td><td></td></tr></tbody></table>
+
+&#x20;
+
+## 1.4 Event Message Verification
+
+* 이벤트 메시지를 처리하기 전에 알림을 수신 받는 곳에서 반드시 치지직에서 보낸 메시지인지 확인하는 과정이 필요합니다.
+* 치지직 개발자 센터 > 서비스 client 등록 시 발급되는 client 의 secret key를 비밀키로 사용하여 HMAC-SHA256 서명을 생성합니다.
+* 아래의 코드 snippet을 확인하여 검증 구현이 필요합니다.
+  * Javascript 에서는 헤더를 소문자로 표기해야 합니다.
+  * Signature 가 매칭되지 않는다면, 2xx 상태코드가 아닌 4xx 상태코드 값으로 반환해야 합니다..
+
+`Javascript`
+
+```javascript
+const crypto = require('crypto');
+const express = require('express');
+const app = express();
+
+// Notification request headers
+const CHZZK_MESSAGE_ID = 'CHZZK-EVENT-MESSAGE-ID'.toLowerCase();
+const CHZZK_MESSAGE_TIMESTAMP = 'CHZZK-EVENT-MESSAGE-TIMESTAMP'.toLowerCase();
+const CHZZK_MESSAGE_SIGNATURE = 'CHZZK-EVENT-MESSAGE-SIGNATURE'.toLowerCase();
+const CHZZK_MESSAGE_TYPE = 'CHZZK-EVENT-MESSAGE-TYPE'.toLowerCase();
+const CHZZK_MESSAGE_TYPE_NOTIFICATION = 'NOTIFICATION'.toLowerCase();
+
+const HMAC_PREFIX = 'sha256=';
+
+......
+
+    let secret = getSecret();
+    let message = getHmacMessage(req);
+    let hmac = HMAC_PREFIX + getHmac(secret, message);
+
+    if (true === verifyMessage(hmac, req.headers[CHZZK_MESSAGE_SIGNATURE])) {
+
+        let notification = JSON.parse(req.body);
+
+        if (CHZZK_MESSAGE_TYPE_NOTIFICATION === req.headers[CHZZK_MESSAGE_TYPE]) {
+            console.log(JSON.stringify(notification));
+            res.sendStatus(200);
+        }
+    } else {
+        console.log('403');
+        res.sendStatus(403);
+    }
+});
+
+function getSecret() {
+    // client 등록 시 발급되는 secret key를 비밀키로 사용 (아래는 예시 실제 시크릿키 아님)
+    return "${secretKey}";
+}
+
+
+function getHmacMessage(request) {
+    return (request.headers[CHZZK_MESSAGE_ID] +
+        request.headers[CHZZK_MESSAGE_TIMESTAMP] +
+        request.body);
+}
+
+
+function getHmac(secret, message) {
+    return crypto.createHmac('sha256', secret)
+        .update(message)
+        .digest('hex');
+}
+
+
+function verifyMessage(hmac, verifySignature) {
+    return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(verifySignature));
+}
+
+```
+
+`Java`
+
+```java
+public class WebhookNotificationSubscriptionTest {
+
+    private static final String CHZZK_MESSAGE_ID = "Chzzk-Event-Message-Id";
+    private static final String CHZZK_MESSAGE_TIMESTAMP = "Chzzk-Event-Message-Timestamp";
+    private static final String CHZZK_MESSAGE_SIGNATURE = "Chzzk-Event-Message-Signature";
+    private static final String CHZZK_MESSAGE_TYPE = "Chzzk-Event-Message-Type";
+    private static final String CHZZK_MESSAGE_TYPE_NOTIFICATION = "notification";
+    private static final String HMAC_PREFIX = "sha256=";
+    private static final String HMAC_ALGORITHM = "HmacSHA256";
+
+    public void handleEvent(String body, HttpServletRequest httpServletRequest) throws NoSuchAlgorithmException, InvalidKeyException {
+
+        String secret = getSecret();
+        String message = getHmacMessage(httpServletRequest, body);
+        String hmac = HMAC_PREFIX + generateHmac(secret, message);
+
+        if (verifyMessage(hmac, httpServletRequest.getHeader(CHZZK_MESSAGE_SIGNATURE))) {
+            if (CHZZK_MESSAGE_TYPE_NOTIFICATION.equals(httpServletRequest.getHeader(CHZZK_MESSAGE_TYPE))) {
+                System.out.println("success: " + body);
+                                // Body Json Parsing
+            }
+        } else {
+            // 검증되지 않은 메시지 확인
+        }
+    }
+
+    private String getSecret() {
+        return "${secretKey}";
+    }
+
+    private String getHmacMessage(HttpServletRequest httpServletRequest, String body) {
+        return httpServletRequest.getHeader(CHZZK_MESSAGE_ID) +
+            httpServletRequest.getHeader(CHZZK_MESSAGE_TIMESTAMP) +
+            body;
+    }
+
+
+    private String generateHmac(String secret, String message) throws NoSuchAlgorithmException, InvalidKeyException {
+        Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM);
+        mac.init(secretKeySpec);
+        byte[] hmacBytes = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
+        return bytesToHex(hmacBytes);
+    }
+
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+    private boolean verifyMessage(String hmac, String verifySignature) {
+        return hmac.equals(verifySignature);
+    }
+}
+
+```
+
+### 1.4.1 Retry Policy
+
+이벤트 발송에 문제가 생겼을 경우(응답 속도가 느리거나, 5xx에러 발생 시) notification message 재발송이 정상적으로 전송될 때까지 최대 3회 발송합니다.
+
+`Chzzk-Event-Message-Retry` 헤더를 참고하여 재발송에 대한 이벤트 확인 및 재발송에 대한 처리(중복 메시지 처리) 구현이 필요합니다.\
+\*이벤트 재발송의 eventTimeMillis(이벤트 발생 시각)는 메시지 전송시각이 아닌 재발송 전 이벤트 전송 시작 시간을 기반으로 전송합니다.
+
+
+# 드롭스 캠페인 생성 및 관리 가이드
+
+드롭스 캠페인을 생성하고 관리하기 위한 가이드 문서입니다.&#x20;
+
+## 파트너 등록 및 관리 어드민 접속 방법
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FM1WuwsovocwTzEPNz04k%2Fimage.png?alt=media&#x26;token=71217fa7-77e2-4cf4-9170-127c4076f7ed" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FDi9vNv9gzBGmmsxiwyLD%2Fimage.png?alt=media&#x26;token=3a9ed7dc-e08f-42f9-87fb-103123541786" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2F6TddUq8jIniim9pug5GI%2Fimage.png?alt=media&#x26;token=bc7255d2-d5b2-437f-bc89-3bc2eabfa72d" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FIKDMZJpcHS9JJjxNSS8P%2Fimage.png?alt=media&#x26;token=2cb93e2b-ac4d-4956-a2a5-a92a2b8dbdef" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FTDrD3PAs8wSMsSSmAz1y%2Fimage.png?alt=media&#x26;token=f65dd920-3e94-4cdd-8dbd-f4e4f8a431b9" alt=""><figcaption></figcaption></figure>
+
+## 드롭스 캠페인 생성/관리
+
+파트너 등록 및 어드민 접속을 완료한 경우 드롭스 캠페인을 생성 및 관리할 수 있습니다. \
+캠페인 생성 및 관리를 위한 상세 내용 가이드는 <dl_chzzk_drops@navercorp.com> 로 요청해 주세요
+
+
+# Brand Guides
+
+치지직 로고는 브랜드를 대표하는 아이덴티티입니다.\
+웹사이트, 모바일, 인쇄매체 등 다양한 환경과 목적에 따라 사용할 수 있으며 **임의로 형태, 색상을 변형하여 사용할 수 없습니다.**
+
+또한, 치지직과 사전 협의 없이 협력, 제휴, 지원 등의 오인 또는 혼동을 주거나 브랜드의 가치를 훼손하는 사용은 금지하고 있으며, **상업적인 목적으로 사용할 수 없습니다.**
+
+치지직 브랜드를 사용하기 앞서 아래 가이드라인의 내용을 숙지하고 항목별 사용 규정을 준수해 주시길 바랍니다.
+
+**1) 기본형 로고(국문)** ([다운로드](https://csmail.naver.com/naver/alias.help?code=DGc73GW8Iv4q))
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FVCYkY1ZbXIxNP6wth864%2F01_%EA%B8%B0%EB%B3%B8%ED%98%95(%EA%B5%AD%EB%AC%B8).png?alt=media&#x26;token=ec9bafb8-fc8b-4a25-88da-157f8ceb139c" alt=""><figcaption></figcaption></figure>
+
+**2) 기본형 로고(영문)** ([다운로드](https://csmail.naver.com/naver/alias.help?code=EQ0rE7HP67hc))
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2F0O7a9eZnI8vU0tPrJXCK%2F02_%EA%B8%B0%EB%B3%B8%ED%98%95(%EC%98%81%EB%AC%B8).png?alt=media&#x26;token=432f6cfb-4ad0-4d3e-b5e6-ed0ef046a0d1" alt=""><figcaption></figcaption></figure>
+
+**3) 조합형 로고** ([다운로드](https://csmail.naver.com/naver/alias.help?code=v2e6zv52ptUu))
+
+조합형 로고가 필요할 경우 적용 환경을 고려해 선택적으로 활용할 수 있습니다.
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FzRxIIq8oGM9PquDc5vLE%2F03_%EC%A1%B0%ED%95%A9%ED%98%95%20%EB%A1%9C%EA%B3%A0.png?alt=media&#x26;token=95e98c84-2879-4676-9c04-dcbf3613082f" alt=""><figcaption></figcaption></figure>
+
+**4) 권장하지 않는 사용**
+
+일관된 브랜드 커뮤니케이션을 위해 로고 사용 시 아래 사항들을 지양해 주시기 바랍니다.
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FaP5y6ipgHTr0ojR9ll56%2F04_%EA%B6%8C%EC%9E%A5%ED%95%98%EC%A7%80%EC%95%8A%EB%8A%94%20%EC%82%AC%EC%9A%A9.png?alt=media&#x26;token=80ec3e9c-7d5a-4f42-9379-7f943bf54fbf" alt=""><figcaption></figcaption></figure>
+
+**5) 아이콘** ([다운로드](https://csmail.naver.com/naver/alias.help?code=3RlYiJrRsg3a))
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FxR7fq88vAmCpsmuF6752%2F05_%EC%95%84%EC%9D%B4%EC%BD%98.png?alt=media&#x26;token=f78b352b-fa7f-4144-9d43-9b87487826eb" alt=""><figcaption></figcaption></figure>
+
+**6) 컬러 규정**
+
+명시된 컬러 가이드게 맞게 사용하도록합니다.
+
+<figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FRZa5gEd8KpoN6yCnx6DS%2F06_%EB%B8%8C%EB%9E%9C%EB%93%9C%20%EC%BB%AC%EB%9F%AC.png?alt=media&#x26;token=720ff5f9-a5e7-4e48-96b5-67083b81e116" alt=""><figcaption></figcaption></figure>
+
+
+# Chzzk AD
+
+치지직 광고 상품을 통해 브랜드와 서비스/제품을 효과적으로 홍보할 수 있어요. \
+자세한 내용은 아래 소개서를 참고 해주세요.&#x20;
+
+* [치지직 통합 광고 상품 소개서 다운로드](https://nosp.da.naver.com/center/api/dafile/download?fileNm=NAVER_%EC%B9%98%EC%A7%80%EC%A7%81_%ED%86%B5%ED%95%A9%EA%B4%91%EA%B3%A0%EC%83%81%ED%92%88%EC%86%8C%EA%B0%9C%EC%84%9C_2026_01.pdf)
+
+그 외 사항은 광고 문의 전용 이메일 **<dl_chzzk_ad@navercorp.com>** 로 문의 바랍니다.
+
+**\[주요 광고 상품 Quick View]**
+
+1. **동영상 광고**
+
+   **1) 인스트림 프리미엄 퍼스트뷰**\
+   : 인스트림 광고 중에서 가장 처음 노출되도록 보장하는 프리미엄 상품입니다.\
+   &#x20;동영상 + 배너가 매칭되어 함께 노출 주목도가 매우 높습니다.\
+   **2) 동영상 인스트림 광고** \
+   : 라이브 방송과 VOD 영상에 전 광고, 중간 광고 형태로 노출됩니다.
+
+   <figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FoIGU1ZCrnEpjQO0aQ3SJ%2F%EB%8F%99%EC%98%81%EC%83%81.jpg?alt=media&#x26;token=d79dfa1a-f124-480b-ad62-4dc21f30afad" alt=""><figcaption></figcaption></figure>
+2. **챗 캐치 배너**\
+   : 사용자의 관심과 참여가 높은  채팅창에서 노출되는 유일한 배너 광고 상품입니다.
+
+   <figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2Fbb1flRP9l4dPzqQ3GdSn%2F%EC%B1%97%EC%BA%90%EC%B9%98.jpg?alt=media&#x26;token=5d5e775a-0b45-4d15-a0a1-8526681b49b2" alt=""><figcaption></figcaption></figure>
+3. **배너 패키지** \
+   : PC 지면에 노출되는 띠배너 형태의 광고 상품입니다.
+
+   <figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2F8mtHrOeb5hPg15oom7i8%2F%EA%B4%91%EA%B3%A0%ED%8E%98%EC%9D%B4%EC%A7%80_%EB%B0%B0%EB%84%88.jpg?alt=media&#x26;token=bcdfb42d-b30e-49ce-9532-3ad1c8fede4e" alt=""><figcaption></figcaption></figure>
+4. **광고 확장팩**\
+   : 공식게임 대회 진행 시 구매할 수 있는 광고 상품으로, 여러 지면에서 임팩트 있게 노출되는 상품입니다.\
+   (※  게임 대회 개최 문의는 <dl_chzzk_contents@navercorp.com>로 문의 바랍니다.)
+
+   <figure><img src="https://61535310-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FU1rtupxF55gPyfAfbzSB%2Fuploads%2FVWnXyRt7aajs5LG2U6Ul%2F%ED%99%95%EC%9E%A5%ED%8C%A9.jpg?alt=media&#x26;token=f4834448-c901-4d14-b6ee-f545a042ba65" alt=""><figcaption></figcaption></figure>
+
+
+# 치지직 제휴 문의
+
+{% columns fullWidth="false" %}
+{% column %}
+
+<h3 align="center"><strong>👔</strong> 비즈니스 채널 개설 </h3>
+
+***
+
+<p align="center">법인 사업자인 경우, <br> 치지직에서 비즈니스 채널을 개설할 수 있습니다. <br><br>✔️ <a href="https://help.naver.com/service/30044/contents/23260?lang=ko&#x26;osType=COMMONOS">비즈니스 채널 개설 방법</a></p>
+
+{% endcolumn %}
+
+{% column %}
+
+<h3 align="center">🎁 드롭스 캠페인 </h3>
+
+***
+
+<p align="center">방송 시청 시간에 따른 리워드로 <br>인게임 아이템이나 쿠폰을 지급할 수 있습니다.<br>드롭스로 게임이나 브랜드를 홍보해 보세요.</p>
+
+<p align="center">✔️ <a href="../drops/overview">드롭스 캠페인 안내</a></p>
+
+{% endcolumn %}
+{% endcolumns %}
+
+{% columns fullWidth="false" %}
+{% column %}
+
+<h3 align="center">✅ 공식 콘텐츠 문의 </h3>
+
+***
+
+<p align="center">게임사나 브랜드 사인 경우,<br>치지직 공식 방송 및 공식 게임대회 개최 문의</p>
+
+<p align="center">✉️ <a href="mailto:dl_chzzk_contents@navercorp.com">공식 콘텐츠 문의/제안</a></p>
+{% endcolumn %}
+
+{% column %}
+
+<h3 align="center">💡 치지직 제휴 문의 </h3>
+
+***
+
+<p align="center">치지직과의 제휴, 협업 제안 </p>
+
+<p align="center">✉️ <a href="mailto:dl_chzzk@navercorp.com">치지직 제휴 문의/제안</a></p>
+{% endcolumn %}
+{% endcolumns %}
