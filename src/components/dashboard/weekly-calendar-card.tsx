@@ -58,7 +58,7 @@ export function WeeklyCalendarCard() {
 
   return (
     <>
-      <Card className="flex flex-col h-[750px] border-border/50 shadow-sm bg-card overflow-hidden">
+      <Card className="flex flex-col h-[734px] border-border/50 shadow-sm bg-card overflow-hidden">
       {/* Header & Controls */}
       <CardHeader className="py-1 px-4 sm:px-6 border-b">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

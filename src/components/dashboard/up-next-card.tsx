@@ -39,7 +39,7 @@ export function UpNextCard() {
   return (
     <>
       <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden">
-      <CardHeader className="py-1 px-1 sm:px-6 border-b">
+      <CardHeader className="h-[20px] py-0 px-1 sm:px-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-bold flex items-center gap-2">
             <Clock className="h-4 w-4 text-primary" />
@@ -48,8 +48,8 @@ export function UpNextCard() {
           <Badge variant="secondary" className="text-[10px] px-1.5 font-normal">2시간 이내</Badge>
         </div>
       </CardHeader>
-      <CardContent className="p-1 flex-1">
-        <div className="flex flex-col">
+      <CardContent className="p-0 flex-1">
+        <div className="h-[160px] flex flex-col">
           {isLoading ? (
             <div className="p-6 text-center text-xs text-muted-foreground animate-pulse">일정을 불러오는 중입니다...</div>
           ) : events.length === 0 ? (
@@ -64,7 +64,7 @@ export function UpNextCard() {
             events.map((event) => (
               <div 
                 key={event.id} 
-                className="flex items-start gap-3 p-4 border-b last:border-0 hover:bg-muted/10 transition-colors cursor-pointer group"
+                className="flex items-start gap-3 p-2 border-b last:border-0 hover:bg-muted/10 transition-colors cursor-pointer group"
                 onClick={() => handleEventClick(event)}
               >
                 <div className="w-16 shrink-0 pt-0.5 text-right">
@@ -85,7 +85,7 @@ export function UpNextCard() {
           )}
         </div>
       </CardContent>
-      <CardFooter className="p-0 border-t bg-muted/20">
+      <CardFooter className="p-1 bg-muted/20">
         <Button variant="ghost" size="sm" asChild className="w-full text-xs text-muted-foreground gap-1">
           <Link href="/calendar">
             전체 보기

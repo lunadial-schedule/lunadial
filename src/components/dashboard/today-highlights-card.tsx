@@ -11,7 +11,7 @@ export function TodayHighlightsCard() {
 
   return (
     <Card className="border-border/50 shadow-sm flex-1">
-      <CardHeader className="py-1">
+      <CardHeader className="py-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-bold">오늘의 하이라이트</CardTitle>
           <Button variant="ghost" size="sm" asChild className="h-8 gap-1 text-xs text-muted-foreground">
