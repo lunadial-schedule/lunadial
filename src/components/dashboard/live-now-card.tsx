@@ -63,7 +63,7 @@ export function LiveNowCard() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-1 pb-4 flex-1">
+      <CardContent className="px-4 pb-4 flex-1">
         {isLoading ? (
           <div className="h-[200px] flex flex-col gap-3">
              {[1,2,3,4,5].map(i => (
@@ -89,7 +89,7 @@ export function LiveNowCard() {
               {liveStreamers.map((streamer) => (
                 <div 
                   key={streamer.channelId} 
-                  className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
+                  className="w-[390px] flex items-start gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
                   onClick={() => window.open(streamer.liveUrl, "_blank", "noopener,noreferrer")}
                 >
                   <div className="relative shrink-0">
@@ -112,9 +112,6 @@ export function LiveNowCard() {
                       {streamer.liveTitle}
                     </p>
                   </div>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Play className="h-4 w-4 fill-current ml-0.5" />
-                  </Button>
                 </div>
               ))}
             </div>
