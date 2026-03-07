@@ -65,7 +65,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground px-2" onClick={handleDismiss}>나중에</Button>
-            <Button size="sm" className="h-7 text-xs px-3" onClick={handleEnablePush}>알림 켜기</Button>
+            <Button size="sm" className="h-7 text-xs px-1" onClick={handleEnablePush}>알림 켜기</Button>
           </div>
         </div>
       )}

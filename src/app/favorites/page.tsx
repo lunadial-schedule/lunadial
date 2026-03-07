@@ -140,7 +140,7 @@ export default function FavoritesPage() {
                       <Button
                         variant={streamer.notificationsEnabled ? "default" : "secondary"}
                         size="sm"
-                        className="h-8 gap-1.5 px-3"
+                        className="h-8 gap-1.5 px-1"
                         onClick={() => toggleNotification(streamer.id)}
                       >
                         {streamer.notificationsEnabled ? (

@@ -142,7 +142,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
             </div>
             <div className="space-y-2">
                <label className="text-sm font-medium">진행 상태 *</label>
-               <select name="status" required defaultValue={schedule.status} className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+               <select name="status" required defaultValue={schedule.status} className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-1 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                  <option value="scheduled">예정 (정상)</option>
                  <option value="changed">일정 변경됨</option>
                  <option value="canceled">일정 취소됨</option>
@@ -169,7 +169,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
                name="memo" 
                defaultValue={schedule.memo || ""} 
                rows={3}
-               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+               className="flex w-full rounded-md border border-input bg-background px-1 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                placeholder="합방 멤버나 상세 컨텐츠 등을 자유롭게 메모하세요."
              />
           </div>

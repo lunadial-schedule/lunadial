@@ -105,7 +105,7 @@ export default function PricingPage() {
 
         {/* Pro Tier */}
         <div className="border-2 border-indigo-600 bg-white dark:bg-zinc-900 rounded-2xl p-8 flex flex-col space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-indigo-600 text-white text-xs px-3 py-1 font-bold rounded-bl-lg">추천</div>
+          <div className="absolute top-0 right-0 bg-indigo-600 text-white text-xs px-1 py-1 font-bold rounded-bl-lg">추천</div>
           <div>
             <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Pro</h2>
             <p className="text-zinc-500 mt-2">진성 팬을 위한 프리미엄 기능</p>

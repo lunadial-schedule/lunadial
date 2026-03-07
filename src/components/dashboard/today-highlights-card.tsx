@@ -11,7 +11,7 @@ export function TodayHighlightsCard() {
 
   return (
     <Card className="border-border/50 shadow-sm flex-1">
-      <CardHeader className="py-4">
+      <CardHeader className="py-1">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-bold">오늘의 하이라이트</CardTitle>
           <Button variant="ghost" size="sm" asChild className="h-8 gap-1 text-xs text-muted-foreground">
@@ -22,7 +22,7 @@ export function TodayHighlightsCard() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-4">
+      <CardContent className="px-1 pb-4">
         <div className="flex flex-col gap-2">
           {highlights.map((item) => (
             <div key={item.id} className="flex items-center justify-between p-3 rounded-xl border border-border/40 bg-card hover:bg-muted/30 transition-colors shadow-sm cursor-pointer group">

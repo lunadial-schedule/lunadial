@@ -141,7 +141,7 @@ export default function AddScheduleModal() {
                 <Label htmlFor="category">카테고리</Label>
                 <select 
                   id="category"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-md border border-input bg-background  py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
                   value={formData.category}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({...formData, category: e.target.value as "컨텐츠" | "합방" | "대회" | "기타"})}
                 >

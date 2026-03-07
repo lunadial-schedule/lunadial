@@ -39,7 +39,7 @@ export function UpNextCard() {
   return (
     <>
       <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden">
-      <CardHeader className="py-3 px-4 sm:px-6 border-b">
+      <CardHeader className="py-1 px-1 sm:px-6 border-b">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-bold flex items-center gap-2">
             <Clock className="h-4 w-4 text-primary" />
@@ -48,7 +48,7 @@ export function UpNextCard() {
           <Badge variant="secondary" className="text-[10px] px-1.5 font-normal">2시간 이내</Badge>
         </div>
       </CardHeader>
-      <CardContent className="p-0 flex-1">
+      <CardContent className="p-1 flex-1">
         <div className="flex flex-col">
           {isLoading ? (
             <div className="p-6 text-center text-xs text-muted-foreground animate-pulse">일정을 불러오는 중입니다...</div>
@@ -56,7 +56,7 @@ export function UpNextCard() {
             <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/10">
               <span className="text-sm font-medium text-muted-foreground mb-1">다가오는 일정이 없습니다</span>
               <span className="text-xs text-muted-foreground/70 mb-4">현재로부터 24시간 이내에 예정된 일정이 없어요.</span>
-              <Button variant="outline" size="sm" asChild className="h-8 text-xs px-3">
+              <Button variant="outline" size="sm" asChild className="h-8 text-xs ">
                 <Link href="/calendar">전체 캘린더 보기</Link>
               </Button>
             </div>
@@ -85,7 +85,7 @@ export function UpNextCard() {
           )}
         </div>
       </CardContent>
-      <CardFooter className="p-2 border-t bg-muted/20">
+      <CardFooter className="p-0 border-t bg-muted/20">
         <Button variant="ghost" size="sm" asChild className="w-full text-xs text-muted-foreground gap-1">
           <Link href="/calendar">
             전체 보기

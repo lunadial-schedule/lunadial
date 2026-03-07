@@ -60,7 +60,7 @@ export function WeeklyCalendarCard() {
     <>
       <Card className="flex flex-col h-[750px] border-border/50 shadow-sm bg-card overflow-hidden">
       {/* Header & Controls */}
-      <CardHeader className="py-3 px-4 sm:px-6 border-b">
+      <CardHeader className="py-1 px-4 sm:px-6 border-b">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <CardTitle className="text-xl font-bold flex items-center gap-2">
             <CalendarIcon className="h-5 w-5 text-primary" />
@@ -72,7 +72,7 @@ export function WeeklyCalendarCard() {
               <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={prevWeek}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm font-medium px-3 tabular-nums">
+              <span className="text-sm font-medium px-1 tabular-nums">
                 {format(startDate, "M.d", { locale: ko })} - {format(addDays(startDate, 6), "M.d", { locale: ko })}
               </span>
               <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={nextWeek}>
