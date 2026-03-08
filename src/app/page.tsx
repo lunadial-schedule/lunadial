@@ -70,16 +70,16 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-3 min-[361px]:gap-4 md:gap-5 lg:gap-6">
-        {/* Left Column wrapper (Desktop: 8-col, Mobile: 평탄화하여 2순위 배치) */}
-        <div className="contents lg:flex lg:flex-col lg:col-span-8">
+      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_450px] xl:grid-cols-[1fr_450px] gap-3 min-[361px]:gap-4 md:gap-5 lg:gap-6">
+        {/* Left Column wrapper (Desktop: Fluid 1fr, Mobile: 평탄화하여 2순위 배치) */}
+        <div className="contents lg:flex lg:flex-col min-w-0">
           <div className="order-2 lg:order-none h-full">
             <WeeklyCalendarCard />
           </div>
         </div>
 
-        {/* Right Column wrapper (Desktop: 4-col, Mobile: 평탄화하여 개별 순위 배치) */}
-        <div className="contents lg:flex lg:flex-col lg:col-span-4 lg:gap-6">
+        {/* Right Column wrapper (Desktop: Fixed 390px+, Mobile: 평탄화하여 개별 순위 배치) */}
+        <div className="contents lg:flex lg:flex-col lg:gap-6 min-w-0">
           <div className="order-1 lg:order-none">
             <LiveNowCard />
           </div>
