@@ -15,7 +15,11 @@ import { TITLE_PLACEHOLDERS, STREAMER_PLACEHOLDERS } from "@/config/placeholders
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
-export function CreateScheduleDialog() {
+interface CreateScheduleDialogProps {
+  isMobileTrigger?: boolean;
+}
+
+export function CreateScheduleDialog({ isMobileTrigger = false }: CreateScheduleDialogProps = {}) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -123,10 +127,27 @@ export function CreateScheduleDialog() {
 
   return (
     <>
-      <Button variant="outline" size="sm" className="hidden sm:flex rounded-full gap-1" onClick={handleOpenClick}>
-        <Plus className="h-4 w-4" />
-        <span>일정 추가</span>
-      </Button>
+      {isMobileTrigger ? (
+        <Button 
+          type="button"
+          size="icon" 
+          className="h-10 w-10 shrink-0 rounded-full shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-transform active:scale-95"
+          onClick={handleOpenClick}
+        >
+          <Plus className="h-5 w-5" />
+        </Button>
+      ) : (
+        <Button 
+          type="button"
+          variant="outline" 
+          size="sm" 
+          className="rounded-full gap-1" 
+          onClick={handleOpenClick}
+        >
+          <Plus className="h-4 w-4" />
+          <span>일정 추가</span>
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

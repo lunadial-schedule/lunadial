@@ -39,14 +39,12 @@ export function UpNextCard() {
   return (
     <>
       <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden">
-      <CardHeader className="h-[20px] py-0 px-1 sm:px-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-bold flex items-center gap-2">
-            <Clock className="h-4 w-4 text-primary" />
-            곧 시작
-          </CardTitle>
-          <Badge variant="secondary" className="text-[10px] px-1.5 font-normal">2시간 이내</Badge>
-        </div>
+      <CardHeader className="p-[14px] md:p-4 min-h-[52px] md:min-h-[56px] flex flex-row items-center justify-between space-y-0 shrink-0">
+        <CardTitle className="text-base font-bold flex items-center gap-2 m-0 pl-1">
+          <Clock className="h-4 w-4 text-primary" />
+          곧 시작
+        </CardTitle>
+        <Badge variant="secondary" className="text-[10px] px-1.5 font-normal m-0 tracking-tighter">2시간 이내</Badge>
       </CardHeader>
       <CardContent className="p-0 flex-1">
         <div className="h-[160px] flex flex-col">

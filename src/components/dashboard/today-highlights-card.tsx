@@ -11,18 +11,16 @@ export function TodayHighlightsCard() {
 
   return (
     <Card className="border-border/50 shadow-sm flex-1">
-      <CardHeader className="py-0">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-bold">오늘의 하이라이트</CardTitle>
-          <Button variant="ghost" size="sm" asChild className="h-8 gap-1 text-xs text-muted-foreground">
-            <Link href="/calendar?date=today&view=day">
-              <span>전체보기</span>
-              <ArrowRight className="h-3 w-3" />
-            </Link>
-          </Button>
-        </div>
+      <CardHeader className="p-[14px] md:p-4 min-h-[52px] md:min-h-[56px] flex flex-row items-center justify-between space-y-0 shrink-0">
+        <CardTitle className="text-base font-bold m-0 pl-1">오늘의 하이라이트</CardTitle>
+        <Button variant="ghost" size="sm" asChild className="h-8 gap-1 text-xs text-muted-foreground m-0">
+          <Link href="/calendar?date=today&view=day">
+            <span>전체보기</span>
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </Button>
       </CardHeader>
-      <CardContent className="px-1 pb-4">
+      <CardContent className="p-[14px] md:p-4 pt-0 md:pt-0 pb-4 md:pb-4">
         <div className="flex flex-col gap-2">
           {highlights.map((item) => (
             <div key={item.id} className="flex items-center justify-between p-3 rounded-xl border border-border/40 bg-card hover:bg-muted/30 transition-colors shadow-sm cursor-pointer group">

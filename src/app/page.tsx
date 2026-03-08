@@ -70,17 +70,25 @@ export default function Home() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: 8-col Weekly Calendar */}
-        <div className="lg:col-span-8 flex flex-col">
-          <WeeklyCalendarCard />
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-3 min-[361px]:gap-4 md:gap-5 lg:gap-6">
+        {/* Left Column wrapper (Desktop: 8-col, Mobile: 평탄화하여 2순위 배치) */}
+        <div className="contents lg:flex lg:flex-col lg:col-span-8">
+          <div className="order-2 lg:order-none h-full">
+            <WeeklyCalendarCard />
+          </div>
         </div>
 
-        {/* Right: 4-col Cards Stack */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          <LiveNowCard />
-          <TodayHighlightsCard />
-          <UpNextCard />
+        {/* Right Column wrapper (Desktop: 4-col, Mobile: 평탄화하여 개별 순위 배치) */}
+        <div className="contents lg:flex lg:flex-col lg:col-span-4 lg:gap-6">
+          <div className="order-1 lg:order-none">
+            <LiveNowCard />
+          </div>
+          <div className="order-3 lg:order-none">
+            <TodayHighlightsCard />
+          </div>
+          <div className="order-4 lg:order-none">
+            <UpNextCard />
+          </div>
         </div>
       </div>
     </PageContainer>

@@ -87,9 +87,9 @@ export function LiveNowCard() {
           <ScrollArea className="h-[330px] pr-4">
             <div className="flex flex-col gap-3">
               {liveStreamers.map((streamer) => (
-                <div 
-                  key={streamer.channelId} 
-                  className="w-[390px] flex items-start gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
+                  <div 
+                    key={streamer.channelId} 
+                    className="w-full flex items-start gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
                   onClick={() => window.open(streamer.liveUrl, "_blank", "noopener,noreferrer")}
                 >
                   <div className="relative shrink-0">

@@ -201,54 +201,73 @@ function CalendarContent() {
                         
                         return (
                           <>
-                            {displayEvents.map(event => {
-                              const firstCat = event.categories?.[0];
-                              const styleCat = CATEGORY_LIST.find(c => c.id === firstCat) || CATEGORY_LIST[0];
-                              return (
-                                <div 
-                                  key={event.id}
-                                  className="group flex flex-col gap-0.5 rounded border border-border/50 bg-background p-1 px-1.5 text-xs shadow-sm cursor-pointer hover:border-primary/50 relative overflow-hidden"
+                            {/* Desktop/Tablet Month View, or Week/Day View anywhere */}
+                            <div className={view === 'month' ? 'hidden sm:flex flex-col gap-1' : 'flex flex-col gap-1'}>
+                              {displayEvents.map(event => {
+                                const firstCat = event.categories?.[0];
+                                const styleCat = CATEGORY_LIST.find(c => c.id === firstCat) || CATEGORY_LIST[0];
+                                return (
+                                  <div 
+                                    key={event.id}
+                                    className="group flex flex-col gap-0.5 rounded border border-border/50 bg-background p-1 px-1.5 text-xs shadow-sm cursor-pointer hover:border-primary/50 relative overflow-hidden"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEventClick(event);
+                                    }}
+                                  >
+                                    <div className="flex items-center justify-between pl-1">
+                                      <div className="flex items-center gap-1.5 truncate">
+                                        <span className={`w-2 h-2 flex-shrink-0 rounded-full ${styleCat.color}`} title={styleCat.label} />
+                                        <span className="font-medium truncate group-hover:text-primary transition-colors">
+                                          {view === 'month' || view === 'week' ? (
+                                            event.streamer
+                                          ) : (
+                                            <>
+                                              <span className="text-muted-foreground font-normal mr-1">
+                                                {event.is_all_day ? "하루 종일" : format(parseISO(event.start_time), "HH:mm")}
+                                              </span>
+                                              {event.streamer} <span className="text-muted-foreground font-normal text-[10px] sm:text-xs ml-1"> {event.title}</span>
+                                            </>
+                                          )}
+                                        </span>
+                                      </div>
+                                      {(event.status === "changed" || event.status === "canceled") && (
+                                        <span className={`shrink-0 h-1.5 w-1.5 rounded-full ${event.status === "changed" ? "bg-amber-500" : "bg-zinc-400"} ml-1`} title={event.status === "changed" ? "일정 변경됨" : "일정 취소됨"} />
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                              {overflowCount > 0 && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-6 mt-1 text-[10px] text-muted-foreground w-full justify-start p-1 hover:bg-muted/50"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleEventClick(event);
+                                    setCurrentDate(date);
+                                    updateUrlParam('view', 'week');
                                   }}
                                 >
-                                  <div className="flex items-center justify-between pl-1">
-                                    <div className="flex items-center gap-1.5 truncate">
-                                      <span className={`w-2 h-2 flex-shrink-0 rounded-full ${styleCat.color}`} title={styleCat.label} />
-                                      <span className="font-medium truncate group-hover:text-primary transition-colors">
-                                        {view === 'month' || view === 'week' ? (
-                                          event.streamer
-                                        ) : (
-                                          <>
-                                            <span className="text-muted-foreground font-normal mr-1">
-                                              {event.is_all_day ? "하루 종일" : format(parseISO(event.start_time), "HH:mm")}
-                                            </span>
-                                            {event.streamer} <span className="text-muted-foreground font-normal text-[10px] sm:text-xs ml-1"> {event.title}</span>
-                                          </>
-                                        )}
-                                      </span>
-                                    </div>
-                                    {(event.status === "changed" || event.status === "canceled") && (
-                                      <span className={`shrink-0 h-1.5 w-1.5 rounded-full ${event.status === "changed" ? "bg-amber-500" : "bg-zinc-400"} ml-1`} title={event.status === "changed" ? "일정 변경됨" : "일정 취소됨"} />
-                                    )}
-                                  </div>
-                                </div>
-                              )
-                            })}
-                            {overflowCount > 0 && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-6 mt-1 text-[10px] text-muted-foreground w-full justify-start p-1 hover:bg-muted/50"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCurrentDate(date);
-                                  updateUrlParam('view', 'week');
-                                }}
-                              >
-                                + {overflowCount}개 더 보기
-                              </Button>
+                                  + {overflowCount}개 더 보기
+                                </Button>
+                              )}
+                            </div>
+                            
+                            {/* Mobile Month View Extracted Dots */}
+                            {view === 'month' && dayEvents.length > 0 && (
+                              <div className="flex sm:hidden flex-wrap items-center justify-center gap-1 mt-1 px-1">
+                                {displayEvents.slice(0, 3).map(event => {
+                                   const firstCat = event.categories?.[0];
+                                   const styleCat = CATEGORY_LIST.find(c => c.id === firstCat) || CATEGORY_LIST[0];
+                                   return <span key={`dot-${event.id}`} className={`w-2 h-2 rounded-full ${styleCat.color}`} />;
+                                })}
+                                {dayEvents.length > 3 && (
+                                  <span className="text-[10px] text-muted-foreground font-medium leading-none ml-0.5">
+                                    +{dayEvents.length - 3}
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </>
                         )

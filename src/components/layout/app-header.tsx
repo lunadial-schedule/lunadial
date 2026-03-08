@@ -70,36 +70,36 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <PageContainer className="flex h-16 items-center">
+      <PageContainer className="flex flex-wrap lg:flex-nowrap items-center justify-between lg:h-16 py-3 lg:py-0 gap-y-3 lg:gap-y-0">
         {/* Left: Logo & Nav */}
-        <div className="flex items-center gap-6 md:gap-8">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="font-bold text-xl tracking-tighter">LUNA DIAL</span>
+        <div className="flex items-center gap-3 lg:gap-8 w-auto">
+          <Link href="/" className="flex items-center space-x-2 shrink-0">
+            <span className="font-bold text-lg lg:text-xl tracking-tighter">LUNA DIAL</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link href="/calendar" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+          <nav className="flex items-center gap-3 lg:gap-6 text-sm font-medium">
+            <Link href="/calendar" className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
               <CalendarIcon className="h-4 w-4" />
-              <span>캘린더</span>
+              <span className="hidden lg:inline">캘린더</span>
             </Link>
-            <Link href="/calendar?scope=favorites" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+            <Link href="/calendar?scope=favorites" className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
               <Star className="h-4 w-4" />
-              <span>즐겨찾기</span>
+              <span className="hidden lg:inline">즐겨찾기</span>
             </Link>
-            <Link href="/pro" className="flex items-center gap-2 text-amber-600 transition-colors hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400">
+            <Link href="/pro" className="flex items-center gap-1.5 text-amber-600 transition-colors hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400">
               <Crown className="h-4 w-4" />
-              <span>Pro</span>
+              <span className="hidden lg:inline">Pro</span>
             </Link>
           </nav>
         </div>
 
-        {/* Center: Global Search */}
-        <div className="flex-1 flex justify-center px-4 md:px-8">
-          <div className="w-full max-w-md relative hidden sm:block">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        {/* Center: Global Search (Row 2 on Mobile, Center on Desktop) */}
+        <div className="w-full lg:w-auto lg:flex-1 flex lg:justify-center px-0 lg:px-4 order-3 lg:order-2 pb-1 lg:pb-0">
+          <div className="w-full relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="스트리머, 일정 검색..."
-              className="w-full rounded-full bg-muted/50 pl-9 md:w-[300px] lg:w-[400px] border-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-background transition-all"
+              className="w-full h-10 lg:h-9 rounded-full bg-muted/50 pl-9 border-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-background transition-all lg:w-[300px] xl:w-[400px]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}
@@ -108,7 +108,7 @@ export function AppHeader() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 md:gap-4 ml-auto">
+        <div className="flex items-center gap-2 lg:gap-4 ml-auto w-auto order-2 lg:order-3">
           {/* Web Push Notification */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -125,8 +125,14 @@ export function AppHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          {/* Add Schedule */}
-          <CreateScheduleDialog />
+          {/* Add Schedule (Desktop Only) */}
+          <div className="hidden lg:block">
+            <CreateScheduleDialog />
+          </div>
+
+          <div className="lg:hidden">
+            <CreateScheduleDialog isMobileTrigger />
+          </div>
 
           {/* User Profile */}
           {user ? (
