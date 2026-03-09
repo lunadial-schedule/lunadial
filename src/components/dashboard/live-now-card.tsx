@@ -46,20 +46,20 @@ export function LiveNowCard() {
   return (
     <Card className="h-[468px] border-border/50 shadow-sm flex flex-col">
       <CardHeader className="py-1 shrink-0">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-bold flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-base font-bold flex items-center gap-2 whitespace-nowrap shrink-0">
             지금 방송 중
             <Badge variant="live" className="animate-pulse">LIVE</Badge>
           </CardTitle>
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 text-xs text-muted-foreground"
+            className="h-8 text-[10px] sm:text-xs text-muted-foreground shrink-0 px-2"
             onClick={fetchLiveStreamers}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-[468px] w-3 h-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
-            새로고침
+            <RefreshCw className={`w-3 h-3 sm:mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">새로고침</span>
           </Button>
         </div>
       </CardHeader>
@@ -89,9 +89,10 @@ export function LiveNowCard() {
               {liveStreamers.map((streamer) => (
                   <div 
                     key={streamer.channelId} 
-                    className="w-full flex items-start gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
+                    className="w-full grid grid-cols-[44px_1fr_auto] items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
                   onClick={() => window.open(streamer.liveUrl, "_blank", "noopener,noreferrer")}
                 >
+                  {/* 1. Avatar (44px Width) */}
                   <div className="relative shrink-0">
                     <Avatar className="h-10 w-10 border-2 border-red-500">
                       <AvatarImage src={streamer.profileImageUrl} alt={streamer.channelName} />
@@ -101,16 +102,20 @@ export function LiveNowCard() {
                       LIVE
                     </div>
                   </div>
-                  <div className="flex-1 overflow-hidden">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold text-sm truncate">{streamer.channelName}</p>
-                      <span className="text-xs text-red-500 font-medium shrink-0">
-                        {formatViewerCount(streamer.viewerCount)}
-                      </span>
-                    </div>
+
+                  {/* 2. Text Content (1fr, min-w-0 for ellipsis to work) */}
+                  <div className="flex flex-col min-w-0 pt-0.5 gap-0.5 pr-1">
+                    <p className="font-semibold text-sm truncate">{streamer.channelName}</p>
                     <p className="text-xs text-muted-foreground truncate" title={streamer.liveTitle}>
                       {streamer.liveTitle}
                     </p>
+                  </div>
+
+                  {/* 3. Viewer Count (Auto width, right aligned) */}
+                  <div className="flex flex-col items-end shrink-0 pt-0.5 min-w-[50px]">
+                    <span className="text-xs text-red-500 font-medium whitespace-nowrap">
+                      {formatViewerCount(streamer.viewerCount)}
+                    </span>
                   </div>
                 </div>
               ))}
