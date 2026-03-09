@@ -18,9 +18,18 @@ function CalendarContent() {
   const pathname = usePathname()
 
   const scope = searchParams.get('scope') || 'all'
-  const view = searchParams.get('view') || 'month'
+  const rawView = searchParams.get('view') || 'month'
+  const view = rawView === 'week' ? 'day' : rawView
   const q = searchParams.get('q') || ''
   
+  React.useEffect(() => {
+    if (rawView === 'week') {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('view', 'day')
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+    }
+  }, [rawView, pathname, router, searchParams])
+
   const dateParam = searchParams.get('date')
   const [currentDate, setCurrentDate] = React.useState(() => {
     if (dateParam) {
@@ -74,27 +83,25 @@ function CalendarContent() {
   const updateUrlParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set(key, value)
-    router.push(`${pathname}?${params.toString()}`)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   const goPrev = () => {
     if (view === 'month') setCurrentDate(prev => subMonths(prev, 1))
-    else if (view === 'week') setCurrentDate(prev => subWeeks(prev, 1))
     else setCurrentDate(prev => subDays(prev, 1))
   }
 
   const goNext = () => {
     if (view === 'month') setCurrentDate(prev => addMonths(prev, 1))
-    else if (view === 'week') setCurrentDate(prev => addWeeks(prev, 1))
     else setCurrentDate(prev => addDays(prev, 1))
   }
 
   const goToday = () => setCurrentDate(new Date())
 
   return (
-    <PageContainer className="min-h-[calc(100vh-4rem)] bg-background py-6 md:py-8 flex flex-col md:flex-row gap-6 items-start">
+    <PageContainer className="min-h-[calc(100vh-4rem)] bg-background py-6 lg:py-8 flex flex-col lg:flex-row gap-6 items-start">
       {/* Left Sidebar Filter (3-col equivalent) */}
-      <Card className="w-full md:w-64 flex-col gap-6 flex shrink-0 p-5 border-border/50 shadow-sm h-fit">
+      <Card className="w-full lg:w-64 flex-col gap-6 flex shrink-0 p-5 border-border/50 shadow-sm h-fit">
         <div className="space-y-4">
           <div>
             <h2 className="mb-3 text-sm font-semibold tracking-tight text-foreground/80">보기 필터</h2>
@@ -134,7 +141,7 @@ function CalendarContent() {
       </Card>
 
       {/* Main Calendar Area (9-col equivalent) */}
-      <Card className="flex-1 border-border/50 shadow-sm flex flex-col min-w-0 bg-card overflow-hidden">
+      <Card className="flex-1 w-full lg:w-auto border-border/50 shadow-sm flex flex-col min-w-0 bg-card overflow-hidden">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b p-4 gap-4 bg-muted/10 shrink-0">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-bold tracking-tight">{format(currentDate, "yyyy년 M월")}</h2>
@@ -146,7 +153,6 @@ function CalendarContent() {
           </div>
           <div className="flex items-center bg-muted/50 p-1 rounded-full">
             <Button variant="ghost" size="sm" className={`h-7 rounded-full px-4 ${view === 'month' ? 'bg-background shadow-sm text-foreground hover:bg-background/80' : 'text-muted-foreground'}`} onClick={() => updateUrlParam('view', 'month')}>월간</Button>
-            <Button variant="ghost" size="sm" className={`h-7 rounded-full px-4 ${view === 'week' ? 'bg-background shadow-sm text-foreground hover:bg-background/80' : 'text-muted-foreground'}`} onClick={() => updateUrlParam('view', 'week')}>주간</Button>
             <Button variant="ghost" size="sm" className={`h-7 rounded-full px-4 ${view === 'day' ? 'bg-background shadow-sm text-foreground hover:bg-background/80' : 'text-muted-foreground'}`} onClick={() => updateUrlParam('view', 'day')}>일간</Button>
           </div>
         </div>
@@ -167,18 +173,13 @@ function CalendarContent() {
             )}
           </div>
           
-          <div className={`grid ${view === 'day' ? 'grid-cols-1 grid-rows-1' : view === 'week' ? 'grid-cols-7 grid-rows-1' : 'grid-cols-7 grid-rows-5'} h-[calc(100%-40px)] min-h-[600px] px-2 sm:px-4`}>
-             {Array.from({ length: view === 'month' ? 35 : view === 'week' ? 7 : 1 }).map((_, i) => {
+          <div className={`grid ${view === 'day' ? 'grid-cols-1 grid-rows-1' : 'grid-cols-7 grid-rows-5'} h-[calc(100%-40px)] min-h-[600px] px-2 sm:px-4`}>
+             {Array.from({ length: view === 'month' ? 35 : 1 }).map((_, i) => {
                let date = currentDate;
                if (view === 'month') {
                  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
                  const startPadding = firstDayOfMonth.getDay()
                  date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i - startPadding + 1)
-               } else if (view === 'week') {
-                 // 이번 주의 일요일 기준
-                 const startOfWeek = new Date(currentDate)
-                 startOfWeek.setDate(currentDate.getDate() - currentDate.getDay())
-                 date = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + i)
                }
                
                const isToday = isSameDay(date, new Date());
@@ -219,7 +220,7 @@ function CalendarContent() {
                                       <div className="flex items-center gap-1.5 truncate">
                                         <span className={`w-2 h-2 flex-shrink-0 rounded-full ${styleCat.color}`} title={styleCat.label} />
                                         <span className="font-medium truncate group-hover:text-primary transition-colors">
-                                          {view === 'month' || view === 'week' ? (
+                                          {view === 'month' ? (
                                             event.streamer
                                           ) : (
                                             <>
@@ -246,7 +247,10 @@ function CalendarContent() {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setCurrentDate(date);
-                                    updateUrlParam('view', 'week');
+                                    const params = new URLSearchParams(searchParams.toString());
+                                    params.set('view', 'day');
+                                    params.set('date', format(date, 'yyyy-MM-dd'));
+                                    router.push(`${pathname}?${params.toString()}`, { scroll: false });
                                   }}
                                 >
                                   + {overflowCount}개 더 보기
@@ -256,7 +260,17 @@ function CalendarContent() {
                             
                             {/* Mobile Month View Extracted Dots */}
                             {view === 'month' && dayEvents.length > 0 && (
-                              <div className="flex sm:hidden flex-wrap items-center justify-center gap-1 mt-1 px-1">
+                              <div 
+                                className="flex sm:hidden flex-wrap items-center justify-center gap-1 mt-1 px-1 cursor-pointer py-1 hover:bg-muted/50 rounded-md transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentDate(date);
+                                  const params = new URLSearchParams(searchParams.toString());
+                                  params.set('view', 'day');
+                                  params.set('date', format(date, 'yyyy-MM-dd'));
+                                  router.push(`${pathname}?${params.toString()}`, { scroll: false });
+                                }}
+                              >
                                 {displayEvents.slice(0, 3).map(event => {
                                    const firstCat = event.categories?.[0];
                                    const styleCat = CATEGORY_LIST.find(c => c.id === firstCat) || CATEGORY_LIST[0];

@@ -3,7 +3,7 @@
 import { LiveNowCard } from "@/components/dashboard/live-now-card";
 import { TodayHighlightsCard } from "@/components/dashboard/today-highlights-card";
 import { UpNextCard } from "@/components/dashboard/up-next-card";
-import { WeeklyCalendarCard } from "@/components/dashboard/weekly-calendar-card";
+import { TodayScheduleCard } from "@/components/dashboard/today-schedule-card";
 import { Button } from "@/components/ui/button";
 import { BellRing, X } from "lucide-react";
 import { PageContainer } from "@/components/layout/page-container";
@@ -70,17 +70,17 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_450px] xl:grid-cols-[1fr_450px] gap-3 min-[361px]:gap-4 md:gap-5 lg:gap-6">
-        {/* Left Column wrapper (Desktop: Fluid 1fr, Mobile: 평탄화하여 2순위 배치) */}
-        <div className="contents lg:flex lg:flex-col min-w-0">
-          <div className="order-2 lg:order-none h-full">
-            <WeeklyCalendarCard />
+      <div className="flex flex-col lg:flex-row lg:justify-center gap-3 min-[361px]:gap-4 md:gap-5 lg:gap-6">
+        {/* Left Column wrapper (Desktop: Fixed 600px, Mobile: Full width) */}
+        <div className="contents lg:flex lg:flex-col lg:w-[600px] xl:w-[750px] shrink-0 min-w-0">
+          <div className="order-1 lg:order-none h-full">
+            <TodayScheduleCard />
           </div>
         </div>
 
-        {/* Right Column wrapper (Desktop: Fixed 390px+, Mobile: 평탄화하여 개별 순위 배치) */}
-        <div className="contents lg:flex lg:flex-col lg:gap-6 min-w-0">
-          <div className="order-1 lg:order-none">
+        {/* Right Column wrapper (Desktop: Fixed 380px, Mobile: Full width) */}
+        <div className="contents lg:flex lg:flex-col lg:w-[380px] xl:w-[450px] shrink-0 lg:gap-6 min-w-0">
+          <div className="order-2 lg:order-none">
             <LiveNowCard />
           </div>
           <div className="order-3 lg:order-none">
