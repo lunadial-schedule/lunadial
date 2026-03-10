@@ -44,7 +44,7 @@ export function UpNextCard() {
           <Clock className="h-4 w-4 text-primary" />
           곧 시작
         </CardTitle>
-        <Badge variant="secondary" className="text-[10px] px-1.5 font-normal m-0 tracking-tighter">2시간 이내</Badge>
+        <Badge variant="secondary" className="text-[10px] px-1.5 font-normal m-0 tracking-tighter">다음 방송 예정</Badge>
       </CardHeader>
       <CardContent className="p-0 flex-1">
         <div className="h-[160px] flex flex-col">
@@ -70,10 +70,10 @@ export function UpNextCard() {
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{event.title}</span>
+                    <span className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{event.streamer}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-muted-foreground">{event.streamer}</span>
+                    <span className="text-xs text-muted-foreground truncate">{event.title}</span>
                     {event.status === "canceled" && <Badge variant="canceled" className="h-[14px] px-1 text-[9px] font-bold tracking-wider">CANCELED</Badge>}
                     {event.status === "changed" && <Badge variant="changed" className="h-[14px] px-1 text-[9px] font-bold tracking-wider">CHANGED</Badge>}
                   </div>
