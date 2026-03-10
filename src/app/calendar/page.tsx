@@ -4,7 +4,7 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer"
 import { PageContainer } from "@/components/layout/page-container"
 import { CATEGORY_LIST, getCategoryByLabel } from "@/config/categories"
@@ -158,7 +158,15 @@ function CalendarContent() {
         </div>
 
         {/* Calendar Grid Mockup */}
-        <CardContent className="flex-1 p-0 overflow-auto flex flex-col">
+        <CardContent className="flex-1 p-0 overflow-auto flex flex-col relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-3">
+              <div className="flex items-center justify-center bg-card p-4 rounded-full shadow-sm border border-border/50">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+              <p className="text-sm font-medium text-foreground/80">일정을 불러오는 중입니다...</p>
+            </div>
+          )}
           <div className={`grid ${view === 'day' ? 'grid-cols-1' : 'grid-cols-7'} border-b h-10 sticky top-0 bg-muted/20 z-10 shrink-0 px-2 sm:px-4`}>
             {view === 'day' ? (
               <div className="flex items-center justify-center text-xs font-semibold text-muted-foreground border-r last:border-0">
