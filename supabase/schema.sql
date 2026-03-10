@@ -35,33 +35,40 @@ create trigger on_auth_user_created
 
 -- 2. Streamers table
 create table public.streamers (
-  channel_id text primary key, -- Chzzk Channel ID
+  id uuid default uuid_generate_v4() primary key,
+  channel_id text unique, -- Chzzk Channel ID (nullable for MVP manual additions)
   name text not null,
+  normalized_name text not null,
+  channel_url text,
   image_url text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  follower_count integer,
+  verified_mark boolean default false,
+  source_type text default 'manual',
+  is_active boolean default true,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 alter table public.streamers enable row level security;
 create policy "Streamers are viewable by everyone" on public.streamers for select using (true);
-create policy "Anyone can insert a streamer (if valid)" on public.streamers for insert with check (true);
+create policy "Authenticated users can insert streamers" on public.streamers for insert with check (auth.role() = 'authenticated');
 
 
 -- 3. Schedules table
 create table public.schedules (
   id uuid default uuid_generate_v4() primary key,
-  streamer_id text references public.streamers(channel_id) on delete cascade not null,
   title text not null,
-  description text,
-  start_at timestamp with time zone not null,
-  end_at timestamp with time zone,
-  category text check (category in ('컨텐츠', '합방', '대회', '기타')),
-  source_url text not null,
+  streamer text not null,
+  categories text[],
+  start_time timestamp with time zone not null,
+  end_time timestamp with time zone,
   status text default 'confirmed' check (status in ('confirmed', 'changed', 'canceled')),
-  link_check_status text default 'unknown' check (link_check_status in ('ok', 'failed', 'unknown')),
-  created_by uuid references public.users(id),
-  updated_by uuid references public.users(id),
+  link text not null,
+  memo text,
+  user_id uuid references public.users(id),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  is_all_day boolean default false
 );
 
 alter table public.schedules enable row level security;
@@ -88,10 +95,11 @@ create policy "Authenticated users can insert revisions" on public.schedule_revi
 
 -- 5. Favorites table
 create table public.favorites (
+  id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.users(id) on delete cascade not null,
-  streamer_id text references public.streamers(channel_id) on delete cascade not null,
+  streamer_id uuid references public.streamers(id) on delete cascade not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  primary key (user_id, streamer_id)
+  unique (user_id, streamer_id)
 );
 
 alter table public.favorites enable row level security;

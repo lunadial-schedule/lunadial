@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          streamer_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          streamer_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          streamer_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_streamer_id_fkey"
+            columns: ["streamer_id"]
+            isOneToOne: false
+            referencedRelation: "streamers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schedules: {
         Row: {
           categories: string[]
@@ -62,12 +91,57 @@ export type Database = {
         }
         Relationships: []
       }
+      streamers: {
+        Row: {
+          channel_id: string | null
+          channel_url: string | null
+          created_at: string
+          follower_count: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          normalized_name: string
+          source_type: string
+          updated_at: string
+          verified_mark: boolean
+        }
+        Insert: {
+          channel_id?: string | null
+          channel_url?: string | null
+          created_at?: string
+          follower_count?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          normalized_name: string
+          source_type?: string
+          updated_at?: string
+          verified_mark?: boolean
+        }
+        Update: {
+          channel_id?: string | null
+          channel_url?: string | null
+          created_at?: string
+          follower_count?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          normalized_name?: string
+          source_type?: string
+          updated_at?: string
+          verified_mark?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      normalize_streamer_name: { Args: { input: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

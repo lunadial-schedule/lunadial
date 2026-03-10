@@ -9,6 +9,7 @@ import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer"
 import { PageContainer } from "@/components/layout/page-container"
 import { CATEGORY_LIST, getCategoryByLabel } from "@/config/categories"
 import { getSchedules, type Schedule } from "@/app/actions/schedules"
+import { getMyFavorites } from "@/app/actions/favorites"
 import { isSameDay, parseISO, format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays } from "date-fns"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 
@@ -43,6 +44,7 @@ function CalendarContent() {
   const [isDetailOpen, setIsDetailOpen] = React.useState(false)
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null)
   const [events, setEvents] = React.useState<Schedule[]>([])
+  const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>([])
   const [isLoading, setIsLoading] = React.useState(false)
 
   const handleEventClick = (event: Schedule) => {
@@ -50,21 +52,38 @@ function CalendarContent() {
     setIsDetailOpen(true)
   }
 
-  const loadSchedules = React.useCallback(async () => {
+  const loadInitialData = React.useCallback(async () => {
     setIsLoading(true);
-    // 넓은 범위로 로딩
-    const start = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    const end = new Date(currentDate.getFullYear(), currentDate.getMonth() + 2, 1);
-    const { data } = await getSchedules(start, end);
-    if (data) setEvents(data);
-    setIsLoading(false);
+    
+    try {
+      // 1. 일정 로딩
+      const start = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+      const end = new Date(currentDate.getFullYear(), currentDate.getMonth() + 2, 1);
+      const { data: scheduleData } = await getSchedules(start, end);
+      if (scheduleData) setEvents(scheduleData);
+
+      // 2. 즐겨찾기 로딩 (스콥 상관 없이 필요 시 캐싱, 현재는 항상 로드해둠)
+      const { data: favData } = await getMyFavorites();
+      if (favData) {
+        setFavoriteStreamerNames(
+          favData.map(f => {
+            const s = f.streamers as any;
+            return Array.isArray(s) ? s[0]?.name : s?.name;
+          }).filter(Boolean)
+        );
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsLoading(false);
+    }
   }, [currentDate.getFullYear(), currentDate.getMonth()]);
 
   React.useEffect(() => {
-    loadSchedules();
-    window.addEventListener("schedulesUpdated", loadSchedules);
-    return () => window.removeEventListener("schedulesUpdated", loadSchedules);
-  }, [loadSchedules]);
+    loadInitialData();
+    window.addEventListener("schedulesUpdated", loadInitialData);
+    return () => window.removeEventListener("schedulesUpdated", loadInitialData);
+  }, [loadInitialData]);
 
   const getDayEvents = (targetDate: Date) => {
     return events.filter(e => {
@@ -74,8 +93,8 @@ function CalendarContent() {
       // 검색어 필터링
       if (q && !e.title.toLowerCase().includes(q.toLowerCase()) && !e.streamer.toLowerCase().includes(q.toLowerCase())) return false;
 
-      // MVP: 즐겨찾기는 임의의 하드코딩된 스트리머 조건(예: 치지직 1, 치지직 2)으로 목업 필터링
-      if (scope === 'favorites' && !e.streamer.includes("치지직")) return false; 
+      // 실제 즐겨찾기 기반 필터링
+      if (scope === 'favorites' && !favoriteStreamerNames.includes(e.streamer)) return false; 
       return true;
     });
   }

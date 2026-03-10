@@ -81,7 +81,7 @@ export function AppHeader() {
               <CalendarIcon className="h-4 w-4" />
               <span className="hidden lg:inline">캘린더</span>
             </Link>
-            <Link href="/calendar?scope=favorites" className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+            <Link href="/favorites" className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
               <Star className="h-4 w-4" />
               <span className="hidden lg:inline">즐겨찾기</span>
             </Link>
@@ -139,7 +139,7 @@ export function AppHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-8 w-8 cursor-pointer ring-1 ring-border">
-                  <AvatarImage src={user.user_metadata?.avatar_url || ""} alt={user.user_metadata?.name || "User"} />
+                  <AvatarImage src={user.user_metadata?.avatar_url || user.user_metadata?.picture || ""} alt={user.user_metadata?.name || "User"} />
                   <AvatarFallback className="bg-primary/10 text-xs text-primary">
                     {user.user_metadata?.name ? user.user_metadata.name.slice(0, 1).toUpperCase() : "U"}
                   </AvatarFallback>

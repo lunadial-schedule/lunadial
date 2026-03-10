@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LUNA DIAL",
-  description: "streamer Calendar",
+  title: "LUNA DIAL - 스트리머 일정",
+  description: "Streamer Calendar",
 };
 
 export default function RootLayout({

@@ -10,14 +10,16 @@ import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import { User } from "@supabase/supabase-js"
 import { toast } from "sonner"
-import { Crown, Star } from "lucide-react"
+import { Crown, Star, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { getMyFavorites } from "@/app/actions/favorites"
 
 export default function AccountSettingsPage() {
   const [user, setUser] = useState<User | null>(null)
   const [nickname, setNickname] = useState("")
   const supabase = createClient()
   
+  const [favorites, setFavorites] = useState<any[]>([])
   const [favoritesCount, setFavoritesCount] = useState(0)
 
   useEffect(() => {
@@ -28,12 +30,14 @@ export default function AccountSettingsPage() {
       }
     })
 
-    const favs = localStorage.getItem("lunadial_favorites")
-    if (favs) {
-      try {
-        setFavoritesCount(JSON.parse(favs).length)
-      } catch (e) {}
+    const loadFavs = async () => {
+      const { data } = await getMyFavorites()
+      if (data) {
+        setFavorites(data)
+        setFavoritesCount(data.length)
+      }
     }
+    loadFavs()
   }, [supabase.auth])
 
   const handleSave = () => {
@@ -61,7 +65,7 @@ export default function AccountSettingsPage() {
           <CardContent className="space-y-6">
             <div className="flex items-center gap-6">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
+                <AvatarImage src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ""} />
                 <AvatarFallback className="text-2xl">
                   {user?.user_metadata?.name ? user.user_metadata.name.slice(0,1).toUpperCase() : "U"}
                 </AvatarFallback>
@@ -119,7 +123,7 @@ export default function AccountSettingsPage() {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-muted-foreground" />
@@ -136,6 +140,37 @@ export default function AccountSettingsPage() {
                   style={{ width: `${isPro ? 100 : Math.min((favoritesCount / 10) * 100, 100)}%` }} 
                 />
               </div>
+              
+              {favoritesCount > 0 && (
+                <div className="pt-2">
+                  <div className="flex flex-wrap gap-2">
+                    {favorites.slice(0, 10).map((fav) => {
+                      const streamer = fav.streamers;
+                      return (
+                        <div key={fav.id} className="flex items-center gap-1.5 bg-muted/50 px-2 py-1.5 rounded-md border text-sm">
+                          <Avatar className="h-5 w-5">
+                            <AvatarImage src={streamer?.image_url || undefined} alt={streamer?.name} />
+                            <AvatarFallback className="text-[10px]">{streamer?.name?.[0]}</AvatarFallback>
+                          </Avatar>
+                          <span className="truncate max-w-[80px] font-medium">{streamer?.name}</span>
+                        </div>
+                      )
+                    })}
+                    {favoritesCount > 10 && (
+                      <div className="flex items-center justify-center px-2 py-1.5 rounded-md border border-dashed text-xs text-muted-foreground font-medium">
+                        +{favoritesCount - 10}명 더보기
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <Button variant="link" size="sm" className="h-auto p-0 text-muted-foreground hover:text-foreground" asChild>
+                      <Link href="/favorites">
+                        전체 목록 관리 <ArrowRight className="ml-1 h-3 w-3" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
