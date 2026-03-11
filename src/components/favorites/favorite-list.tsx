@@ -4,14 +4,16 @@ import * as React from "react"
 import { getMyFavorites, isFavorited } from "@/app/actions/favorites"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FavoriteButton } from "./favorite-button"
-import { Loader2 } from "lucide-react"
+import { Loader2, Edit2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { StreamerEditModal } from "./streamer-edit-modal"
 
 export function FavoriteList() {
   const [favorites, setFavorites] = React.useState<any[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [isExpanded, setIsExpanded] = React.useState(false)
+  const [editingStreamer, setEditingStreamer] = React.useState<any | null>(null)
 
   const loadFavorites = React.useCallback(async () => {
     setIsLoading(true)
@@ -66,7 +68,7 @@ export function FavoriteList() {
     )
   }
 
-  const displayLimit = 8
+  const displayLimit = 12
   const displayedFavorites = isExpanded ? favorites : favorites.slice(0, displayLimit)
 
   return (
@@ -96,17 +98,27 @@ export function FavoriteList() {
               )}
             </div>
             
-            <FavoriteButton 
-              streamerId={streamer.id} 
-              initialFavorited={true}
-              onFavoriteChange={(isFav) => {
-                if (!isFav) {
-                  // 낙관적 업데이트로 목록에서 바로 제거할 수도 있음: 
-                  setFavorites(prev => prev.filter(f => f.streamers.id !== streamer.id))
-                }
-              }}
-              className="md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-            />
+            <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={() => setEditingStreamer(streamer)}
+              >
+                <Edit2 className="h-4 w-4" />
+                <span className="sr-only">정보 수정</span>
+              </Button>
+              <FavoriteButton 
+                streamerId={streamer.id} 
+                initialFavorited={true}
+                onFavoriteChange={(isFav) => {
+                  if (!isFav) {
+                    // 낙관적 업데이트로 목록에서 바로 제거할 수도 있음: 
+                    setFavorites(prev => prev.filter(f => f.streamers.id !== streamer.id))
+                  }
+                }}
+              />
+            </div>
           </div>
         )
       })}
@@ -122,6 +134,14 @@ export function FavoriteList() {
             {favorites.length - displayLimit}명 더 보기
           </Button>
         </div>
+      )}
+
+      {editingStreamer && (
+        <StreamerEditModal 
+          open={!!editingStreamer} 
+          onOpenChange={(open) => !open && setEditingStreamer(null)} 
+          streamer={editingStreamer} 
+        />
       )}
     </div>
   )

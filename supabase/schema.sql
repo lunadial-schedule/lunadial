@@ -52,6 +52,7 @@ create table public.streamers (
 alter table public.streamers enable row level security;
 create policy "Streamers are viewable by everyone" on public.streamers for select using (true);
 create policy "Authenticated users can insert streamers" on public.streamers for insert with check (auth.role() = 'authenticated');
+create policy "Authenticated users can update streamers" on public.streamers for update using (auth.role() = 'authenticated');
 
 
 -- 3. Schedules table
@@ -59,6 +60,7 @@ create table public.schedules (
   id uuid default uuid_generate_v4() primary key,
   title text not null,
   streamer text not null,
+  streamer_id uuid references public.streamers(id) on delete set null,
   categories text[],
   start_time timestamp with time zone not null,
   end_time timestamp with time zone,

@@ -158,7 +158,7 @@ export default function AccountSettingsPage() {
                     })}
                     {favoritesCount > 10 && (
                       <div className="flex items-center justify-center px-2 py-1.5 rounded-md border border-dashed text-xs text-muted-foreground font-medium">
-                        +{favoritesCount - 10}명 더보기
+                        +{favoritesCount - 10}명
                       </div>
                     )}
                   </div>

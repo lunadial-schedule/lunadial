@@ -1,13 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { Search } from "lucide-react"
+import { Search, Edit2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { searchStreamers } from "@/app/actions/streamers"
 import { getMyFavorites } from "@/app/actions/favorites"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FavoriteButton } from "./favorite-button"
 import { CreateStreamerModal } from "./create-streamer-modal"
+import { StreamerEditModal } from "./streamer-edit-modal"
+import { Button } from "@/components/ui/button"
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number = 500): T {
@@ -26,6 +28,7 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
   const [favoriteSet, setFavoriteSet] = React.useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = React.useState(false)
   const [hasSearched, setHasSearched] = React.useState(false)
+  const [editingStreamer, setEditingStreamer] = React.useState<any | null>(null)
 
   const loadFavorites = React.useCallback(async () => {
     try {
@@ -157,10 +160,21 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
                   </div>
                 </div>
                 
-                <FavoriteButton 
-                  streamerId={streamer.id!} 
-                  initialFavorited={favoriteSet.has(streamer.id!)} 
-                />
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => setEditingStreamer(streamer)}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                    <span className="sr-only">정보 수정</span>
+                  </Button>
+                  <FavoriteButton 
+                    streamerId={streamer.id!} 
+                    initialFavorited={favoriteSet.has(streamer.id!)} 
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -177,6 +191,14 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
           </div>
         )}
       </div>
+
+      {editingStreamer && (
+        <StreamerEditModal 
+          open={!!editingStreamer} 
+          onOpenChange={(open) => !open && setEditingStreamer(null)} 
+          streamer={editingStreamer} 
+        />
+      )}
     </div>
   )
 }

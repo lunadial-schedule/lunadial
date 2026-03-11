@@ -14,6 +14,8 @@ import { useRouter } from "next/navigation";
 import { TITLE_PLACEHOLDERS, STREAMER_PLACEHOLDERS } from "@/config/placeholders";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { findOrCreateStreamer } from "@/app/actions/streamers";
+import { StreamerAutocompleteInput } from "./streamer-autocomplete-input";
 
 interface CreateScheduleDialogProps {
   isMobileTrigger?: boolean;
@@ -28,6 +30,9 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
   const [isAllDay, setIsAllDay] = React.useState(true);
   const [selectedCats, setSelectedCats] = React.useState<string[]>([]);
   const [startTime, setStartTime] = React.useState("");
+  
+  // 스트리머 입력 관리를 위한 상태
+  const [streamerName, setStreamerName] = React.useState("");
 
   const [titlePlaceholder, setTitlePlaceholder] = React.useState("예: 마크 대규모 합방");
   const [streamerPlaceholder, setStreamerPlaceholder] = React.useState("예: 풍월량");
@@ -49,6 +54,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
       setStartTime(format(new Date(), "yyyy-MM-dd"));
       setSelectedCats([]);
       setErrorMsg(null);
+      setStreamerName("");
 
       let newTitle = TITLE_PLACEHOLDERS[Math.floor(Math.random() * TITLE_PLACEHOLDERS.length)];
       while (TITLE_PLACEHOLDERS.length > 1 && newTitle === prevTitleRef.current) {
@@ -85,16 +91,27 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
     
     const formData = new FormData(e.currentTarget);
     const title = formData.get("title") as string;
-    const streamer = formData.get("streamer") as string;
     const link = formData.get("link") as string;
     const memo = formData.get("memo") as string;
     
+    // 1. 스트리머 존재 여부 확인 및 자동 생성
+    const streamerRes = await findOrCreateStreamer({ name: streamerName });
+    if (streamerRes.error) {
+      setErrorMsg("스트리머 등록 오류: " + streamerRes.error);
+      setIsLoading(false);
+      return;
+    }
+    
+    const streamerId = streamerRes.data?.id;
+
     // 하루 종일일 경우, 시간 부분을 00:00으로 강제
     const startTimeStr = isAllDay ? `${startTime}T00:00:00` : startTime;
     
+    // 2. 일정 생성 (streamer_id 연결)
     const { data, error } = await createSchedule({
       title,
-      streamer,
+      streamer: streamerName,
+      streamer_id: streamerId,
       categories: selectedCats,
       link,
       start_time: new Date(startTimeStr).toISOString(),
@@ -168,7 +185,13 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
           </div>
           <div className="space-y-2">
              <label className="text-sm font-medium">스트리머 *</label>
-             <Input name="streamer" required placeholder={`${streamerPlaceholder}`} />
+             <StreamerAutocompleteInput
+               name="streamer"
+               value={streamerName}
+               onChange={setStreamerName}
+               placeholder={streamerPlaceholder}
+               required={true}
+             />
           </div>
           <div className="space-y-2">
              <label className="text-sm font-medium">카테고리 *</label>

@@ -86,3 +86,61 @@ export async function findOrCreateStreamer(input: {
 
   return { data: newStreamer, error: null, isNew: true };
 }
+
+export async function updateStreamer(streamerId: string, input: {
+  name?: string;
+  channelUrl?: string | null;
+  imageUrl?: string | null;
+  followerCount?: number | null;
+  verifiedMark?: boolean;
+  isActive?: boolean;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { data: null, error: "로그인이 필요합니다." };
+  }
+
+  const updates: any = {};
+  if (input.name !== undefined) {
+    if (!input.name.trim()) return { data: null, error: "스트리머 이름을 입력해주세요." };
+    const normalizedName = normalizeStreamerName(input.name);
+    // 중복 확인
+    const { data: existing, error: searchError } = await supabase
+      .from("streamers")
+      .select("id")
+      .eq("normalized_name", normalizedName)
+      .neq("id", streamerId)
+      .maybeSingle();
+
+    if (existing) {
+      return { data: null, error: "동일한(유사한) 이름의 다른 스트리머가 이미 존재합니다." };
+    }
+    updates.name = input.name.trim();
+    updates.normalized_name = normalizedName;
+  }
+  
+  if (input.channelUrl !== undefined) updates.channel_url = input.channelUrl;
+  if (input.imageUrl !== undefined) updates.image_url = input.imageUrl;
+  if (input.followerCount !== undefined) updates.follower_count = input.followerCount;
+  if (input.verifiedMark !== undefined) updates.verified_mark = input.verifiedMark;
+  if (input.isActive !== undefined) updates.is_active = input.isActive;
+  
+  updates.updated_at = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("streamers")
+    .update(updates)
+    .eq("id", streamerId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating streamer:", error);
+    return { data: null, error: "스트리머 수정에 실패했습니다." };
+  }
+
+  return { data, error: null };
+}
+
