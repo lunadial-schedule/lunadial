@@ -5,11 +5,13 @@ import { getMyFavorites, isFavorited } from "@/app/actions/favorites"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FavoriteButton } from "./favorite-button"
 import { Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function FavoriteList() {
   const [favorites, setFavorites] = React.useState<any[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [isExpanded, setIsExpanded] = React.useState(false)
 
   const loadFavorites = React.useCallback(async () => {
     setIsLoading(true)
@@ -64,32 +66,34 @@ export function FavoriteList() {
     )
   }
 
+  const displayLimit = 8
+  const displayedFavorites = isExpanded ? favorites : favorites.slice(0, displayLimit)
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {favorites.map((fav) => {
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+      {displayedFavorites.map((fav) => {
         const streamer = fav.streamers
         return (
           <div 
             key={fav.id}
-            className="flex items-center gap-3 p-3 rounded-lg border bg-card shadow-sm hover:shadow-md transition-all group"
+            className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border bg-card shadow-sm hover:shadow-md transition-all group"
           >
-            <Avatar className="h-12 w-12 border">
+            <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border">
               <AvatarImage src={streamer.image_url || undefined} alt={streamer.name} />
               <AvatarFallback>{streamer.name[0]}</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col flex-1 min-w-0">
+            <div className="flex flex-col flex-1 min-w-0 justify-center">
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-sm truncate">{streamer.name}</span>
                 {streamer.verified_mark && (
                   <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium shrink-0">단독</span>
                 )}
               </div>
-              <span className="text-xs text-muted-foreground truncate w-full block">
-                {streamer.follower_count !== null 
-                  ? `팔로워 ${streamer.follower_count.toLocaleString()}`
-                  : '팔로워 정보 없음'
-                }
-              </span>
+              {streamer.follower_count !== null && (
+                <span className="text-[11px] sm:text-xs text-muted-foreground truncate w-full block mt-0.5">
+                  팔로워 {streamer.follower_count.toLocaleString()}
+                </span>
+              )}
             </div>
             
             <FavoriteButton 
@@ -106,6 +110,19 @@ export function FavoriteList() {
           </div>
         )
       })}
+
+      {favorites.length > displayLimit && !isExpanded && (
+        <div className="col-span-1 sm:col-span-2 lg:col-span-3 mt-2 flex justify-center">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setIsExpanded(true)}
+            className="w-full sm:w-auto text-xs"
+          >
+            {favorites.length - displayLimit}명 더 보기
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

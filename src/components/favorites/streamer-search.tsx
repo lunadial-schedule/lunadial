@@ -19,7 +19,7 @@ function useDebounce<T>(value: T, delay: number = 500): T {
   return debouncedValue
 }
 
-export function StreamerSearchSection() {
+export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
   const [query, setQuery] = React.useState("")
   const debouncedQuery = useDebounce(query, 300)
   const [results, setResults] = React.useState<any[]>([])
@@ -85,6 +85,14 @@ export function StreamerSearchSection() {
     performSearch(debouncedQuery)
   }, [debouncedQuery, performSearch])
 
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
+  React.useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 100)
+    }
+  }, [autoFocus])
+
   return (
     <div className="w-full flex flex-col gap-4">
       <CreateStreamerModal 
@@ -98,6 +106,7 @@ export function StreamerSearchSection() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
+          ref={inputRef}
           placeholder="스트리머 이름으로 검색..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
