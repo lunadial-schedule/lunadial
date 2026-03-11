@@ -12,6 +12,7 @@ import { getSchedules, type Schedule } from "@/app/actions/schedules"
 import { getMyFavorites } from "@/app/actions/favorites"
 import { isSameDay, parseISO, format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays } from "date-fns"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog"
 
 function CalendarContent() {
   const router = useRouter()
@@ -326,6 +327,10 @@ function CalendarContent() {
         onOpenChange={setIsDetailOpen} 
         schedule={selectedEvent}
       />
+
+      <div className="lg:hidden">
+        <CreateScheduleDialog isMobileTrigger />
+      </div>
     </PageContainer>
   )
 }

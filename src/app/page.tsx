@@ -4,6 +4,7 @@ import { LiveNowCard } from "@/components/dashboard/live-now-card";
 import { TodayHighlightsCard } from "@/components/dashboard/today-highlights-card";
 import { UpNextCard } from "@/components/dashboard/up-next-card";
 import { TodayScheduleCard } from "@/components/dashboard/today-schedule-card";
+import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog";
 import { Button } from "@/components/ui/button";
 import { BellRing, X } from "lucide-react";
 import { PageContainer } from "@/components/layout/page-container";
@@ -90,6 +91,10 @@ export default function Home() {
             <UpNextCard />
           </div>
         </div>
+      </div>
+
+      <div className="lg:hidden">
+        <CreateScheduleDialog isMobileTrigger />
       </div>
     </PageContainer>
   );

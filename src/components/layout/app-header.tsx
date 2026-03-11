@@ -130,10 +130,6 @@ export function AppHeader() {
             <CreateScheduleDialog />
           </div>
 
-          <div className="lg:hidden">
-            <CreateScheduleDialog isMobileTrigger />
-          </div>
-
           {/* User Profile */}
           {user ? (
             <DropdownMenu>

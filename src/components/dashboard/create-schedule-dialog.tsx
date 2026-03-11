@@ -147,11 +147,16 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
       {isMobileTrigger ? (
         <Button 
           type="button"
-          size="icon" 
-          className="h-10 w-10 shrink-0 rounded-full shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-transform active:scale-95"
+          aria-label="새 일정 등록"
+          className="fixed z-[100] h-14 lg:hidden rounded-full px-5 shadow-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-transform active:scale-95 flex items-center justify-center gap-2"
+          style={{ 
+            bottom: 'calc(1.5rem + env(safe-area-inset-bottom))', 
+            right: 'calc(1.5rem + env(safe-area-inset-right))' 
+          }}
           onClick={handleOpenClick}
         >
           <Plus className="h-5 w-5" />
+          일정 추가
         </Button>
       ) : (
         <Button 
@@ -166,85 +171,100 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
         </Button>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-          <DialogTitle>새 일정 등록</DialogTitle>
-          <DialogDescription>
-            스트리머의 새로운 방송/합방 일정을 등록합니다.
-          </DialogDescription>
-        </DialogHeader>
-        {errorMsg && (
-          <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md font-medium -mb-2 mt-2">
-            {errorMsg}
-          </div>
-        )}
-        <form onSubmit={onSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-             <label className="text-sm font-medium">제목 *</label>
-             <Input name="title" required placeholder={`${titlePlaceholder}`} />
-          </div>
-          <div className="space-y-2">
-             <label className="text-sm font-medium">스트리머 *</label>
-             <StreamerAutocompleteInput
-               name="streamer"
-               value={streamerName}
-               onChange={setStreamerName}
-               placeholder={streamerPlaceholder}
-               required={true}
-             />
-          </div>
-          <div className="space-y-2">
-             <label className="text-sm font-medium">카테고리 *</label>
-             <div className="flex flex-wrap gap-2">
-               {CATEGORY_LIST.map(cat => {
-                 const isSelected = selectedCats.includes(cat.id);
-                 return (
-                   <Badge
-                     key={cat.id}
-                     variant="outline"
-                     className={`cursor-pointer border-dashed transition-colors hover:bg-muted ${isSelected ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary' : ''}`}
-                     onClick={() => {
-                       setSelectedCats(prev => prev.includes(cat.id) ? prev.filter(c => c !== cat.id) : [...prev, cat.id])
-                     }}
-                   >
-                     {cat.label}
-                   </Badge>
-                 )
-               })}
-             </div>
-          </div>
-          <div className="space-y-2">
-             <div className="flex items-center justify-between">
-               <label className="text-sm font-medium">시작 시간 *</label>
-               <div className="flex items-center space-x-2">
-                 <Checkbox id="isAllDay" checked={isAllDay} onCheckedChange={(c) => handleAllDayChange(c === true)} />
-                 <label htmlFor="isAllDay" className="text-sm text-muted-foreground cursor-pointer">하루 종일</label>
-               </div>
-             </div>
-             <Input type={isAllDay ? "date" : "datetime-local"} name="start_time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-             <label className="text-sm font-medium">공지 링크 *</label>
-             <Input type="url" name="link" required placeholder="https://..." />
-          </div>
-          <div className="space-y-2">
-             <label className="text-sm font-medium">메모</label>
-             <textarea 
-               name="memo" 
-               rows={2}
-               className="flex w-full rounded-md border border-input bg-background px-1 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-               placeholder="추가 세부사항을 기록하세요."
-             />
-          </div>
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={isLoading}>취소</Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "등록 중..." : "등록하기"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <DialogContent className="sm:max-w-[425px] flex flex-col p-0 gap-0 max-h-[90dvh] md:max-h-[85vh] overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
+            <DialogTitle>새 일정 등록</DialogTitle>
+            <DialogDescription>
+              스트리머의 새로운 방송/합방 일정을 등록합니다.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={onSubmit} className="flex flex-col flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              {errorMsg && (
+                <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md font-medium">
+                  {errorMsg}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                 <label className="text-sm font-medium">제목 *</label>
+                 <Input name="title" required placeholder={`${titlePlaceholder}`} />
+              </div>
+
+              <div className="space-y-2">
+                 <label className="text-sm font-medium">스트리머 *</label>
+                 <StreamerAutocompleteInput
+                   name="streamer"
+                   value={streamerName}
+                   onChange={setStreamerName}
+                   placeholder={streamerPlaceholder}
+                   required={true}
+                 />
+              </div>
+
+              <div className="space-y-2">
+                 <label className="text-sm font-medium">카테고리 *</label>
+                 <div className="flex flex-wrap gap-2">
+                   {CATEGORY_LIST.map(cat => {
+                     const isSelected = selectedCats.includes(cat.id);
+                     return (
+                       <Badge
+                         key={cat.id}
+                         variant="outline"
+                         className={`cursor-pointer border-dashed transition-colors hover:bg-muted ${isSelected ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary' : ''}`}
+                         onClick={() => {
+                           setSelectedCats(prev => prev.includes(cat.id) ? prev.filter(c => c !== cat.id) : [...prev, cat.id])
+                         }}
+                       >
+                         {cat.label}
+                       </Badge>
+                     )
+                   })}
+                 </div>
+              </div>
+
+              <div className="space-y-2">
+                 <div className="flex items-center justify-between">
+                   <label className="text-sm font-medium">시작 시간 *</label>
+                   <div className="flex items-center space-x-2">
+                     <Checkbox id="isAllDay" checked={isAllDay} onCheckedChange={(c) => handleAllDayChange(c === true)} />
+                     <label htmlFor="isAllDay" className="text-sm text-muted-foreground cursor-pointer">하루 종일</label>
+                   </div>
+                 </div>
+                 <Input type={isAllDay ? "date" : "datetime-local"} name="start_time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                 <label className="text-sm font-medium">공지 링크 *</label>
+                 <Input type="url" name="link" required placeholder="https://..." />
+              </div>
+
+              <div className="space-y-2">
+                 <label className="text-sm font-medium">메모</label>
+                 <textarea 
+                   name="memo" 
+                   rows={2}
+                   className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px]"
+                   placeholder="추가 세부사항을 기록하세요."
+                 />
+              </div>
+            </div>
+
+            <DialogFooter 
+              className="shrink-0 px-6 py-4 border-t shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] bg-background flex flex-row justify-end gap-2"
+              style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+            >
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={isLoading} className="flex-1 sm:flex-none">
+                취소
+              </Button>
+              <Button type="submit" disabled={isLoading} className="flex-1 sm:flex-none">
+                {isLoading ? "등록 중..." : "등록하기"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
