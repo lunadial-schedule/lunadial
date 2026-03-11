@@ -4,7 +4,7 @@ import * as React from "react"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { searchStreamers } from "@/app/actions/streamers"
-import { isFavorited } from "@/app/actions/favorites"
+import { getMyFavorites } from "@/app/actions/favorites"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FavoriteButton } from "./favorite-button"
 import { CreateStreamerModal } from "./create-streamer-modal"
@@ -23,14 +23,36 @@ export function StreamerSearchSection() {
   const [query, setQuery] = React.useState("")
   const debouncedQuery = useDebounce(query, 300)
   const [results, setResults] = React.useState<any[]>([])
-  const [favoriteMap, setFavoriteMap] = React.useState<Record<string, boolean>>({})
+  const [favoriteSet, setFavoriteSet] = React.useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = React.useState(false)
   const [hasSearched, setHasSearched] = React.useState(false)
+
+  const loadFavorites = React.useCallback(async () => {
+    try {
+      const { data } = await getMyFavorites()
+      if (data) {
+        const ids = data.map(f => {
+          const s = f.streamers as any
+          return Array.isArray(s) ? s[0]?.id : s?.id
+        }).filter(Boolean)
+        setFavoriteSet(new Set(ids))
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    loadFavorites()
+    window.addEventListener("favoritesUpdated", loadFavorites)
+    return () => window.removeEventListener("favoritesUpdated", loadFavorites)
+  }, [loadFavorites])
+
+  const searchIdRef = React.useRef(0)
 
   const performSearch = React.useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setResults([])
-      setFavoriteMap({})
       setHasSearched(false)
       return
     }
@@ -38,29 +60,24 @@ export function StreamerSearchSection() {
     setIsLoading(true)
     setHasSearched(true)
     
+    const currentSearchId = ++searchIdRef.current
+
     try {
       const { data } = await searchStreamers(searchQuery)
+      
+      if (currentSearchId !== searchIdRef.current) return
+
       if (data) {
         setResults(data)
-
-        // 각 결과의 즐겨찾기 상태 조회 (병렬)
-        // MVP: 결과가 최대 20개이므로 직접 개별 조회, 혹은 나중에 조인으로 최적화
-        const favPromises = data.map(async (streamer) => {
-          const res = await isFavorited(streamer.id!)
-          return { id: streamer.id!, isFavorited: res?.data || false }
-        })
-
-        const favResults = await Promise.all(favPromises)
-        const newFavMap: Record<string, boolean> = {}
-        favResults.forEach(r => {
-          newFavMap[r.id] = r.isFavorited
-        })
-        setFavoriteMap(newFavMap)
       }
     } catch (e) {
-      console.error(e)
+      if (currentSearchId === searchIdRef.current) {
+        console.error(e)
+      }
     } finally {
-      setIsLoading(false)
+      if (currentSearchId === searchIdRef.current) {
+        setIsLoading(false)
+      }
     }
   }, [])
 
@@ -133,7 +150,7 @@ export function StreamerSearchSection() {
                 
                 <FavoriteButton 
                   streamerId={streamer.id!} 
-                  initialFavorited={favoriteMap[streamer.id!] || false} 
+                  initialFavorited={favoriteSet.has(streamer.id!)} 
                 />
               </div>
             ))}
