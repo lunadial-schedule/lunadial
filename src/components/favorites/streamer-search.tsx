@@ -199,6 +199,7 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
           streamer={editingStreamer} 
         />
       )}
+npx -y supabase gen types typescript --local | Out-File -Encoding utf8 src\types\supabase.ts
     </div>
   )
 }
