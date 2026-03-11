@@ -16,12 +16,14 @@ import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { findOrCreateStreamer } from "@/app/actions/streamers";
 import { StreamerAutocompleteInput } from "./streamer-autocomplete-input";
+import { useIsOverlayOpen } from "@/hooks/use-is-overlay-open";
 
 interface CreateScheduleDialogProps {
   isMobileTrigger?: boolean;
 }
 
 export function CreateScheduleDialog({ isMobileTrigger = false }: CreateScheduleDialogProps = {}) {
+  const isOverlayOpen = useIsOverlayOpen();
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -148,7 +150,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
         <Button 
           type="button"
           aria-label="새 일정 등록"
-          className="fixed z-[100] h-14 lg:hidden rounded-full px-5 shadow-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-transform active:scale-95 flex items-center justify-center gap-2"
+          className={`fixed z-[100] h-14 lg:hidden rounded-full px-5 shadow-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-transform active:scale-95 items-center justify-center gap-2 ${isOverlayOpen ? 'hidden' : 'flex'}`}
           style={{ 
             bottom: 'calc(1.5rem + env(safe-area-inset-bottom))', 
             right: 'calc(1.5rem + env(safe-area-inset-right))' 
@@ -175,7 +177,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
             <DialogTitle>새 일정 등록</DialogTitle>
             <DialogDescription>
-              스트리머의 새로운 방송/합방 일정을 등록합니다.
+              스트리머의 새로운 방송 일정을 등록합니다.
             </DialogDescription>
           </DialogHeader>
 
