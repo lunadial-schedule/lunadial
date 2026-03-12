@@ -36,13 +36,16 @@ export async function authorizeChzzkToken(code: string, state: string): Promise<
     body: body.toString()
   })
 
+  const responseText = await response.text()
+
   if (!response.ok) {
-    const errText = await response.text()
-    console.error("Chzzk token exchange failed:", errText)
-    throw new Error(`Failed to exchange token: ${response.status}`)
+    console.error("Chzzk token exchange failed. Status:", response.status)
+    console.error("Chzzk token exchange body sent:", body.toString())
+    console.error("Chzzk token exchange response text:", responseText)
+    throw new Error(`Failed to exchange token (${response.status}): ${responseText}`)
   }
 
-  const data = await response.json()
+  const data = JSON.parse(responseText)
   return {
     accessToken: data.content.accessToken,
     refreshToken: data.content.refreshToken,
