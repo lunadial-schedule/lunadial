@@ -4,6 +4,9 @@ import { authorizeChzzkToken, getChzzkProfile } from "@/lib/server/chzzk"
 import { verifyChzzkState } from "@/lib/server/chzzk-oauth"
 import { encryptString } from "@/lib/server/crypto"
 
+// Next.js App Router 캐싱 방지
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const code = searchParams.get("code")
@@ -77,8 +80,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.redirect(successRedirectUrl)
   } catch (err: any) {
-    console.error("Chzzk callback catch error:", err)
+    console.error("Chzzk callback catch error:", err.message || err)
     errorRedirectUrl.searchParams.set("chzzk_error", "server_error")
+    errorRedirectUrl.searchParams.set("details", err.message || "unknown")
     return NextResponse.redirect(errorRedirectUrl)
   }
 }

@@ -67,10 +67,11 @@ export default function AccountSettingsPage() {
         window.history.replaceState({}, '', window.location.pathname)
       }
       const err = sp.get('chzzk_error')
+      const details = sp.get('details')
       if (err) {
         if (err === 'already_linked') toast.error("이미 다른 계정에 연동된 치지직 계정입니다.")
         else if (err === 'canceled') toast.error("치지직 연동이 취소되었습니다.")
-        else toast.error("치지직 연동 중 오류가 발생했습니다.")
+        else toast.error(`치지직 연동 중 오류가 발생했습니다. ${details ? `(${details})` : ''}`)
         window.history.replaceState({}, '', window.location.pathname)
       }
     }
