@@ -65,7 +65,7 @@ export function ChzzkConnectCard({ initialAccount, onAccountChange }: ChzzkConne
             alt="Chzzk Logo" 
             width={24} 
             height={24} 
-            className="rounded-md object-contain"
+            className="object-contain"
           />
           치지직 계정 연동
         </CardTitle>
@@ -75,13 +75,13 @@ export function ChzzkConnectCard({ initialAccount, onAccountChange }: ChzzkConne
       </CardHeader>
       <CardContent>
         {account ? (
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/20">
-            <div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-muted/20 gap-4">
+            <div className="w-full sm:w-auto overflow-hidden">
               <p className="font-semibold text-sm">연결된 채널</p>
-              <p className="text-lg font-bold">{account.provider_username}</p>
+              <p className="text-lg font-bold truncate" title={account.provider_username || ""}>{account.provider_username}</p>
               <p className="text-xs text-muted-foreground mt-1 gap-1 flex items-center">
-                <Link2 className="w-3 h-3" />
-                {account.provider_user_id}
+                <Link2 className="w-3 h-3 shrink-0" />
+                <span className="truncate" title={account.provider_user_id}>{account.provider_user_id}</span>
               </p>
             </div>
             <Button
@@ -89,7 +89,7 @@ export function ChzzkConnectCard({ initialAccount, onAccountChange }: ChzzkConne
               size="sm"
               onClick={handleDisconnect}
               disabled={isLoading}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Unlink className="w-4 h-4 mr-2" />}
               연결 해제
