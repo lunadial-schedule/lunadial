@@ -21,19 +21,20 @@ export async function authorizeChzzkToken(code: string, state: string): Promise<
 
   const tokenUrl = "https://openapi.chzzk.naver.com/auth/v1/token"
   
-  const body = new URLSearchParams()
-  body.append("grantType", "authorization_code")
-  body.append("clientId", clientId)
-  body.append("clientSecret", clientSecret)
-  body.append("code", code)
-  body.append("state", state)
+  const body = JSON.stringify({
+    grantType: "authorization_code",
+    clientId,
+    clientSecret,
+    code,
+    state
+  })
 
   const response = await fetch(tokenUrl, {
     method: "POST",
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
+      "Content-Type": "application/json"
     },
-    body: body.toString()
+    body
   })
 
   const responseText = await response.text()
