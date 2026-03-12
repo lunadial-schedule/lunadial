@@ -13,6 +13,7 @@ import { toast } from "sonner"
 import { Crown, Star, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { getMyFavorites } from "@/app/actions/favorites"
+import { ChzzkConnectCard } from "@/components/mypage/chzzk-connect-card"
 
 export default function AccountSettingsPage() {
   const [user, setUser] = useState<User | null>(null)
@@ -21,6 +22,8 @@ export default function AccountSettingsPage() {
   
   const [favorites, setFavorites] = useState<any[]>([])
   const [favoritesCount, setFavoritesCount] = useState(0)
+  
+  const [chzzkAccount, setChzzkAccount] = useState<any>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -38,6 +41,39 @@ export default function AccountSettingsPage() {
       }
     }
     loadFavs()
+    
+    // 치지직 계정 연동 정보 불러오기
+    const loadChzzkAccount = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data } = await supabase
+          .from("connected_accounts")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("provider", "chzzk")
+          .maybeSingle()
+        if (data) {
+          setChzzkAccount(data)
+        }
+      }
+    }
+    loadChzzkAccount()
+
+    // OAuth 결과 처리
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search)
+      if (sp.get('chzzk_success')) {
+        toast.success("치지직 계정 연동이 완료되었습니다.")
+        window.history.replaceState({}, '', window.location.pathname)
+      }
+      const err = sp.get('chzzk_error')
+      if (err) {
+        if (err === 'already_linked') toast.error("이미 다른 계정에 연동된 치지직 계정입니다.")
+        else if (err === 'canceled') toast.error("치지직 연동이 취소되었습니다.")
+        else toast.error("치지직 연동 중 오류가 발생했습니다.")
+        window.history.replaceState({}, '', window.location.pathname)
+      }
+    }
   }, [supabase.auth])
 
   const handleSave = () => {
@@ -174,6 +210,23 @@ export default function AccountSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Chzzk Connect Integration */}
+        {user && (
+          <ChzzkConnectCard 
+            initialAccount={chzzkAccount} 
+            onAccountChange={() => {
+              // Refresh account status on disconnect
+              supabase
+                .from("connected_accounts")
+                .select("*")
+                .eq("user_id", user.id)
+                .eq("provider", "chzzk")
+                .maybeSingle()
+                .then(({ data }) => setChzzkAccount(data || null))
+            }}
+          />
+        )}
       </div>
     </PageContainer>
   )
