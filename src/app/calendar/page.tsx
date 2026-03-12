@@ -13,6 +13,7 @@ import { getMyFavorites } from "@/app/actions/favorites"
 import { isSameDay, parseISO, format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays } from "date-fns"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog"
+import { createClient } from "@/lib/supabase/client"
 
 function CalendarContent() {
   const router = useRouter()
@@ -106,6 +107,18 @@ function CalendarContent() {
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
+  const handleFavoritesScope = async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
+        router.push("/login");
+      }
+      return;
+    }
+    updateUrlParam('scope', 'favorites');
+  };
+
   const goPrev = () => {
     if (view === 'month') setCurrentDate(prev => subMonths(prev, 1))
     else setCurrentDate(prev => subDays(prev, 1))
@@ -127,7 +140,7 @@ function CalendarContent() {
             <h2 className="mb-3 text-sm font-semibold tracking-tight text-foreground/80">보기 필터</h2>
             <div className="flex bg-muted/50 p-1 rounded-lg">
               <Button variant="ghost" size="sm" className={`flex-1 text-xs h-8 ${scope === 'all' ? 'bg-background shadow-sm text-foreground hover:bg-background/80' : 'text-muted-foreground'}`} onClick={() => updateUrlParam('scope', 'all')}>전체</Button>
-              <Button variant="ghost" size="sm" className={`flex-1 text-xs h-8 ${scope === 'favorites' ? 'bg-background shadow-sm text-foreground hover:bg-background/80' : 'text-muted-foreground'}`} onClick={() => updateUrlParam('scope', 'favorites')}>즐겨찾기</Button>
+              <Button variant="ghost" size="sm" className={`flex-1 text-xs h-8 ${scope === 'favorites' ? 'bg-background shadow-sm text-foreground hover:bg-background/80' : 'text-muted-foreground'}`} onClick={handleFavoritesScope}>즐겨찾기</Button>
             </div>
           </div>
           <div className="pt-2">

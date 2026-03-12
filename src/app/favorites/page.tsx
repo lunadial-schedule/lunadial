@@ -9,8 +9,35 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { FavoriteSearchSheet } from "@/components/favorites/favorite-search-sheet"
 import { AddFavoriteFloatingButton } from "@/components/favorites/add-favorite-floating-button"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
 export default function FavoritesPage() {
+  const router = useRouter()
+  
+  React.useEffect(() => {
+    let mounted = true
+    const checkUser = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!mounted) return
+      
+      if (!user) {
+        if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
+          router.push("/login")
+        } else {
+          router.back()
+        }
+      }
+    }
+    checkUser()
+    
+    return () => {
+      mounted = false
+    }
+  }, [router])
+
   return (
     <PageContainer className="py-8 bg-background min-h-[calc(100vh-4rem)] flex flex-col gap-8">
 

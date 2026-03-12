@@ -17,6 +17,7 @@ import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer";
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog";
 import { CATEGORY_LIST } from "@/config/categories";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 export function TodayScheduleCard() {
   const router = useRouter();
@@ -89,6 +90,20 @@ export function TodayScheduleCard() {
     return format(day, "EEEE", { locale: ko });
   };
 
+  const handleFavoritesFilterChange = async (checked: boolean) => {
+    if (checked) {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
+          router.push("/login");
+        }
+        return; // do not check
+      }
+    }
+    setIsFavoritesOnly(checked);
+  };
+
   return (
     <>
       <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden h-[500px] lg:h-full">
@@ -103,7 +118,7 @@ export function TodayScheduleCard() {
               <Checkbox 
                 id="favorites-only-today" 
                 checked={isFavoritesOnly}
-                onCheckedChange={(checked) => setIsFavoritesOnly(!!checked)}
+                onCheckedChange={handleFavoritesFilterChange}
               />
               <Label htmlFor="favorites-only-today" className="text-xs md:text-sm font-medium cursor-pointer select-none">
                 즐겨찾기
