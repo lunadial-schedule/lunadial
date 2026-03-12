@@ -68,7 +68,7 @@ export function FavoriteList() {
     )
   }
 
-  const displayLimit = 12
+  const displayLimit = 15
   const displayedFavorites = isExpanded ? favorites : favorites.slice(0, displayLimit)
 
   return (

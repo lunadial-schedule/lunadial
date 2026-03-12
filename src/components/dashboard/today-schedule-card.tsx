@@ -6,10 +6,13 @@ import { addDays, format, isSameDay, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
 
 import { getSchedules, type Schedule } from "@/app/actions/schedules";
+import { getMyFavorites } from "@/app/actions/favorites";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer";
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog";
 import { CATEGORY_LIST } from "@/config/categories";
@@ -22,6 +25,8 @@ export function TodayScheduleCard() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null);
+  const [isFavoritesOnly, setIsFavoritesOnly] = React.useState(false);
+  const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>([]);
 
   // 어제, 오늘, 내일 Date 객체 배열
   const targetDays = React.useMemo(() => [
@@ -39,26 +44,41 @@ export function TodayScheduleCard() {
     setIsDetailOpen(true);
   };
 
-  const loadSchedules = React.useCallback(async () => {
+  const loadData = React.useCallback(async () => {
     setIsLoading(true);
     // 3일치 여유 있게 앞뒤로 좀 더 가져온다 (안전하게 -2일 ~ +2일)
     const startDate = addDays(currentDate, -2);
     const endDate = addDays(currentDate, 2);
-    const { data } = await getSchedules(startDate, endDate);
-    if (data) {
-      setEvents(data);
+    
+    // 일정과 즐겨찾기를 동시에 가져온다
+    const [schedulesRes, favoritesRes] = await Promise.all([
+      getSchedules(startDate, endDate),
+      getMyFavorites()
+    ]);
+    
+    if (schedulesRes.data) {
+      setEvents(schedulesRes.data);
     }
+    if (favoritesRes.data) {
+      const fNames = favoritesRes.data.map(f => (f.streamers as any)?.name).filter(Boolean) as string[];
+      setFavoriteStreamerNames(fNames);
+    }
+    
     setIsLoading(false);
   }, [currentDate]);
 
   React.useEffect(() => {
-    loadSchedules();
-    window.addEventListener("schedulesUpdated", loadSchedules);
-    return () => window.removeEventListener("schedulesUpdated", loadSchedules);
-  }, [loadSchedules]);
+    loadData();
+    window.addEventListener("schedulesUpdated", loadData);
+    return () => window.removeEventListener("schedulesUpdated", loadData);
+  }, [loadData]);
 
   const getEventsForDay = (day: Date) => {
-    return events.filter(e => isSameDay(parseISO(e.start_time), day));
+    return events.filter(e => {
+      if (!isSameDay(parseISO(e.start_time), day)) return false;
+      if (isFavoritesOnly && (!e.streamer || !favoriteStreamerNames.includes(e.streamer))) return false;
+      return true;
+    });
   };
   
   const getDayLabel = (day: Date) => {
@@ -79,6 +99,16 @@ export function TodayScheduleCard() {
             오늘의 일정
           </CardTitle>
           <div className="flex items-center gap-1.5 md:gap-2">
+            <div className="flex items-center gap-2 mr-2">
+              <Checkbox 
+                id="favorites-only-today" 
+                checked={isFavoritesOnly}
+                onCheckedChange={(checked) => setIsFavoritesOnly(!!checked)}
+              />
+              <Label htmlFor="favorites-only-today" className="text-xs md:text-sm font-medium cursor-pointer select-none">
+                즐겨찾기
+              </Label>
+            </div>
             <Button variant="outline" size="sm" onClick={goToday} className="h-7 md:h-8 rounded-full text-xs sm:text-sm px-3">오늘</Button>
             <div className="flex items-center bg-muted/50 rounded-full p-0.5">
               <Button variant="ghost" size="icon" className="h-6 w-6 md:h-7 md:w-7 rounded-full" onClick={goPrev}>
