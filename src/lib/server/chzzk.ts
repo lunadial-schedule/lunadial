@@ -56,7 +56,7 @@ export async function authorizeChzzkToken(code: string, state: string): Promise<
 }
 
 export async function getChzzkProfile(accessToken: string): Promise<ChzzkProfileResponse> {
-  const profileUrl = "https://openapi.chzzk.naver.com/openapi/v1/users/me"
+  const profileUrl = "https://openapi.chzzk.naver.com/open/v1/users/me"
 
   const response = await fetch(profileUrl, {
     method: "GET",
