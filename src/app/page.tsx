@@ -10,19 +10,33 @@ import { BellRing, X } from "lucide-react";
 import { PageContainer } from "@/components/layout/page-container";
 import * as React from "react";
 import { toast } from "sonner";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function Home() {
+function Content() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [showBanner, setShowBanner] = React.useState(false);
 
   React.useEffect(() => {
-    const hideStatus = localStorage.getItem("hidePushBannerUntil");
-    if (!hideStatus) {
-      setShowBanner(true);
-    } else if (hideStatus !== "perm_granted" && new Date(hideStatus) < new Date()) {
-      // 7일이 지났다면 다시 표시
-      setShowBanner(true);
+    // 치지직 OAuth Callback 처리 (redirectUri 가 루트인 경우 우회)
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    const error = searchParams.get('error');
+
+    if (code && state) {
+      router.replace(`/api/auth/chzzk/callback?code=${code}&state=${state}`);
+    } else if (error) {
+      router.replace(`/api/auth/chzzk/callback?error=${error}`);
+    } else {
+      const hideStatus = localStorage.getItem("hidePushBannerUntil");
+      if (!hideStatus) {
+        setShowBanner(true);
+      } else if (hideStatus !== "perm_granted" && new Date(hideStatus) < new Date()) {
+        setShowBanner(true);
+      }
     }
-  }, []);
+  }, [router, searchParams]);
 
   const handleDismiss = () => {
     const hideDate = new Date();
@@ -98,4 +112,12 @@ export default function Home() {
       </div>
     </PageContainer>
   );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <Content />
+    </Suspense>
+  )
 }
