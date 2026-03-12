@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -20,6 +21,10 @@ interface ChzzkConnectCardProps {
 export function ChzzkConnectCard({ initialAccount, onAccountChange }: ChzzkConnectCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [account, setAccount] = useState<ChzzkAccount | null>(initialAccount)
+
+  useEffect(() => {
+    setAccount(initialAccount)
+  }, [initialAccount])
 
   const handleConnect = () => {
     setIsLoading(true)
@@ -55,17 +60,13 @@ export function ChzzkConnectCard({ initialAccount, onAccountChange }: ChzzkConne
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-5 h-5 text-[#00FFA3]"
-          >
-            <path d="M12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0Z" fill="currentColor"/>
-            <path d="M7 16V8L17 14L7 16Z" fill="#141517"/>
-          </svg>
+          <Image 
+            src="/chzzk-logo.png" 
+            alt="Chzzk Logo" 
+            width={24} 
+            height={24} 
+            className="rounded-md object-contain"
+          />
           치지직 계정 연동
         </CardTitle>
         <CardDescription>
