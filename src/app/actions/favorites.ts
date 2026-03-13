@@ -45,6 +45,27 @@ export async function addFavorite(streamerId: string) {
     return { data: null, error: "로그인이 필요합니다." };
   }
 
+  // TODO: isPro 확인 로직 연동 시 이 부분을 프로필/구독 상태에 따라 변경
+  // 현재는 임시로 false 처리하여 모든 사용자(Free)에게 10명 제한 적용
+  const isPro = false;
+  const maxFavorites = 10;
+
+  if (!isPro) {
+    const { count, error: countError } = await supabase
+      .from("favorites")
+      .select("*", { count: 'exact', head: true })
+      .eq("user_id", user.id);
+
+    if (countError) {
+      console.error("Error checking favorites count:", countError);
+      return { data: null, error: "즐겨찾기 상태를 확인하지 못했습니다." };
+    }
+
+    if (count !== null && count >= maxFavorites) {
+      return { data: null, error: `Free 플랜은 즐겨찾기를 최대 ${maxFavorites}명까지만 추가할 수 있습니다.` };
+    }
+  }
+
   const { data, error } = await supabase
     .from("favorites")
     .insert({

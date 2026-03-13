@@ -56,9 +56,17 @@ export function FavoriteButton({ streamerId, initialFavorited, className, onFavo
       // 롤백
       setIsFavorited(!nextState)
       if (onFavoriteChange) onFavoriteChange(!nextState)
-      toast.error(err.message || (nextState ? "즐겨찾기 추가 실패" : "즐겨찾기 해제 실패"), {
-        description: err.message === "로그인이 필요합니다." ? "로그인 후 다시 시도해주세요." : undefined
-      })
+      
+      const errMsg = err.message || ""
+      if (errMsg.includes("Free 플랜은 즐겨찾기를 최대")) {
+        if (window.confirm("Free 플랜은 즐겨찾기를 최대 10명까지만 추가할 수 있습니다. Pro 플랜으로 업그레이드하시겠습니까?")) {
+          router.push("/pro")
+        }
+      } else {
+        toast.error(errMsg || (nextState ? "즐겨찾기 추가 실패" : "즐겨찾기 해제 실패"), {
+          description: errMsg === "로그인이 필요합니다." ? "로그인 후 다시 시도해주세요." : undefined
+        })
+      }
     } finally {
       setIsLoading(false)
     }

@@ -7,6 +7,8 @@ import * as z from "zod"
 import { Loader2, Plus } from "lucide-react"
 import { STREAMER_PLACEHOLDERS } from "@/config/placeholders"
 
+import { useRouter } from "next/navigation"
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -45,6 +47,7 @@ interface CreateStreamerModalProps {
 export function CreateStreamerModal({ initialSearchQuery = "", onSuccess }: CreateStreamerModalProps) {
   const [open, setOpen] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
+  const router = useRouter()
   
   const [streamerPlaceholder, setStreamerPlaceholder] = React.useState("예: 릴카")
   const prevStreamerRef = React.useRef<string | null>(null)
@@ -111,7 +114,14 @@ export function CreateStreamerModal({ initialSearchQuery = "", onSuccess }: Crea
       if (onSuccess) onSuccess()
 
     } catch (error: any) {
-      toast.error(error.message)
+      const errMsg = error.message || ""
+      if (errMsg.includes("Free 플랜은 즐겨찾기를 최대")) {
+        if (window.confirm("Free 플랜은 즐겨찾기를 최대 10명까지만 추가할 수 있습니다. Pro 플랜으로 업그레이드하시겠습니까?")) {
+          router.push("/pro")
+        }
+      } else {
+        toast.error(errMsg)
+      }
     } finally {
       setIsLoading(false)
     }

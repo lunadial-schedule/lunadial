@@ -143,7 +143,6 @@ export function ScheduleDetailDrawer({
 
           {(schedule.memo && schedule.memo.trim() !== "") && (
             <div className="bg-muted/30 p-5 rounded-xl border border-border">
-              <h4 className="text-xs font-semibold text-muted-foreground mb-3">상세 메모</h4>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
                 {schedule.memo}
               </p>
