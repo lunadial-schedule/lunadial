@@ -1,3 +1,9 @@
+/**
+ * Next.js 미들웨어
+ *
+ * 매 요청마다 Supabase 인증 세션을 갱신한다.
+ * 정적 파일, 이미지 최적화, favicon 경로는 제외한다.
+ */
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
@@ -5,15 +11,9 @@ export async function middleware(request: NextRequest) {
   return await updateSession(request)
 }
 
+/** 미들웨어를 적용할 경로 매처 (정적 파일 제외) */
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

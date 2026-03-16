@@ -1,3 +1,9 @@
+/**
+ * 치지직 인기 라이브 목록 API
+ *
+ * 시청자 수 기준 상위 5개 라이브 스트림을 반환한다.
+ * 30초 정적 캐싱으로 레이트리밋 및 부하를 방지한다.
+ */
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -5,7 +11,7 @@ export async function GET() {
   const CHZZK_CLIENT_SECRET = process.env.CHZZK_CLIENT_SECRET
 
   if (!CHZZK_CLIENT_ID || !CHZZK_CLIENT_SECRET) {
-    return NextResponse.json({ error: 'Missing Chzzk API credentials' }, { status: 500 })
+    return NextResponse.json({ error: '치지직 API 인증 정보 누락' }, { status: 500 })
   }
 
   try {
@@ -15,16 +21,16 @@ export async function GET() {
         'Client-Secret': CHZZK_CLIENT_SECRET,
         'Content-Type': 'application/json',
       },
-      next: { revalidate: 30 }, // 30초 정적 캐싱으로 레이트리밋 및 부하 방지
+      next: { revalidate: 30 }, // 30초 캐싱
     })
 
     if (!res.ok) {
-      throw new Error(`Naver OpenAPI error: ${res.status} ${res.statusText}`)
+      throw new Error(`치지직 API 에러: ${res.status} ${res.statusText}`)
     }
 
     const { content } = await res.json()
     
-    // 치지직 API 응답 스펙에 맞춤: content 내부의 data 배열
+    // 프론트에서 사용할 형태로 매핑
     const items = content?.data?.map((item: any) => ({
       channelId: item.channelId,
       channelName: item.channelName,
@@ -39,7 +45,7 @@ export async function GET() {
       items 
     })
   } catch (error) {
-    console.error('Failed to fetch Chzzk live top:', error)
-    return NextResponse.json({ error: 'Failed to fetch live streams' }, { status: 500 })
+    console.error('치지직 인기 라이브 조회 실패:', error)
+    return NextResponse.json({ error: '라이브 스트림 조회 실패' }, { status: 500 })
   }
 }

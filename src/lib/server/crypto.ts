@@ -1,9 +1,23 @@
+/**
+ * 문자열 암호화/복호화 유틸 (서버 전용)
+ *
+ * AES-256-GCM 알고리즘으로 민감한 데이터(예: 치지직 토큰)를 암호화/복호화한다.
+ * 환경변수 ENCRYPTION_KEY (최소 32자)가 필요하다.
+ *
+ * 암호화 결과 형식: "iv:authTag:encryptedText" (모두 base64 인코딩)
+ */
 import crypto from "crypto"
 
+/** 암호화 알고리즘 */
 const ALGORITHM = "aes-256-gcm"
-// 32 byte key needed for aes-256
+/** AES-256은 32바이트 키가 필요 */
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY
 
+/**
+ * 평문 문자열을 AES-256-GCM으로 암호화한다.
+ * @param text - 암호화할 평문
+ * @returns "iv:authTag:encryptedText" 형태의 암호화 문자열
+ */
 export function encryptString(text: string): string {
   if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length < 32) {
     throw new Error("Invalid or missing ENCRYPTION_KEY (must be at least 32 characters)")
@@ -16,10 +30,14 @@ export function encryptString(text: string): string {
   
   const authTag = cipher.getAuthTag().toString("base64")
   
-  // Format: iv:authTag:encryptedText
   return `${iv.toString("base64")}:${authTag}:${encrypted}`
 }
 
+/**
+ * AES-256-GCM으로 암호화된 문자열을 복호화한다.
+ * @param encryptedData - "iv:authTag:encryptedText" 형태의 암호화 문자열
+ * @returns 복호화된 평문 문자열
+ */
 export function decryptString(encryptedData: string): string {
   if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length < 32) {
     throw new Error("Invalid or missing ENCRYPTION_KEY (must be at least 32 characters)")

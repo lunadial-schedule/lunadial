@@ -1,5 +1,15 @@
 "use client"
 
+/**
+ * 메인 페이지 (대시보드)
+ *
+ * 좌측: 오늘의 일정(TodayScheduleCard)
+ * 우측: 현재 라이브(LiveNowCard), 트렌딩 카테고리(TrendingCategoriesCard), 곧 시작(UpNextCard)
+ *
+ * 추가 기능:
+ * - 웹 푸시 알림 온보딩 배너 (7일간 숨기기, 영구 허용 처리)
+ * - 치지직 OAuth 콜백 리다이렉트 처리 (redirectUri가 루트인 경우 우회)
+ */
 import { LiveNowCard } from "@/components/dashboard/live-now-card";
 import { TrendingCategoriesCard } from "@/components/dashboard/trending-categories-card";
 import { UpNextCard } from "@/components/dashboard/up-next-card";

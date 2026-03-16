@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 즐겨찾기 토글 버튼 — 추가/해제 기능
+ */
+
 import * as React from "react"
 import { Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"

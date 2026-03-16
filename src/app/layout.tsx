@@ -1,3 +1,8 @@
+/**
+ * 루트 레이아웃
+ *
+ * 전체 앱에 적용되는 레이아웃. 폰트, 헤더, 토스터, Google AdSense 스크립트를 포함한다.
+ */
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";

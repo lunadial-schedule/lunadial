@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 현재 라이브 카드 — 치지직 인기 라이브 스트림 TOP 5 표시
+ */
+
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

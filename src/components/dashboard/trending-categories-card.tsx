@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 지금 뜨는 카테고리 카드 — 치지직 상위 500 라이브 기준 카테고리 집계
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Info } from "lucide-react"

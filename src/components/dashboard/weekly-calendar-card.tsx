@@ -1,4 +1,8 @@
-"use client";
+"use client"
+
+/**
+ * 주간 캘린더 카드
+ */;
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";

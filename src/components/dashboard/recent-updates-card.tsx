@@ -1,3 +1,6 @@
+/**
+ * 최근 업데이트 카드 — 최근 변경된 일정 목록
+ */
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"

@@ -1,4 +1,8 @@
-"use client";
+"use client"
+
+/**
+ * 오늘의 일정 카드 — 날짜별 일정 목록, 즐겨찾기 필터 지원
+ */;
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucide-react";

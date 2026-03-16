@@ -1,5 +1,12 @@
 "use client"
 
+/**
+ * 즐겨찾기 페이지
+ *
+ * 좌측: 내 즐겨찾기 스트리머 목록 (추가/제거/편집)
+ * 우측: 스트리머 검색 및 추가 (데스크톱), 하단 FAB (모바일)
+ * 인증되지 않은 사용자는 로그인 페이지로 리다이렉트한다.
+ */
 import * as React from "react"
 import { PageContainer } from "@/components/layout/page-container"
 import { FavoriteList } from "@/components/favorites/favorite-list"

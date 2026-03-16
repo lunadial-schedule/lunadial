@@ -1,5 +1,11 @@
 "use client"
 
+/**
+ * 가격 정책 페이지 (Free / Pro 비교)
+ *
+ * Free와 Pro 플랜의 기능을 비교하고, 포트원 결제를 통해 Pro로 업그레이드할 수 있다.
+ * 포트원 V2 브라우저 SDK를 동적으로 로드하여 카드 결제를 처리한다.
+ */
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { PORTONE_STORE_ID, PORTONE_CHANNEL_KEY } from "@/config/env"

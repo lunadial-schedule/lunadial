@@ -1,5 +1,11 @@
 "use client"
 
+/**
+ * 계정 설정 페이지
+ *
+ * 프로필(닉네임, 이메일, 아바타), 구독 정보(Free/Pro),
+ * 즐겨찾기 현황, 치지직 계정 연동/해제를 관리한다.
+ */
 import { PageContainer } from "@/components/layout/page-container"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"

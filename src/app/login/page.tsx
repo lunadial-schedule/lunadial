@@ -1,5 +1,11 @@
 "use client"
 
+/**
+ * 로그인 페이지
+ *
+ * Google OAuth를 통한 소셜 로그인을 제공한다.
+ * 로그인 성공 시 /auth/callback → /calendar로 리다이렉트된다.
+ */
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { useState, Suspense } from "react"

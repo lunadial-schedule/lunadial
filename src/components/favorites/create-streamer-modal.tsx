@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 스트리머 직접 생성 모달
+ */
+
 import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"

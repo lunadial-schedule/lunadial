@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 일정 추가 모달 (범용)
+ */
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

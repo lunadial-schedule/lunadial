@@ -1,4 +1,8 @@
-"use client";
+"use client"
+
+/**
+ * 일정 수정 다이얼로그
+ */;
 
 import * as React from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";

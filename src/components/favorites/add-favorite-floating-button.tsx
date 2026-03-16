@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 즐겨찾기 추가 FAB — 모바일에서 하단 우측에 표시
+ */
+
 import * as React from "react"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"

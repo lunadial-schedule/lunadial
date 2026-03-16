@@ -1,5 +1,17 @@
 "use client"
 
+/**
+ * 캘린더 페이지
+ *
+ * 스트리머 방송 일정을 월간/일간 뷰로 표시한다.
+ * 좌측 사이드바에서 전체/즐겨찾기 필터, 카테고리 필터를 제공한다.
+ *
+ * URL 파라미터:
+ * - scope: 'all' | 'favorites' (필터 범위)
+ * - view: 'month' | 'day' (뷰 모드)
+ * - date: 'yyyy-MM-dd' (현재 날짜)
+ * - q: 검색어
+ */
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"

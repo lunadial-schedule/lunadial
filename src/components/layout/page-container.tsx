@@ -1,3 +1,6 @@
+/**
+ * 페이지 컨테이너 — 공통 max-width 및 패딩 래퍼
+ */
 import * as React from "react"
 import { cn } from "@/lib/utils"
 

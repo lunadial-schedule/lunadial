@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 일정 상세 드로어 — 일정 클릭 시 상세 정보 표시 및 수정/삭제
+ */
+
 import * as React from "react"
 import { ExternalLink, Edit2, ShieldAlert, XCircle, Clock } from "lucide-react"
 

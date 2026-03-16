@@ -1,4 +1,8 @@
-"use client";
+"use client"
+
+/**
+ * 일정 생성 다이얼로그 — 폼 입력, AI 자동 파싱, 중복 검사 지원
+ */;
 
 import * as React from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";

@@ -1,5 +1,11 @@
 "use client"
 
+/**
+ * 알림 설정 페이지
+ *
+ * 브라우저 알림 권한 상태를 표시하고, 방송 시작/일정 변경/취소/공지사항 등
+ * 항목별로 알림 수신 여부를 토글할 수 있다.
+ */
 import { PageContainer } from "@/components/layout/page-container"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"

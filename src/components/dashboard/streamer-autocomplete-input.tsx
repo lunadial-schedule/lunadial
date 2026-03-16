@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 스트리머 자동완성 입력 — 치지직 API 검색 + DB 검색 + 신규 생성
+ */
+
 import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { searchStreamers } from "@/app/actions/streamers"

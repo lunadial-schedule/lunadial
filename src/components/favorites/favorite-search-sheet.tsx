@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 즐겨찾기 검색 시트 — 모바일용 하단 시트
+ */
+
 import * as React from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { StreamerSearchSection } from "./streamer-search"

@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 웹 푸시 알림 버튼 — Service Worker 등록 및 구독 관리
+ */
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 

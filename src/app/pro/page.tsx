@@ -1,5 +1,11 @@
 "use client"
 
+/**
+ * Pro 업그레이드 페이지
+ *
+ * Free와 Pro 플랜의 기능을 비교 카드로 보여주고,
+ * Pro 결제 버튼을 제공한다. (현재 결제 연동 준비 중)
+ */
 import { PageContainer } from "@/components/layout/page-container"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"

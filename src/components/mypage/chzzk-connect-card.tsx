@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 치지직 계정 연동 카드 — 연동 상태 표시 및 연동/해제 버튼
+ */
+
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"

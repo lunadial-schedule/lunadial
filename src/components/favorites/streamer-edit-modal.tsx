@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 스트리머 정보 수정 모달
+ */
+
 import * as React from "react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"

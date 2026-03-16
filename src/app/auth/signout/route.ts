@@ -1,3 +1,8 @@
+/**
+ * 로그아웃 라우트
+ *
+ * Supabase 세션을 종료하고 메인 페이지(/)로 리다이렉트한다.
+ */
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 

@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 즐겨찾기 스트리머 목록 — 로딩/빈 상태/목록 렌더링
+ */
+
 import * as React from "react"
 import { getMyFavorites, isFavorited } from "@/app/actions/favorites"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

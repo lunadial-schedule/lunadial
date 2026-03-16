@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 오늘의 하이라이트 카드
+ */
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

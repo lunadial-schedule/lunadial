@@ -1,3 +1,9 @@
+/**
+ * 치지직 계정 연동 해제
+ *
+ * connected_accounts 테이블에서 해당 사용자의 치지직 연동 레코드를 삭제한다.
+ * TODO: 토큰 철회(revoke)도 함께 수행하면 더 안전하다.
+ */
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
@@ -7,10 +13,10 @@ export async function POST() {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (!user || userError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "인증되지 않은 사용자입니다." }, { status: 401 })
     }
 
-    // Delete record from DB
+    // DB에서 치지직 연동 레코드 삭제
     const { error: dbError } = await supabase
       .from("connected_accounts")
       .delete()
@@ -18,18 +24,13 @@ export async function POST() {
       .eq("provider", "chzzk")
 
     if (dbError) {
-      console.error("Error disconnecting chzzk:", dbError)
-      return NextResponse.json({ error: "DB Error" }, { status: 500 })
+      console.error("치지직 연동 해제 에러:", dbError)
+      return NextResponse.json({ error: "연동 해제 실패" }, { status: 500 })
     }
-
-    // Token revocation is optional. Since we don't have the plaintext token available 
-    // unless we query and decrypt it, we can just delete from DB.
-    // However, if we must revoke, we could query it first before deleting.
-    // MVP: Just delete link.
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error("Disconnect Chzzk error:", err)
-    return NextResponse.json({ error: "Server Error" }, { status: 500 })
+    console.error("치지직 연동 해제 에러:", err)
+    return NextResponse.json({ error: "서버 에러" }, { status: 500 })
   }
 }

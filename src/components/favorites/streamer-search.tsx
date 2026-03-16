@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 스트리머 검색 섹션 — 이름 검색 + 결과 목록 + 즐겨찾기 추가
+ */
+
 import * as React from "react"
 import { Search, Edit2 } from "lucide-react"
 import { Input } from "@/components/ui/input"

@@ -1,4 +1,8 @@
-"use client";
+"use client"
+
+/**
+ * 곧 시작 카드 — 다음 방송 예정 일정 표시
+ */;
 
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";

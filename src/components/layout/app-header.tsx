@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * 앱 헤더 — 네비게이션, 로그인/로그아웃, 모바일 메뉴
+ */
+
 import * as React from "react"
 import Link from "next/link"
 import { PageContainer } from "@/components/layout/page-container"
