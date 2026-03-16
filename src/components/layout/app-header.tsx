@@ -6,6 +6,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { PageContainer } from "@/components/layout/page-container"
 import { Search, Bell, Plus, Calendar as CalendarIcon, Star, Crown } from "lucide-react"
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog"
@@ -78,7 +79,7 @@ export function AppHeader() {
         {/* Left: Logo & Nav */}
         <div className="flex items-center gap-3 lg:gap-8 w-auto">
           <Link href="/" className="flex items-center space-x-2 shrink-0">
-            <span className="font-bold text-lg lg:text-xl tracking-tighter">LUNA DIAL</span>
+            <Image src="/logo.png" alt="LUNA DIAL" width={140} height={36} className="h-7 lg:h-8 w-auto" priority />
           </Link>
           <nav className="flex items-center gap-3 lg:gap-6 text-sm font-medium">
             <Link href="/calendar" className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
