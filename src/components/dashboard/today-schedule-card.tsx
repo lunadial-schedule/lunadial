@@ -142,8 +142,8 @@ export function TodayScheduleCard() {
             {targetDays.map((day, colIndex) => {
               const dayEvents = getEventsForDay(day);
               const isTodayDate = isSameDay(day, new Date());
-              const displayEvents = dayEvents.slice(0, 12);
-              const overflowCount = Math.max(0, dayEvents.length - 12);
+              const displayEvents = dayEvents.slice(0, 17);
+              const overflowCount = Math.max(0, dayEvents.length - 17);
               const label = getDayLabel(day);
 
               return (

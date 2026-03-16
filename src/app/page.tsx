@@ -1,7 +1,7 @@
 "use client"
 
 import { LiveNowCard } from "@/components/dashboard/live-now-card";
-import { TodayHighlightsCard } from "@/components/dashboard/today-highlights-card";
+import { TrendingCategoriesCard } from "@/components/dashboard/trending-categories-card";
 import { UpNextCard } from "@/components/dashboard/up-next-card";
 import { TodayScheduleCard } from "@/components/dashboard/today-schedule-card";
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog";
@@ -99,7 +99,7 @@ function Content() {
             <LiveNowCard />
           </div>
           <div className="order-3 lg:order-none">
-            <TodayHighlightsCard />
+            <TrendingCategoriesCard />
           </div>
           <div className="order-4 lg:order-none">
             <UpNextCard />
