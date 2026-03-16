@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Badge } from "@/components/ui/badge"
 import { Info } from "lucide-react"
 import Image from "next/image"
 import { useCallback, useEffect, useState } from "react"
@@ -52,19 +52,8 @@ export function TrendingCategoriesCard() {
   return (
     <Card className="border-border/50 shadow-sm flex-1">
       <CardHeader className="p-[14px] md:p-4 min-h-[52px] md:min-h-[56px] flex flex-row items-center justify-between space-y-0 shrink-0">
-        <div className="flex items-center gap-1.5">
-          <CardTitle className="text-base font-bold m-0 pl-1">지금 뜨는 카테고리</CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs max-w-[300px]">
-                <p>시청자 수 상위 500개 라이브 기준으로 집계됩니다.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <CardTitle className="text-base font-bold m-0 pl-1">지금 뜨는 카테고리</CardTitle>
+        <Badge variant="secondary" className="text-[10px] px-1.5 font-normal m-0 tracking-tighter">상위 500개 라이브 기준</Badge>
       </CardHeader>
       <CardContent className="p-[14px] md:p-4 pt-0 md:pt-0 pb-4 md:pb-4">
         {fetchState === 'loading' ? (
