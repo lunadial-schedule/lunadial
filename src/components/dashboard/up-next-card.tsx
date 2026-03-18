@@ -45,13 +45,13 @@ export function UpNextCard() {
 
   return (
     <>
-      <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden">
-        <CardHeader className="min-h-[42px] px-4 py-2.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
+      <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden h-[480px]">
+        <CardHeader className="h-10 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
           <CardTitle className="text-[15px] font-bold flex items-center gap-1.5 m-0 hover:text-primary transition-colors cursor-pointer" onClick={() => window.location.href = "/calendar"}>
             <Clock className="h-4 w-4 text-primary" />
             곧 시작
           </CardTitle>
-          <Badge variant="secondary" className="text-[10px] px-1.5 h-5 font-medium whitespace-nowrap flex items-center m-0">다음 방송 예정</Badge>
+          <Badge variant="secondary" className="text-[10px] px-1.5 h-4.5 font-medium whitespace-nowrap flex items-center m-0">다음 방송 예정</Badge>
         </CardHeader>
         <CardContent className="p-0 flex flex-col">
           {isLoading ? (
@@ -67,7 +67,7 @@ export function UpNextCard() {
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col p-3 md:p-4 gap-1.5">
+            <div className="flex flex-col p-2.5 md:p-3 gap-1.5">
               {events.map((event) => {
                 const now = new Date();
                 const isWithinOneHour = isAfter(parseISO(event.start_time), now) && isAfter(addHours(now, 1), parseISO(event.start_time));
@@ -78,7 +78,7 @@ export function UpNextCard() {
                   <div 
                     key={event.id} 
                     className={cn(
-                      "group flex items-center p-3 rounded-xl border border-border/60 hover:bg-muted/30 hover:border-primary/50 transition-all cursor-pointer relative shrink-0 min-h-[56px]",
+                      "group flex items-center px-3 py-2 rounded-xl border border-border/60 hover:bg-muted/30 hover:border-primary/50 transition-all cursor-pointer relative shrink-0 min-h-[50px]",
                       isWithinOneHour ? "bg-amber-500/5 dark:bg-amber-500/10" : "bg-card"
                     )}
                     onClick={() => handleEventClick(event)}
@@ -129,7 +129,7 @@ export function UpNextCard() {
           )}
         </CardContent>
         <CardFooter className="p-0 shrink-0">
-          <Button variant="ghost" size="sm" asChild className="w-full h-10 text-xs text-muted-foreground gap-1 rounded-none border-t border-border/50 hover:bg-muted/30">
+          <Button variant="ghost" size="sm" asChild className="w-full h-8.5 text-xs text-muted-foreground gap-1 rounded-none border-t border-border/50 hover:bg-muted/30">
             <Link href="/calendar">
               전체 보기
               <ChevronRight className="h-3 w-3 inline-block ml-0.5" />

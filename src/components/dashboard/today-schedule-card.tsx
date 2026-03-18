@@ -110,9 +110,9 @@ export function TodayScheduleCard() {
 
   return (
     <>
-      <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden h-[700px] lg:h-[1610px]">
+      <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden h-[700px] lg:h-[1420px]">
         {/* Header & Controls */}
-        <CardHeader className="min-h-[42px] px-4 py-2.5 flex flex-row items-center justify-between border-b shrink-0">
+        <CardHeader className="h-9 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
           <CardTitle className="text-[18px] font-bold flex items-center gap-1.5 m-0 p-0">
             <CalendarIcon className="h-4 w-4 text-primary" />
             오늘의 일정
@@ -150,7 +150,7 @@ export function TodayScheduleCard() {
         </CardHeader>
 
         {/* Scrollable Columns Container */}
-        <div className="flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide bg-muted/10 p-3 md:p-4">
+        <div className="flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide bg-muted/10 p-2.5 md:p-3">
           <div className="flex lg:grid lg:grid-cols-3 gap-3 md:gap-4 h-full w-full">
             {targetDays.map((day, colIndex) => {
               const dayEvents = getEventsForDay(day);
@@ -161,7 +161,7 @@ export function TodayScheduleCard() {
                 <div 
                   key={colIndex} 
                   className={cn(
-                    "relative flex-shrink-0 w-full lg:w-auto snap-center flex flex-col bg-background border border-border/50 rounded-2xl shadow-sm p-3 md:p-4 transition-all h-full overflow-hidden",
+                    "relative flex-shrink-0 w-full lg:w-auto snap-center flex flex-col bg-background border border-border/50 rounded-xl shadow-sm p-2.5 md:p-3 transition-all h-full overflow-hidden",
                     colIndex !== 1 && "hidden lg:flex"
                   )}
                 >
@@ -182,7 +182,7 @@ export function TodayScheduleCard() {
                     </span>
                   </div>
                   
-                  <div className="flex-1 flex flex-col gap-2 overflow-y-auto pr-1 relative min-h-0 py-2 z-10 pb-6">
+                  <div className="flex-1 flex flex-col gap-1.5 overflow-y-auto pr-1 relative min-h-0 pt-1.5 pb-4 z-10">
                     {isLoading ? (
                        <div className="flex-1 flex items-center justify-center min-h-[150px]">
                          <span className="text-xs text-muted-foreground animate-pulse">로딩 중...</span>
@@ -265,7 +265,7 @@ export function TodayScheduleCard() {
                     )}
                   </div>
                   {/* 하단 빈 공간 그라데이션 (허전함 방지) */}
-                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-muted/30 via-muted/10 to-transparent pointer-events-none z-0" />
+                  <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-muted/30 via-muted/10 to-transparent pointer-events-none z-0" />
                 </div>
               );
             })}

@@ -48,8 +48,8 @@ export function LiveNowCard() {
   }, [])
 
   return (
-    <Card className="h-[468px] border-border/50 shadow-sm flex flex-col">
-      <CardHeader className="min-h-[42px] px-4 py-2.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
+    <Card className="h-[380px] border-border/50 shadow-sm flex flex-col">
+      <CardHeader className="h-10 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
         <div className="flex items-center justify-between gap-2 w-full">
           <CardTitle className="text-[15px] font-bold flex items-center gap-1.5 whitespace-nowrap m-0">
             지금 방송 중
@@ -93,11 +93,11 @@ export function LiveNowCard() {
           </div>
         ) : liveStreamers.length > 0 ? (
           <ScrollArea className="flex-1 min-h-0">
-            <div className="flex flex-col pr-3 pb-2">
+            <div className="flex flex-col pr-3 pb-0">
               {liveStreamers.map((streamer, index) => (
                 <div 
                   key={streamer.channelId} 
-                  className="w-full grid grid-cols-[16px_36px_1fr_68px] sm:grid-cols-[16px_36px_1fr_72px] gap-2.5 sm:gap-3 py-2.5 pl-4 pr-1 border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors group cursor-pointer items-center"
+                  className="w-full grid grid-cols-[16px_36px_1fr_68px] sm:grid-cols-[16px_36px_1fr_72px] gap-2.5 sm:gap-3 py-2 pl-3 pr-2 border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors group cursor-pointer items-center"
                   onClick={() => window.open(streamer.liveUrl, "_blank", "noopener,noreferrer")}
                 >
                   {/* Rank */}

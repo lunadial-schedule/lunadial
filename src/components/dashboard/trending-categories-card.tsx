@@ -55,8 +55,8 @@ export function TrendingCategoriesCard() {
   }, [fetchCategories])
 
   return (
-    <Card className="border-border/50 shadow-sm flex flex-col h-full lg:h-[520px]">
-      <CardHeader className="min-h-[42px] px-4 py-2.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
+    <Card className="border-border/50 shadow-sm flex flex-col h-full lg:h-[510px]">
+      <CardHeader className="h-10 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
         <div className="flex items-center justify-between gap-2 w-full">
           <CardTitle className="text-[15px] font-bold m-0 flex items-center gap-1.5">
             지금 뜨는 카테고리
@@ -77,7 +77,7 @@ export function TrendingCategoriesCard() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-3 md:p-4 flex-1">
+      <CardContent className="pt-2.5 pb-3 px-3 md:pt-3 md:pb-3 md:px-3 flex-1">
         {fetchState === 'loading' ? (
           <div className="py-8 flex flex-col items-center justify-center text-muted-foreground text-sm gap-2">
             <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></span>
@@ -94,7 +94,7 @@ export function TrendingCategoriesCard() {
             <p>현재 집계 중인 카테고리가 없습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="grid grid-cols-3 gap-2">
             {categories.slice(0, 6).map((category) => (
               <div 
                 key={category.categoryId} 
