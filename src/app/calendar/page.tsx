@@ -155,10 +155,10 @@ function CalendarContent() {
   const goToday = () => setCurrentDate(new Date())
 
   return (
-    <PageContainer className="min-h-[calc(100vh-4rem)] bg-background lg:py-8 flex flex-col lg:flex-row gap-4 lg:gap-6 items-start pb-20 lg:pb-8">
+    <PageContainer className="min-h-[calc(100vh-4rem)] bg-background lg:py-4 flex flex-col lg:flex-row gap-4 lg:gap-5 items-start pb-20 lg:pb-6">
       {/* Left Sidebar Filter */}
       <Card className="w-full lg:w-64 flex-col flex shrink-0 border-border/50 shadow-sm h-fit rounded-none border-x-0 lg:border-x lg:rounded-[12px]">
-        <div className="p-[14px] md:p-4 flex flex-col gap-5">
+        <div className="p-3 md:p-3.5 flex flex-col gap-4">
           {/* 보기 필터 */}
           <div>
             <div className="flex bg-muted/60 p-1 rounded-lg">
@@ -204,23 +204,23 @@ function CalendarContent() {
       {/* Main Calendar Area */}
       <Card className="flex-1 w-full lg:w-auto border-border/50 lg:shadow-sm flex flex-col min-w-0 bg-card overflow-hidden rounded-none border-x-0 lg:border-x lg:rounded-xl">
         {/* Calendar Toolbar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b p-3 md:p-4 gap-3 bg-muted/10 shrink-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b px-3 py-2.5 md:px-4 md:py-3 gap-2 bg-muted/5 shrink-0">
           <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight shrink-0 whitespace-nowrap">
+            <h2 className="text-[26px] md:text-[30px] font-bold tracking-tight shrink-0 whitespace-nowrap">
               {view === 'month' ? format(currentDate, "yyyy년 M월") : format(currentDate, "M월 d일")}
             </h2>
             <div className="flex items-center bg-muted/50 rounded-full p-0.5 ml-auto sm:ml-0">
-              <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={goPrev}><ChevronLeft className="h-4 w-4 md:h-5 md:w-5" /></Button>
-              <Button variant="ghost" size="sm" className="h-7 md:h-8 rounded-full font-medium px-3 md:px-4 text-[11px] md:text-sm" onClick={goToday}>오늘</Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={goNext}><ChevronRight className="h-4 w-4 md:h-5 md:w-5" /></Button>
+              <Button variant="ghost" size="icon" className="h-6.5 w-6.5 md:h-7 md:w-7 rounded-full" onClick={goPrev}><ChevronLeft className="h-4 w-4 md:h-5 md:w-5" /></Button>
+              <Button variant="ghost" size="sm" className="h-6.5 md:h-7 ... px-2.5 md:px-3 text-[11px] md:text-xs" onClick={goToday}>오늘</Button>
+              <Button variant="ghost" size="icon" className="h-6.5 w-6.5 md:h-7 md:w-7 rounded-full" onClick={goNext}><ChevronRight className="h-4 w-4 md:h-5 md:w-5" /></Button>
             </div>
           </div>
-          <div className="flex items-center bg-muted/60 p-1 rounded-full w-full sm:w-auto">
-            <Button variant="ghost" size="sm" className={`flex-1 sm:flex-none h-7 rounded-full px-4 text-xs ${view === 'month' ? 'bg-foreground shadow-sm text-background font-bold hover:bg-foreground/90 hover:text-background' : 'text-muted-foreground hover:text-foreground/80'}`} onClick={() => updateUrlParam('view', 'month')}>
+          <div className="flex items-center bg-muted/60 p-0.5 rounded-full w-full sm:w-auto">
+            <Button variant="ghost" size="sm" className={`flex-1 sm:flex-none h-6.5 rounded-full px-3 text-[11px] ${view === 'month' ? 'bg-foreground shadow-sm text-background font-bold hover:bg-foreground/90 hover:text-background' : 'text-muted-foreground hover:text-foreground/80'}`} onClick={() => updateUrlParam('view', 'month')}>
               <Grid className="w-3 h-3 mr-1.5" />
               월간
             </Button>
-            <Button variant="ghost" size="sm" className={`flex-1 sm:flex-none h-7 rounded-full px-4 text-xs ${view === 'day' ? 'bg-foreground shadow-sm text-background font-bold hover:bg-foreground/90 hover:text-background' : 'text-muted-foreground hover:text-foreground/80'}`} onClick={() => updateUrlParam('view', 'day')}>
+            <Button variant="ghost" size="sm" className={`flex-1 sm:flex-none h-6.5 rounded-full px-3 text-[11px] ${view === 'day' ? 'bg-foreground shadow-sm text-background font-bold hover:bg-foreground/90 hover:text-background' : 'text-muted-foreground hover:text-foreground/80'}`} onClick={() => updateUrlParam('view', 'day')}>
               <List className="w-3 h-3 mr-1.5" />
               일간
             </Button>
@@ -239,7 +239,7 @@ function CalendarContent() {
           )}
           
           {/* Calendar Header Row */}
-          <div className={`grid ${view === 'day' ? 'grid-cols-1' : 'grid-cols-7'} border-b h-10 bg-muted/5 z-10 shrink-0 px-2 sm:px-4`}>
+          <div className={`grid ${view === 'day' ? 'grid-cols-1' : 'grid-cols-7'} border-b h-8.5 bg-muted/5 z-10 shrink-0 px-2 sm:px-4`}>
             {view === 'day' ? (
               <div className="flex justify-between items-center text-xs font-semibold px-2 border-r last:border-0">
                 <span className="text-muted-foreground">{format(currentDate, "MM.dd")} ({format(currentDate, "E", { locale: ko })})</span>
@@ -270,14 +270,14 @@ function CalendarContent() {
 
                  return (
                    <div key={i} className={`border-r border-b flex flex-col overflow-hidden transition-colors ${!isCurrentMonth ? 'bg-muted/10 opacity-70' : 'bg-background hover:bg-muted/5'} ${isToday ? 'bg-primary/5 hover:bg-primary/10' : ''}`}>
-                      <div className="flex justify-between items-center p-1 md:p-1.5 shrink-0 border-b border-border/30">
+                      <div className="flex justify-between items-center px-1 py-0.5 md:px-1.5 md:py-1 shrink-0 border-b border-border/30">
                         <div className={`text-[11px] md:text-xs inline-flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-sm ${isToday ? 'bg-primary text-primary-foreground font-bold shadow-sm' : 'text-foreground/70 font-medium'} ${date.getDay()===0 && !isToday ? 'text-red-500' : ''} ${date.getDay()===6 && !isToday ? 'text-blue-500' : ''}`}>
                           {date.getDate()}
                         </div>
                       </div>
                       
                       {/* Desktop Schedule Items */}
-                      <div className="flex-1 flex flex-col gap-[2px] mt-1 p-0.5 md:p-1">
+                      <div className="flex-1 flex flex-col gap-[2px] mt-0.5 p-0.5">
                         {(() => {
                           const dayEvents = getDayEvents(date);
                           const maxVisible = 8; // Limit up to 8 items thinly
@@ -346,7 +346,7 @@ function CalendarContent() {
                })
              ) : (
                /* Day View Content */
-               <div className="flex-1 flex flex-col gap-2 py-4 pb-20 sm:pb-4">
+               <div className="flex-1 flex flex-col gap-2 py-2 pb-6 sm:pb-3">
                  {(() => {
                    const dayEvents = getDayEvents(currentDate);
                    if (dayEvents.length === 0) {

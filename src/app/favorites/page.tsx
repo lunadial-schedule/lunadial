@@ -46,18 +46,15 @@ export default function FavoritesPage() {
   }, [router])
 
   return (
-    <PageContainer className="py-8 bg-background min-h-[calc(100vh-4rem)] flex flex-col gap-8">
+    <PageContainer className="py-4 lg:py-4 bg-background min-h-[calc(100vh-4rem)] flex flex-col gap-5 lg:gap-6">
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
         {/* Left Side: My Favorites */}
         <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
           <Card className="border-border/50 shadow-sm overflow-hidden flex flex-col h-full">
-            <CardHeader className="bg-muted/10 border-b pb-4 flex flex-row items-center justify-between space-y-0">
+            <CardHeader className="h-9 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
               <div className="flex flex-col gap-1.5">
                 <CardTitle className="text-lg">내 즐겨찾기</CardTitle>
-                <CardDescription>
-                  즐겨찾기한 스트리머 목록입니다. 이 목록에 있는 스트리머들의 일정은 캘린더에서 필터링하여 볼 수 있습니다.
-                </CardDescription>
               </div>
               <div className="lg:hidden pl-2 shrink-0">
                 <FavoriteSearchSheet>
@@ -68,7 +65,7 @@ export default function FavoritesPage() {
                 </FavoriteSearchSheet>
               </div>
             </CardHeader>
-            <CardContent className="pt-4 sm:pt-0 bg-muted/5">
+            <CardContent className="pt-1 pb-3 bg-muted/5">
               <FavoriteList />
             </CardContent>
           </Card>
@@ -77,13 +74,10 @@ export default function FavoritesPage() {
         {/* Right Side: Search & Add (Desktop Only) */}
         <div className="hidden lg:flex lg:col-span-5 xl:col-span-4 flex-col gap-4 lg:sticky lg:top-[80px]">
           <Card className="border-border/50 shadow-sm">
-            <CardHeader className="bg-muted/10 border-b pb-4">
+            <CardHeader className="h-9 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
               <CardTitle className="text-lg">스트리머 찾기</CardTitle>
-              <CardDescription>
-                이름으로 검색하여 목록에 추가하세요.
-              </CardDescription>
             </CardHeader>
-            <CardContent className="pt-4 sm:pt-6">
+            <CardContent className="pt-3 pb-3">
               <StreamerSearchSection />
             </CardContent>
           </Card>

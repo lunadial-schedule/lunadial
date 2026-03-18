@@ -80,7 +80,7 @@ function Content() {
   };
 
   return (
-    <PageContainer className="pt-6 md:pt-8 min-h-screen">
+    <PageContainer className="pt-6 md:pt-8 min-h-screen lg:py-4">
       {/* Onboarding Push Banner (Conditional Dummy) */}
       {showBanner && (
         <div className="mb-6 rounded-lg bg-primary/5 border border-primary/20 px-4 py-2 flex flex-col sm:flex-row items-center justify-between gap-3">
