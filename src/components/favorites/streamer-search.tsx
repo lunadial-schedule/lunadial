@@ -135,40 +135,40 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
         )}
 
         {!isLoading && results.length > 0 && (
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col px-1">
-              <span className="text-sm font-medium text-muted-foreground">검색 결과 {results.length}건</span>
+          <div className="flex flex-col gap-0 border border-border/50 rounded-lg overflow-hidden bg-background">
+            <div className="flex flex-col px-3 py-2 bg-muted/10 border-b border-border/50">
+              <span className="text-xs font-medium text-muted-foreground">검색 결과 {results.length}건</span>
             </div>
             {results.map((streamer) => (
               <div 
                 key={streamer.id} 
-                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between p-[10px] sm:p-3 border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors group"
               >
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 border">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <Avatar className="h-9 w-9 sm:h-10 sm:w-10 border border-border/40 shrink-0">
                     <AvatarImage src={streamer.image_url || undefined} alt={streamer.name} />
                     <AvatarFallback>{streamer.name[0]}</AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-0 pr-2">
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold text-sm">{streamer.name}</span>
                       {streamer.verified_mark && (
-                        <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium">단독</span>
+                        <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium shrink-0">단독</span>
                       )}
                     </div>
                     {streamer.follower_count !== null && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[10px] sm:text-[11px] text-muted-foreground truncate w-full block">
                         팔로워 {streamer.follower_count.toLocaleString()}
                       </span>
                     )}
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                     onClick={() => setEditingStreamer(streamer)}
                   >
                     <Edit2 className="h-4 w-4" />

@@ -9,11 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Clock, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format, parseISO, isAfter, addHours } from "date-fns";
+import { format, parseISO, isAfter, addHours, formatDistanceToNowStrict } from "date-fns";
 import { ko } from "date-fns/locale";
 import Link from "next/link";
 import { getSchedules, type Schedule } from "@/app/actions/schedules";
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer";
+import { CATEGORY_LIST } from "@/config/categories";
+import { cn } from "@/lib/utils";
 
 export function UpNextCard() {
   const [events, setEvents] = React.useState<Schedule[]>([]);
@@ -33,68 +35,107 @@ export function UpNextCard() {
       const end = addHours(now, 24);
       const { data } = await getSchedules(now, end);
       if (data) {
-        const upcoming = data.filter(e => isAfter(parseISO(e.start_time), now)).slice(0, 3);
+        const upcoming = data.filter(e => isAfter(parseISO(e.start_time), now)).slice(0, 5);
         setEvents(upcoming);
       }
       setIsLoading(false);
     }
     loadSchedules();
   }, []);
+
   return (
     <>
       <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden">
-      <CardHeader className="p-[14px] md:p-4 min-h-[52px] md:min-h-[56px] flex flex-row items-center justify-between space-y-0 shrink-0">
-        <CardTitle className="text-base font-bold flex items-center gap-2 m-0 pl-1">
-          <Clock className="h-4 w-4 text-primary" />
-          곧 시작
-        </CardTitle>
-        <Badge variant="secondary" className="text-[10px] px-1.5 font-normal m-0 tracking-tighter">다음 방송 예정</Badge>
-      </CardHeader>
-      <CardContent className="p-0 flex-1">
-        <div className="h-[160px] flex flex-col">
+        <CardHeader className="min-h-[42px] px-4 py-2.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
+          <CardTitle className="text-[15px] font-bold flex items-center gap-1.5 m-0 hover:text-primary transition-colors cursor-pointer" onClick={() => window.location.href = "/calendar"}>
+            <Clock className="h-4 w-4 text-primary" />
+            곧 시작
+          </CardTitle>
+          <Badge variant="secondary" className="text-[10px] px-1.5 h-5 font-medium whitespace-nowrap flex items-center m-0">다음 방송 예정</Badge>
+        </CardHeader>
+        <CardContent className="p-0 flex flex-col">
           {isLoading ? (
-            <div className="p-6 text-center text-xs text-muted-foreground animate-pulse">일정을 불러오는 중입니다...</div>
+            <div className="flex-1 flex flex-col items-center justify-center p-4 text-center text-xs text-muted-foreground animate-pulse mt-8">
+              일정을 불러오는 중입니다...
+            </div>
           ) : events.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/10">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-muted/5">
               <span className="text-sm font-medium text-muted-foreground mb-1">다가오는 일정이 없습니다</span>
-              <span className="text-xs text-muted-foreground/70 mb-4">현재로부터 24시간 이내에 예정된 일정이 없어요.</span>
-              <Button variant="outline" size="sm" asChild className="h-8 text-xs ">
+              <span className="text-[11px] text-muted-foreground/70 mb-4">현재로부터 24시간 이내에 예정된 일정이 없어요.</span>
+              <Button variant="outline" size="sm" asChild className="h-8 text-xs rounded-md">
                 <Link href="/calendar">전체 캘린더 보기</Link>
               </Button>
             </div>
           ) : (
-            events.map((event) => (
-              <div 
-                key={event.id} 
-                className="flex items-start gap-3 p-2 border-b last:border-0 hover:bg-muted/10 transition-colors cursor-pointer group"
-                onClick={() => handleEventClick(event)}
-              >
-                <div className="w-16 shrink-0 pt-0.5 text-right">
-                  <span className="text-xs font-semibold text-primary">{event.is_all_day ? "종일" : format(parseISO(event.start_time), "a h:mm", { locale: ko })}</span>
-                </div>
-                <div className="flex-1 min-w-0 flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{event.streamer}</span>
+            <div className="flex flex-col p-3 md:p-4 gap-1.5">
+              {events.map((event) => {
+                const now = new Date();
+                const isWithinOneHour = isAfter(parseISO(event.start_time), now) && isAfter(addHours(now, 1), parseISO(event.start_time));
+                const firstCat = event.categories?.[0];
+                const styleCat = CATEGORY_LIST.find(c => c.id === firstCat) || CATEGORY_LIST[0];
+                
+                return (
+                  <div 
+                    key={event.id} 
+                    className={cn(
+                      "group flex items-center p-3 rounded-xl border border-border/60 hover:bg-muted/30 hover:border-primary/50 transition-all cursor-pointer relative shrink-0 min-h-[56px]",
+                      isWithinOneHour ? "bg-amber-500/5 dark:bg-amber-500/10" : "bg-card"
+                    )}
+                    onClick={() => handleEventClick(event)}
+                  >
+                    <div className={cn(
+                      "absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full",
+                      styleCat.color
+                    )} />
+                    
+                    <div className="w-[56px] shrink-0 flex flex-col items-start justify-center pr-2 pl-1 border-r border-border/50">
+                      <span className={cn(
+                        "text-[13px] font-bold",
+                        isWithinOneHour ? 'text-primary' : 'text-foreground'
+                      )}>
+                        {event.is_all_day ? "종일" : format(parseISO(event.start_time), "HH:mm", { locale: ko })}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0 flex flex-col justify-center gap-[2px] pl-3">
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          "font-bold text-sm truncate group-hover:text-primary transition-colors",
+                          isWithinOneHour && "text-foreground"
+                        )}>{event.streamer}</span>
+                        {event.status === "canceled" && <span className="bg-muted text-muted-foreground shrink-0 text-[10px] px-1.5 py-0.5 rounded-sm font-medium">취소됨</span>}
+                        {event.status === "changed" && <span className="bg-primary/10 text-primary shrink-0 text-[10px] px-1.5 py-0.5 rounded-sm font-medium">변경됨</span>}
+                        {isWithinOneHour && <span className="text-[10px] px-1.5 py-0.5 rounded-sm font-semibold tracking-tight bg-amber-100/50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">곧 시작</span>}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground truncate flex items-center">
+                        {event.title}
+                      </span>
+                    </div>
+                    <div className="shrink-0 flex items-center justify-end h-full pl-2 min-w-[64px] text-right">
+                      {!event.is_all_day ? (
+                        <span className={cn(
+                          "text-[11px] font-medium whitespace-nowrap",
+                          isWithinOneHour ? 'text-primary' : 'text-muted-foreground'
+                        )}>
+                          {formatDistanceToNowStrict(parseISO(event.start_time), { locale: ko, addSuffix: true })}
+                        </span>
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-muted-foreground truncate">{event.title}</span>
-                    {event.status === "canceled" && <Badge variant="canceled" className="h-[14px] px-1 text-[9px] font-bold tracking-wider">CANCELED</Badge>}
-                    {event.status === "changed" && <Badge variant="changed" className="h-[14px] px-1 text-[9px] font-bold tracking-wider">CHANGED</Badge>}
-                  </div>
-                </div>
-              </div>
-            ))
+                );
+              })}
+            </div>
           )}
-        </div>
-      </CardContent>
-      <CardFooter className="p-1 bg-muted/20">
-        <Button variant="ghost" size="sm" asChild className="w-full text-xs text-muted-foreground gap-1">
-          <Link href="/calendar">
-            전체 보기
-            <ChevronRight className="h-3 w-3 inline-block ml-0.5" />
-          </Link>
-        </Button>
-      </CardFooter>
+        </CardContent>
+        <CardFooter className="p-0 shrink-0">
+          <Button variant="ghost" size="sm" asChild className="w-full h-10 text-xs text-muted-foreground gap-1 rounded-none border-t border-border/50 hover:bg-muted/30">
+            <Link href="/calendar">
+              전체 보기
+              <ChevronRight className="h-3 w-3 inline-block ml-0.5" />
+            </Link>
+          </Button>
+        </CardFooter>
       </Card>
       
       <ScheduleDetailDrawer 

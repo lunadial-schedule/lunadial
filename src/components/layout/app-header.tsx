@@ -27,13 +27,14 @@ import {
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { User } from "@supabase/supabase-js"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 
 export function AppHeader() {
   const [user, setUser] = React.useState<User | null>(null)
   const [searchQuery, setSearchQuery] = React.useState("")
   const supabase = createClient()
   const router = useRouter()
+  const pathname = usePathname()
 
   React.useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -82,15 +83,15 @@ export function AppHeader() {
             <Image src="/logo.png" alt="LUNA DIAL" width={140} height={36} className="h-7 lg:h-8 w-auto" priority />
           </Link>
           <nav className="flex items-center gap-3 lg:gap-6 text-sm font-medium">
-            <Link href="/calendar" className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+            <Link href="/calendar" className={cn("flex items-center gap-1.5 transition-colors hover:text-foreground", pathname === "/calendar" ? "text-foreground font-semibold" : "text-muted-foreground")}>
               <CalendarIcon className="h-4 w-4" />
               <span className="hidden lg:inline">캘린더</span>
             </Link>
-            <Link href="/favorites" className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+            <Link href="/favorites" className={cn("flex items-center gap-1.5 transition-colors hover:text-foreground", pathname === "/favorites" ? "text-foreground font-semibold" : "text-muted-foreground")}>
               <Star className="h-4 w-4" />
               <span className="hidden lg:inline">즐겨찾기</span>
             </Link>
-            <Link href="/pro" className="flex items-center gap-1.5 text-amber-600 transition-colors hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400">
+            <Link href="/pro" className={cn("flex items-center gap-1.5 transition-colors", pathname === "/pro" ? "text-amber-700 dark:text-amber-400 font-semibold" : "text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400")}>
               <Crown className="h-4 w-4" />
               <span className="hidden lg:inline">Pro</span>
             </Link>
@@ -104,7 +105,7 @@ export function AppHeader() {
             <Input
               type="search"
               placeholder="스트리머, 일정 검색..."
-              className="w-full h-10 lg:h-9 rounded-full bg-muted/50 pl-9 border-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-background transition-all lg:w-[300px] xl:w-[400px]"
+              className="w-full h-10 lg:h-9 rounded-full bg-background pl-9 border border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all lg:w-[300px] xl:w-[400px]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}

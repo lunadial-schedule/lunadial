@@ -107,9 +107,9 @@ export async function searchChzzkCategory(query: string) {
 /**
  * 치지직 현재 라이브 목록을 페이지네이션으로 조회합니다.
  * 시청자 수 내림차순으로 정렬된 결과를 반환합니다.
- * @param maxPages 최대 페이지 수 (기본 5, 페이지당 20개)
+ * @param maxPages 최대 페이지 수 (기본 Infinity — 전체 수집, 페이지당 20개)
  */
-export async function getChzzkLives(maxPages = 5): Promise<ChzzkLiveItem[]> {
+export async function getChzzkLives(maxPages = Infinity): Promise<ChzzkLiveItem[]> {
   const allItems: ChzzkLiveItem[] = []
   let nextCursor: { concurrentUserCount: number; liveId: number } | null = null
 

@@ -95,25 +95,17 @@ function Content() {
         </div>
       )}
 
-      <div className="flex flex-col lg:flex-row lg:justify-center gap-3 min-[361px]:gap-4 md:gap-5 lg:gap-6">
-        {/* Left Column wrapper (Desktop: Fixed 600px, Mobile: Full width) */}
-        <div className="contents lg:flex lg:flex-col lg:w-[600px] xl:w-[750px] shrink-0 min-w-0">
-          <div className="order-1 lg:order-none h-full">
-            <TodayScheduleCard />
-          </div>
+      <div className="flex flex-col lg:grid lg:grid-cols-10 gap-4 lg:gap-6 w-full items-start">
+        {/* Left Column wrapper (Desktop: 70%, Mobile: Full width) */}
+        <div className="flex flex-col w-full lg:col-span-7 h-full min-w-0 order-1 lg:order-none">
+          <TodayScheduleCard />
         </div>
 
-        {/* Right Column wrapper (Desktop: Fixed 380px, Mobile: Full width) */}
-        <div className="contents lg:flex lg:flex-col lg:w-[380px] xl:w-[450px] shrink-0 lg:gap-6 min-w-0">
-          <div className="order-2 lg:order-none">
-            <LiveNowCard />
-          </div>
-          <div className="order-3 lg:order-none">
-            <TrendingCategoriesCard />
-          </div>
-          <div className="order-4 lg:order-none">
-            <UpNextCard />
-          </div>
+        {/* Right Column wrapper (Desktop: 30%, Mobile: Full width) */}
+        <div className="flex flex-col w-full lg:col-span-3 gap-4 lg:gap-6 min-w-0 order-2 lg:order-none">
+          <UpNextCard />
+          <LiveNowCard />
+          <TrendingCategoriesCard />
         </div>
       </div>
 

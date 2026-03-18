@@ -76,37 +76,37 @@ export function FavoriteList() {
   const displayedFavorites = isExpanded ? favorites : favorites.slice(0, displayLimit)
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+    <div className="flex flex-col gap-0 border border-border/50 rounded-lg overflow-hidden bg-background max-h-[800px] overflow-y-auto">
       {displayedFavorites.map((fav) => {
         const streamer = fav.streamers
         return (
           <div 
             key={fav.id}
-            className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border bg-card shadow-sm hover:shadow-md transition-all group"
+            className="flex items-center gap-3 p-[10px] sm:p-3 border-b border-border/50 last:border-0 hover:bg-muted/30 transition-all group"
           >
-            <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border">
+            <Avatar className="h-9 w-9 sm:h-10 sm:w-10 border border-border/40 shrink-0">
               <AvatarImage src={streamer.image_url || undefined} alt={streamer.name} />
               <AvatarFallback>{streamer.name[0]}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col flex-1 min-w-0 justify-center">
               <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm truncate">{streamer.name}</span>
+                <span className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{streamer.name}</span>
                 {streamer.verified_mark && (
                   <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium shrink-0">단독</span>
                 )}
               </div>
               {streamer.follower_count !== null && (
-                <span className="text-[11px] sm:text-xs text-muted-foreground truncate w-full block mt-0.5">
+                <span className="text-[10px] sm:text-[11px] text-muted-foreground truncate w-full block">
                   팔로워 {streamer.follower_count.toLocaleString()}
                 </span>
               )}
             </div>
             
-            <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 shrink-0">
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 onClick={() => setEditingStreamer(streamer)}
               >
                 <Edit2 className="h-4 w-4" />
@@ -117,7 +117,6 @@ export function FavoriteList() {
                 initialFavorited={true}
                 onFavoriteChange={(isFav) => {
                   if (!isFav) {
-                    // 낙관적 업데이트로 목록에서 바로 제거할 수도 있음: 
                     setFavorites(prev => prev.filter(f => f.streamers.id !== streamer.id))
                   }
                 }}
@@ -128,12 +127,12 @@ export function FavoriteList() {
       })}
 
       {favorites.length > displayLimit && !isExpanded && (
-        <div className="col-span-1 sm:col-span-2 lg:col-span-3 mt-2 flex justify-center">
+        <div className="p-2 border-t border-border/50 bg-muted/5 flex justify-center">
           <Button 
-            variant="outline" 
+            variant="ghost" 
             size="sm" 
             onClick={() => setIsExpanded(true)}
-            className="w-full sm:w-auto text-xs"
+            className="w-full text-xs text-muted-foreground hover:text-foreground"
           >
             {favorites.length - displayLimit}명 더 보기
           </Button>

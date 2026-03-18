@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getTrendingCategories } from '@/services/trending-categories'
 
-export const revalidate = 60 // ISR: 60초 캐시
+export const revalidate = 600 // ISR: 10분 캐시
 
 export async function GET() {
   try {
@@ -9,7 +9,7 @@ export async function GET() {
 
     return NextResponse.json(result, {
       headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=900',
       },
     })
   } catch {

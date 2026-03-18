@@ -1,13 +1,13 @@
 /**
  * 트렌딩 카테고리 집계 서비스
  *
- * 치지직 라이브 데이터를 기반으로 카테고리별 라이브 수 / 시청자 수를 집계하고
- * 메모리 캐시(60초 TTL)를 적용하여 과도한 API 호출을 방지한다.
+ * 치지직 전체 라이브 데이터를 수집하여 카테고리별 라이브 수 / 시청자 수를 집계하고
+ * 메모리 캐시(10분 TTL)를 적용하여 과도한 API 호출을 방지한다.
  */
 import { getChzzkLives, searchChzzkCategory } from '@/services/chzzk'
 import type { ChzzkLiveItem, TrendingCategoryCard } from '@/types/chzzk'
 
-const CACHE_TTL_MS = 60_000 // 60초
+const CACHE_TTL_MS = 600_000 // 10분
 const TOP_CATEGORY_COUNT = 6
 
 interface CachedResult {
@@ -125,7 +125,8 @@ export async function getTrendingCategories(): Promise<{
   }
 
   try {
-    const lives = await getChzzkLives(25)
+    // 전체 라이브를 수집 (페이지 제한 없음)
+    const lives = await getChzzkLives()
 
     if (lives.length === 0) {
       if (lastSuccessData) {

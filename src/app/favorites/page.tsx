@@ -68,7 +68,7 @@ export default function FavoritesPage() {
                 </FavoriteSearchSheet>
               </div>
             </CardHeader>
-            <CardContent className="pt-4 sm:pt-6 bg-muted/5">
+            <CardContent className="pt-4 sm:pt-0 bg-muted/5">
               <FavoriteList />
             </CardContent>
           </Card>
