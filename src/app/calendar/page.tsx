@@ -172,7 +172,7 @@ function CalendarContent() {
             <div className="flex items-center justify-between mb-2.5">
               <h3 className="text-[13px] font-semibold tracking-tight text-foreground/90">카테고리</h3>
               <div className="flex items-center gap-2 md:gap-1.5">
-                <Button variant="ghost" size="sm" className="h-9 md:h-6 bg-muted/50 px-4 md:px-2 rounded-md hover:bg-muted font-medium text-[13px] md:text-[11px] text-foreground/80" onClick={() => setSelectedCats(CATEGORY_LIST.map(c => c.id))}>전체선택</Button>
+                <Button variant="ghost" size="sm" className="h-9 md:h-6 bg-muted/50 px-4 md:px-2 rounded-md hover:bg-muted font-medium text-[13px] md:text-[11px] text-foreground/80" onClick={() => setSelectedCats(CATEGORY_LIST.map(c => c.id))}>전체 선택</Button>
                 <Button variant="ghost" size="sm" className="h-9 md:h-6 bg-muted/50 px-4 md:px-2 rounded-md hover:bg-muted font-medium text-[13px] md:text-[11px] text-foreground/80" onClick={() => setSelectedCats([])}>해제</Button>
               </div>
             </div>
@@ -191,7 +191,7 @@ function CalendarContent() {
                         else setSelectedCats(prev => [...prev, cat.id])
                     }}
                   >
-                    {isSelected && <span className={cn("w-1.5 h-1.5 rounded-full", cat.color)} />}
+                    <span className={cn("w-1.5 h-1.5 rounded-full", cat.color)} />
                     {cat.label}
                   </div>
                 )
