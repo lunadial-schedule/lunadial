@@ -26,10 +26,7 @@ export interface ChzzkLivesResponse {
   content: {
     data: ChzzkLiveItem[]
     page: {
-      next: {
-        concurrentUserCount: number
-        liveId: number
-      } | null
+      next: string | null
     }
   }
 }

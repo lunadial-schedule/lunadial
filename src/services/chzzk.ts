@@ -111,7 +111,7 @@ export async function searchChzzkCategory(query: string) {
  */
 export async function getChzzkLives(maxPages = Infinity): Promise<ChzzkLiveItem[]> {
   const allItems: ChzzkLiveItem[] = []
-  let nextCursor: { concurrentUserCount: number; liveId: number } | null = null
+  let nextCursor: string | null = null
 
   for (let page = 0; page < maxPages; page++) {
     try {
@@ -119,7 +119,7 @@ export async function getChzzkLives(maxPages = Infinity): Promise<ChzzkLiveItem[
       url.searchParams.append('size', '20')
 
       if (nextCursor) {
-        url.searchParams.append('next', JSON.stringify(nextCursor))
+        url.searchParams.append('next', nextCursor)
       }
 
       const response = await fetch(url.toString(), {

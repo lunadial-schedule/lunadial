@@ -11,6 +11,7 @@ import { Info, RefreshCw } from "lucide-react"
 import Image from "next/image"
 import { useCallback, useEffect, useState } from "react"
 import type { TrendingCategoryCard, TrendingCategoriesResponse } from "@/types/chzzk"
+import { getRelativeTimeString } from "@/lib/utils"
 
 function formatViewerCount(count: number): string {
   if (count >= 10000) {
@@ -24,6 +25,8 @@ type FetchState = 'loading' | 'error' | 'empty' | 'success'
 export function TrendingCategoriesCard() {
   const [categories, setCategories] = useState<TrendingCategoryCard[]>([])
   const [fetchState, setFetchState] = useState<FetchState>('loading')
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null)
+  const [relativeTime, setRelativeTime] = useState<string>('방금 전')
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -43,6 +46,8 @@ export function TrendingCategoriesCard() {
       }
 
       setCategories(data.categories)
+      setUpdatedAt(data.updatedAt)
+      setRelativeTime(getRelativeTimeString(data.updatedAt))
       setFetchState('success')
     } catch (error) {
       console.error('Failed to fetch trending categories:', error)
@@ -54,6 +59,20 @@ export function TrendingCategoriesCard() {
     fetchCategories()
   }, [fetchCategories])
 
+  useEffect(() => {
+    if (!updatedAt) return
+    
+    // 1분마다 표시 시간 갱신
+    const interval = setInterval(() => {
+      setRelativeTime(getRelativeTimeString(updatedAt))
+    }, 60000)
+    
+    // 컴포넌트 마운트/언마운트 시 즉각 반영
+    setRelativeTime(getRelativeTimeString(updatedAt))
+    
+    return () => clearInterval(interval)
+  }, [updatedAt])
+
   return (
     <Card className="border-border/50 shadow-sm flex flex-col h-full lg:h-[510px]">
       <CardHeader className="h-10 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
@@ -62,8 +81,8 @@ export function TrendingCategoriesCard() {
             지금 뜨는 카테고리
           </CardTitle>
           <div className="flex items-center">
-            {fetchState !== 'loading' && (
-              <span className="text-[11px] text-muted-foreground font-medium mr-2">방금 전</span>
+            {fetchState !== 'loading' && updatedAt && (
+              <span className="text-[11px] text-muted-foreground font-medium mr-2">{relativeTime}</span>
             )}
             <Button 
               variant="ghost" 

@@ -125,8 +125,8 @@ export async function getTrendingCategories(): Promise<{
   }
 
   try {
-    // 전체 라이브를 수집 (페이지 제한 없음)
-    const lives = await getChzzkLives()
+    // 전체 라이브 수집 (최대 50페이지 = 상위 1000개 방송)
+    const lives = await getChzzkLives(50)
 
     if (lives.length === 0) {
       if (lastSuccessData) {

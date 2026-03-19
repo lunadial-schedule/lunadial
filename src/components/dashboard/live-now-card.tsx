@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Play, RefreshCw } from "lucide-react"
-import { formatViewerCount } from "@/lib/utils"
+import { formatViewerCount, getRelativeTimeString } from "@/lib/utils"
 
 interface LiveStreamer {
   channelId: string
@@ -26,6 +26,8 @@ export function LiveNowCard() {
   const [liveStreamers, setLiveStreamers] = useState<LiveStreamer[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isError, setIsError] = useState(false)
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null)
+  const [relativeTime, setRelativeTime] = useState<string>('방금 전')
 
   const fetchLiveStreamers = async () => {
     setIsLoading(true)
@@ -35,6 +37,10 @@ export function LiveNowCard() {
       if (!res.ok) throw new Error('Fetch failed')
       const data = await res.json()
       setLiveStreamers(data.items || [])
+      if (data.updatedAt) {
+        setUpdatedAt(data.updatedAt)
+        setRelativeTime(getRelativeTimeString(data.updatedAt))
+      }
     } catch (err) {
       console.error(err)
       setIsError(true)
@@ -47,6 +53,20 @@ export function LiveNowCard() {
     fetchLiveStreamers()
   }, [])
 
+  useEffect(() => {
+    if (!updatedAt) return
+    
+    // 1분마다 표시 시간 갱신
+    const interval = setInterval(() => {
+      setRelativeTime(getRelativeTimeString(updatedAt))
+    }, 60000)
+    
+    // 즉각 반영
+    setRelativeTime(getRelativeTimeString(updatedAt))
+    
+    return () => clearInterval(interval)
+  }, [updatedAt])
+
   return (
     <Card className="h-[380px] border-border/50 shadow-sm flex flex-col">
       <CardHeader className="h-10 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
@@ -56,8 +76,8 @@ export function LiveNowCard() {
             <Badge variant="live" className="animate-pulse h-5 flex items-center px-1.5 text-[10px] ml-0.5 m-0">LIVE</Badge>
           </CardTitle>
           <div className="flex items-center">
-            {!isLoading && (
-              <span className="text-[11px] text-muted-foreground font-medium mr-2">방금 전</span>
+            {!isLoading && updatedAt && (
+              <span className="text-[11px] text-muted-foreground font-medium mr-2">{relativeTime}</span>
             )}
             <Button 
               variant="ghost" 
