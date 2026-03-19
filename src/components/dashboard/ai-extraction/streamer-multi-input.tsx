@@ -120,7 +120,7 @@ export function StreamerMultiInput({ value, onChange, placeholder, inputValue: e
           </span>
         ))}
         <input
-          className="flex-1 bg-transparent outline-none min-w-[80px]"
+          className="flex-1 bg-transparent outline-none min-w-[80px] text-base md:text-sm placeholder:text-muted-foreground"
           placeholder={value.length === 0 ? placeholder : ""}
           value={inputValue}
           onChange={(e) => {

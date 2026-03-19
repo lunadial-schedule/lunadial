@@ -123,8 +123,13 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
   return (
     <div className="flex flex-col flex-1 overflow-hidden h-full">
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
-        <div className="bg-primary/5 text-primary text-sm p-3 rounded-md font-medium">
-          이미지에 적힌 일정을 AI가 자동으로 분석하여 초안을 작성합니다.
+        <div className="bg-primary/5 text-primary text-xs p-3 rounded-md font-medium">
+          <ul className="list-disc list-inside space-y-1">
+            <li>이미지에 적힌 일정을 AI가 자동으로 분석하여 초안을 작성합니다.</li>
+            <li>추출된 내용은 수정이 가능하며, 추가로 직접 일정을 등록할 수 있습니다.</li>
+            <li>이미지에 누락된 내용은 작성자가 직접 입력해야 합니다.</li>
+            <li>AI는 실수를 할 수 있습니다. 추출된 내용을 다시 확인하세요.</li>
+          </ul>
         </div>
 
         {errorMsg && (
@@ -187,11 +192,14 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
         </div>
       </div>
 
-      <div className="shrink-0 px-6 py-4 border-t flex justify-end gap-2" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
-        <Button variant="ghost" onClick={onCancel} disabled={status === "loading"}>
+      <div 
+        className="shrink-0 px-6 py-4 border-t shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] bg-background flex flex-row justify-end gap-2"
+        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+      >
+        <Button variant="ghost" onClick={onCancel} disabled={status === "loading"} className="flex-1 sm:flex-none">
           취소
         </Button>
-        <Button onClick={handleExtract} disabled={!isFormValid || status === "loading"}>
+        <Button onClick={handleExtract} disabled={!isFormValid || status === "loading"} className="flex-1 sm:flex-none">
           {status === "loading" ? (
             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 추출 중...</>
           ) : (
