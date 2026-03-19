@@ -18,10 +18,22 @@ interface StreamerMultiInputProps {
   value: string[]
   onChange: (value: string[]) => void
   placeholder?: string
+  inputValue?: string
+  onInputChange?: (val: string) => void
 }
 
-export function StreamerMultiInput({ value, onChange, placeholder }: StreamerMultiInputProps) {
-  const [inputValue, setInputValue] = React.useState("")
+export function StreamerMultiInput({ value, onChange, placeholder, inputValue: externalInputValue, onInputChange: externalOnInputChange }: StreamerMultiInputProps) {
+  const [internalInputValue, setInternalInputValue] = React.useState("")
+  const inputValue = externalInputValue !== undefined ? externalInputValue : internalInputValue
+  
+  const setInputValue = (val: string) => {
+    if (externalOnInputChange) {
+      externalOnInputChange(val)
+    } else {
+      setInternalInputValue(val)
+    }
+  }
+
   const debouncedValue = useDebounce(inputValue, 300)
   const [results, setResults] = React.useState<any[]>([])
   const [isLoading, setIsLoading] = React.useState(false)

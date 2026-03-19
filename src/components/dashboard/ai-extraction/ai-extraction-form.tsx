@@ -36,6 +36,7 @@ interface AiExtractionFormProps {
 
 export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractionFormProps) {
   const [streamers, setStreamers] = React.useState<string[]>([])
+  const [streamerInput, setStreamerInput] = React.useState("")
   const [link, setLink] = React.useState("")
   const [imageFile, setImageFile] = React.useState<File | null>(null)
   
@@ -71,7 +72,8 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
     }
   }
 
-  const isFormValid = streamers.length > 0 && link.trim() !== "" && imageFile !== null
+  const isStreamerValid = streamers.length > 0 || streamerInput.trim() !== ""
+  const isFormValid = isStreamerValid && link.trim() !== "" && imageFile !== null
 
   const handleExtract = async () => {
     if (!isFormValid) return
@@ -79,10 +81,17 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
     setErrorMsg(null)
 
     try {
-      // Create FormData to simulate MVP action (even though we're mostly mocking)
+      let finalStreamers = [...streamers]
+      if (streamers.length === 0 && streamerInput.trim() !== "") {
+        finalStreamers = [streamerInput.trim()]
+        // Optimistically add it to the visible tags as well
+        setStreamers(finalStreamers)
+        setStreamerInput("")
+      }
+
       const formData = new FormData()
       formData.append("image", imageFile)
-      formData.append("streamers", JSON.stringify(streamers))
+      formData.append("streamers", JSON.stringify(finalStreamers))
       formData.append("link", link)
 
       const result = await extractScheduleFromImage(formData)
@@ -91,7 +100,7 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
         setErrorMsg(result.error)
       } else if (result.data) {
         setStatus("idle")
-        onExtractionComplete(result.data, { streamers, link })
+        onExtractionComplete(result.data, { streamers: finalStreamers, link })
       }
     } catch (err: any) {
       setStatus("error")
@@ -117,6 +126,8 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
           <StreamerMultiInput 
             value={streamers} 
             onChange={setStreamers} 
+            inputValue={streamerInput}
+            onInputChange={setStreamerInput}
             placeholder="스트리머 검색 및 추가 (엔터 키)" 
           />
           <p className="text-xs text-muted-foreground">이미지에 여러 명의 일정이 있으면 스트리머를 여러 명 추가하세요.</p>
