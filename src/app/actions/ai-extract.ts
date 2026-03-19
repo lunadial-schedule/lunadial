@@ -8,17 +8,17 @@ import { getCategoryByLabel, CATEGORIES } from "@/config/categories"
  * AI 추출 Server Action (Gemini API 사용)
  */
 export async function extractScheduleFromImage(formData: FormData): Promise<{ data?: ExtractedScheduleDraft[], error?: string }> {
-  const image = formData.get("image") as File
-  const link = formData.get("link") as string
-  const streamersRaw = formData.get("streamers") as string
-  
-  if (!image || !link || !streamersRaw) {
-    return { error: "필수 정보가 누락되었습니다." }
-  }
-
-  const streamers: string[] = JSON.parse(streamersRaw)
-  
   try {
+    const image = formData.get("image") as File
+    const link = formData.get("link") as string
+    const streamersRaw = formData.get("streamers") as string
+    
+    if (!image || !link || !streamersRaw) {
+      return { error: "필수 정보가 누락되었습니다." }
+    }
+
+    const streamers: string[] = JSON.parse(streamersRaw)
+    
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       throw new Error("서버 환경 변수에 GEMINI_API_KEY가 설정되지 않았습니다.")
