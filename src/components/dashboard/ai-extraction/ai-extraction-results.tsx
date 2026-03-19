@@ -1,0 +1,316 @@
+"use client"
+
+import * as React from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import { ExtractedScheduleDraft } from "./ai-extraction-form"
+import { CATEGORY_LIST } from "@/config/categories"
+import { getSchedules, createSchedule } from "@/app/actions/schedules"
+import { Loader2, ArrowLeft, Plus, AlertCircle, CheckCircle2, Copy } from "lucide-react"
+
+// Types to match DB format roughly
+interface MinSchedule {
+  id: string
+  title: string
+  streamer: string
+  start_time: string
+  is_all_day: boolean | null
+}
+
+interface AiExtractionResultsProps {
+  results: ExtractedScheduleDraft[]
+  payload: { streamers: string[], link: string }
+  onBack: () => void
+  onComplete: () => void
+}
+
+export function AiExtractionResults({ results, payload, onBack, onComplete }: AiExtractionResultsProps) {
+  const [drafts, setDrafts] = React.useState<ExtractedScheduleDraft[]>(results)
+  const [existingSchedules, setExistingSchedules] = React.useState<MinSchedule[]>([])
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isCheckingDups, setIsCheckingDups] = React.useState(true)
+
+  // Fetch recent schedules to check for duplicates
+  React.useEffect(() => {
+    async function loadSchedules() {
+      // Just fetch schedules from today onwards roughly
+      const startDate = new Date()
+      startDate.setHours(0, 0, 0, 0)
+      const res = await getSchedules(startDate)
+      if (res.data) {
+        setExistingSchedules(res.data)
+      }
+      setIsCheckingDups(false)
+    }
+    loadSchedules()
+  }, [])
+
+  // Duplicate Check effect whenever drafts or existingSchedules change
+  React.useEffect(() => {
+    if (isCheckingDups) return
+
+    setDrafts(prev => prev.map(draft => {
+      // If user has already handled it or manually checked, we could skip, but let's always warn
+      if (!draft.title || !draft.date) return draft
+
+      // Match logic: Same Streamer AND Same Date AND Same Title
+      // For MVP, comparing Date string and Streamer and Title
+      const isDup = existingSchedules.some(s => {
+        if (s.streamer !== draft.streamerName) return false
+        
+        const sDate = s.start_time.split("T")[0]
+        if (sDate !== draft.date) return false
+
+        // Exact or strong title match
+        if (s.title === draft.title) return true
+
+        return false
+      })
+
+      if (isDup && !draft.duplicate?.isDuplicate) {
+        return {
+          ...draft,
+          isSelected: false, // Auto-uncheck
+          duplicate: {
+            isDuplicate: true,
+            reason: "이미 등록된 일정과 유사합니다."
+          }
+        }
+      } else if (!isDup && draft.duplicate?.isDuplicate) {
+        // Clearance of duplicate if modified
+        return {
+          ...draft,
+          duplicate: { isDuplicate: false }
+        }
+      }
+
+      return draft
+    }))
+  }, [existingSchedules, isCheckingDups]) // Intentionally not including drafts deeply to avoid infinite loop. Just run once after load, or when explicit trigger.
+  // Wait, if I don't include drafts, it won't check when user edits. 
+  // Let's implement a manual duplicate check function or run it onChange.
+  // For safety, I'll export a checker function to use inside onChange.
+
+  const checkForDuplicates = (draft: ExtractedScheduleDraft, schedules: MinSchedule[]) => {
+    if (!draft.title || !draft.date) return { isDuplicate: false }
+    const isDup = schedules.some(s => {
+      if (s.streamer !== draft.streamerName) return false
+      const sDate = s.start_time.split("T")[0]
+      if (sDate !== draft.date) return false
+      if (s.title === draft.title) return true
+      return false
+    })
+    return { isDuplicate: isDup, reason: isDup ? "이미 등록된 일정과 중복될 수 있어 자동 선택 해제되었습니다." : null }
+  }
+
+  const handleUpdateDraft = (id: string, updates: Partial<ExtractedScheduleDraft>) => {
+    setDrafts(prev => prev.map(d => {
+      if (d.id !== id) return d
+      const updated = { ...d, ...updates }
+      
+      // Auto duplicate check on edit
+      const dupRes = checkForDuplicates(updated, existingSchedules)
+      if (dupRes.isDuplicate !== updated.duplicate?.isDuplicate) {
+        updated.duplicate = dupRes
+        if (dupRes.isDuplicate) updated.isSelected = false
+      }
+      return updated
+    }))
+  }
+
+  const handleAddManual = () => {
+    const newDraft: ExtractedScheduleDraft = {
+      id: `manual-${Date.now()}`,
+      isSelected: true,
+      date: new Date().toISOString().split("T")[0],
+      startTime: "",
+      endTime: null,
+      isAllDay: true,
+      title: "",
+      streamerName: payload.streamers[0] || "",
+      category: CATEGORY_LIST[0]?.id || "default",
+      memo: "사용자가 수동으로 추가함",
+      noticeUrl: payload.link,
+      status: "ready"
+    }
+    setDrafts(prev => [...prev, newDraft])
+  }
+
+  const handleSubmit = async () => {
+    const selected = drafts.filter(d => d.isSelected)
+    if (selected.length === 0) {
+      alert("선택된 일정이 없습니다.")
+      return
+    }
+
+    // Validate required fields
+    const invalid = selected.find(d => !d.title || !d.date || !d.streamerName || !d.noticeUrl)
+    if (invalid) {
+      alert("선택된 일정 중 필수입력값(제목, 날짜, 스트리머)이 누락된 항목이 있습니다.")
+      return
+    }
+
+    setIsSubmitting(true)
+    let successCount = 0
+    let failCount = 0
+
+    for (const draft of selected) {
+      const startTimeStr = draft.isAllDay 
+        ? `${draft.date}T00:00:00` 
+        : `${draft.date}T${draft.startTime || "00:00"}:00`
+
+      const { error } = await createSchedule({
+        title: draft.title,
+        streamer: draft.streamerName!,
+        categories: draft.category ? [draft.category] : [],
+        link: draft.noticeUrl,
+        start_time: new Date(startTimeStr).toISOString(),
+        end_time: null,
+        memo: draft.memo || "",
+        is_all_day: draft.isAllDay,
+        status: "scheduled"
+      })
+
+      if (error) {
+        failCount++
+        console.error("Error creating schedule:", error)
+      } else {
+        successCount++
+      }
+    }
+
+    setIsSubmitting(false)
+    alert(`${successCount}개의 일정이 등록되었습니다.\n(제외/실패: ${drafts.length - successCount}개)`)
+    
+    // Refresh & close
+    window.dispatchEvent(new Event("schedulesUpdated"))
+    onComplete()
+  }
+
+  const selectedCount = drafts.filter(d => d.isSelected).length
+
+  return (
+    <div className="flex flex-col flex-1 overflow-hidden h-full">
+      {/* Header Summary */}
+      <div className="shrink-0 px-6 py-4 border-b bg-muted/20">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold">총 {drafts.length}개의 일정 후보를 찾았어요</h2>
+            {isCheckingDups && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+          </div>
+          <Badge variant="outline" className="bg-background">
+            확인 필요 {drafts.filter(d => d.status === "needs_review" || d.status === "incomplete").length}개
+          </Badge>
+        </div>
+        <div className="text-xs text-muted-foreground flex flex-col gap-1">
+          <span className="truncate">공지 링크: <a href={payload.link} target="_blank" rel="noreferrer" className="text-primary hover:underline">{payload.link}</a></span>
+          <span className="truncate">스트리머: {payload.streamers.join(", ")}</span>
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        {drafts.length === 0 && (
+          <div className="text-center text-sm text-muted-foreground py-8">
+            후보 일정이 없습니다.
+          </div>
+        )}
+
+        {drafts.map((draft, idx) => (
+          <div key={draft.id} className={`p-4 border rounded-xl shadow-sm transition-colors ${draft.isSelected ? 'border-primary ring-1 ring-primary/20' : 'bg-muted/30 border-dashed opacity-80'}`}>
+            <div className="flex items-start gap-3">
+              <Checkbox 
+                id={`chk-${draft.id}`} 
+                checked={draft.isSelected} 
+                onCheckedChange={(val) => handleUpdateDraft(draft.id, { isSelected: val === true })}
+                className="mt-1"
+              />
+              <div className="flex-1 space-y-3">
+                {/* Badges */}
+                <div className="flex flex-wrap items-center gap-1.5 min-h-6">
+                  {draft.duplicate?.isDuplicate && (
+                    <Badge variant="destructive" className="flex items-center gap-1 text-[10px] px-1.5"><Copy className="w-3 h-3" /> 중복 일정</Badge>
+                  )}
+                  {!draft.duplicate?.isDuplicate && draft.status === "ready" && (
+                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 flex items-center gap-1 text-[10px] px-1.5"><CheckCircle2 className="w-3 h-3" /> 추출 완료</Badge>
+                  )}
+                  {draft.status === "needs_review" && (
+                     <Badge variant="secondary" className="flex items-center gap-1 text-orange-600 bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 text-[10px] px-1.5"><AlertCircle className="w-3 h-3" /> 확인 필요</Badge>
+                  )}
+                  {draft.status === "incomplete" && (
+                     <Badge variant="outline" className="flex items-center gap-1 text-red-600 border-red-200 bg-red-50 text-[10px] px-1.5"><AlertCircle className="w-3 h-3" /> 정보 부족</Badge>
+                  )}
+                  {draft.duplicate?.isDuplicate && (
+                    <span className="text-[10px] text-destructive ml-1">{draft.duplicate.reason}</span>
+                  )}
+                </div>
+
+                {/* Inline Editing Form */}
+                <div className="grid grid-cols-6 gap-2">
+                  <div className="col-span-6 sm:col-span-3">
+                    <label className="text-xs font-medium text-muted-foreground mr-2 mb-1 hidden sm:block">날짜</label>
+                    <Input type="date" className="h-8 text-xs" value={draft.date || ""} onChange={(e) => handleUpdateDraft(draft.id, { date: e.target.value })} />
+                  </div>
+                  <div className="col-span-6 sm:col-span-3 flex items-center gap-2">
+                    <div className="flex items-center space-x-1 whitespace-nowrap bg-muted/50 px-2 rounded-md h-8 border">
+                      <Checkbox id={`allday-${draft.id}`} checked={draft.isAllDay} onCheckedChange={(c) => handleUpdateDraft(draft.id, { isAllDay: c === true, startTime: c === true ? null : draft.startTime })} />
+                      <label htmlFor={`allday-${draft.id}`} className="text-xs shrink-0 cursor-pointer">종일</label>
+                    </div>
+                    {!draft.isAllDay && (
+                      <Input type="time" className="h-8 text-xs" value={draft.startTime || ""} onChange={(e) => handleUpdateDraft(draft.id, { startTime: e.target.value })} />
+                    )}
+                  </div>
+
+                  <div className="col-span-6 sm:col-span-4">
+                     <label className="text-xs font-medium text-muted-foreground mb-1 hidden sm:block">제목</label>
+                     <Input className="h-8 text-xs font-medium" placeholder="일정 제목" value={draft.title} onChange={(e) => handleUpdateDraft(draft.id, { title: e.target.value })} />
+                  </div>
+                  
+                  <div className="col-span-6 sm:col-span-2">
+                     <label className="text-xs font-medium text-muted-foreground mb-1 hidden sm:block">스트리머</label>
+                     {/* MVP: Simple text input for inline editing */}
+                     <Input className="h-8 text-xs" placeholder="스트리머" value={draft.streamerName || ""} onChange={(e) => handleUpdateDraft(draft.id, { streamerName: e.target.value })} />
+                  </div>
+
+                  <div className="col-span-6 flex items-center gap-2">
+                    <select 
+                      className="h-8 text-xs rounded-md border border-input bg-background px-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={draft.category || ""}
+                      onChange={(e) => handleUpdateDraft(draft.id, { category: e.target.value })}
+                    >
+                      <option value="" disabled>카테고리 선택</option>
+                      {CATEGORY_LIST.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                    </select>
+                    
+                    <Input className="h-8 text-xs flex-1" placeholder="메모 (선택사항)" value={draft.memo || ""} onChange={(e) => handleUpdateDraft(draft.id, { memo: e.target.value })} />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        <div className="pt-2 flex justify-center pb-8">
+          <Button variant="outline" size="sm" onClick={handleAddManual} className="border-dashed h-9">
+            <Plus className="w-4 h-4 mr-1" />
+            일정 직접 추가
+          </Button>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="shrink-0 px-6 py-4 border-t shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] bg-background flex flex-row items-center justify-between" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
+        <Button variant="ghost" size="sm" onClick={onBack} disabled={isSubmitting} className="text-muted-foreground">
+          <ArrowLeft className="w-4 h-4 mr-1" /> 다시 추출
+        </Button>
+        <Button onClick={handleSubmit} disabled={isSubmitting || selectedCount === 0 || isCheckingDups}>
+          {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          {selectedCount}개 선택된 일정 등록
+        </Button>
+      </div>
+    </div>
+  )
+}

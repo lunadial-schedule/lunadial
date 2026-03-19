@@ -6,6 +6,7 @@
 
 import * as React from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CATEGORY_LIST } from "@/config/categories";
@@ -21,6 +22,7 @@ import { User } from "@supabase/supabase-js";
 import { findOrCreateStreamer } from "@/app/actions/streamers";
 import { StreamerAutocompleteInput } from "./streamer-autocomplete-input";
 import { useIsOverlayOpen } from "@/hooks/use-is-overlay-open";
+import { AiExtractionTab } from "./ai-extraction/ai-extraction-tab";
 
 interface CreateScheduleDialogProps {
   isMobileTrigger?: boolean;
@@ -185,7 +187,16 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={onSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <Tabs defaultValue="manual" className="flex-1 flex flex-col overflow-hidden">
+            <div className="px-6 pt-4 shrink-0">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="manual">직접 입력</TabsTrigger>
+                <TabsTrigger value="ai">AI 자동 추출</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="manual" className="flex-1 flex flex-col overflow-hidden m-0 data-[state=active]:flex">
+              <form onSubmit={onSubmit} className="flex flex-col flex-1 overflow-hidden">
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               {errorMsg && (
                 <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md font-medium">
@@ -269,6 +280,12 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
               </Button>
             </DialogFooter>
           </form>
+            </TabsContent>
+            
+            <TabsContent value="ai" className="flex-1 flex flex-col overflow-hidden m-0 data-[state=active]:flex">
+              <AiExtractionTab onOpenChange={setOpen} />
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </>
