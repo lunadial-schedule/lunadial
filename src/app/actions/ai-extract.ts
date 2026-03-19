@@ -88,6 +88,8 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
 - 자연스럽게 다듬거나 요약하거나 바꾸지 말라.
 - 제목을 찾을 수 없지만 일정은 식별 가능하면 "방송 예정"으로 반환하라.
 - 일정 자체가 불명확하면 해당 일정은 반환하지 말라.
+- 만약 휴식과 관련된 제목이 있거나, 제목 부분에 내용이 없다면 일정에서 제외하고 반환하지 말라.
+  - 예: "휴방", "휴방입니다", "쉬어가요", "쉬는시간", "OFFLINE", "휴일이에요"
 
 2. streamerName
 - 이미지 안에 표시된 스트리머명 또는 사용자 입력 스트리머 후보를 참고해 가장 적절한 값을 넣어라.
@@ -121,7 +123,7 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
 - 날짜도 없으면 false로 반환하라.
 
 7. categories
-- 제목을 분석해서 아래 카테고리 중 0개 이상 선택하라.
+- 제목을 분석해서 아래 카테고리 중 1개 이상 선택하라.
 - 복수 선택 가능하다.
 - 사용할 수 있는 카테고리 값은 아래 8개뿐이다.
   - "토크"
@@ -133,8 +135,7 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
   - "광고"
   - "같이보기"
 - 제목과 이미지 문맥으로 명확히 판단 가능한 경우만 넣어라.
-- 확신할 수 없으면 빈 배열([])을 반환하라.
-- 임의로 기본 카테고리를 넣지 말라.
+- 확신할 수 없으면 ["토크"]를 반환하라.
 
 카테고리 예시:
 - "마인크래프트 대규모 합방" -> ["게임", "합방"]
