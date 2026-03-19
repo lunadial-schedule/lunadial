@@ -2,6 +2,7 @@
 
 import { ExtractedScheduleDraft } from "@/components/dashboard/ai-extraction/ai-extraction-form"
 import { GoogleGenerativeAI } from "@google/generative-ai"
+import { getCategoryByLabel, CATEGORIES } from "@/config/categories"
 
 /**
  * AI 추출 Server Action (Gemini API 사용)
@@ -86,23 +87,21 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
 - 이미지에 있는 제목 텍스트를 최대한 그대로 추출하라.
 - 띄어쓰기/문장부호도 가능한 한 원문을 유지하라.
 - 자연스럽게 다듬거나 요약하거나 바꾸지 말라.
-- 제목을 찾을 수 없지만 일정은 식별 가능하면 "방송 예정"으로 반환하라.
 - 일정 자체가 불명확하면 해당 일정은 반환하지 말라.
-- 만약 휴식과 관련된 제목이 있다면 일정에서 제외하고 반환하지 말라.
-  - 예: "휴방", "휴방입니다", "쉬어가요", "쉬는시간", "OFFLINE", "휴일이에요"
+- 만약 휴식과 관련된 제목이 있거나 내용이 비어있다면 일정에서 제외하고 반환하지 말라. 대부분의 이미지에는 정규 방송과 휴방을 구별할 수 있게(색깔이나 텍스트 투명도 등...) 표시되어 있을 것이다.
+  - 예: "휴방", "휴방입니다", "쉬어가요", "쉬는시간", "OFFLINE", "Loading", "휴일이에요", "고모댁 가요", "녹음하러 가요"
 
 2. streamerName
-- 이미지 안에 표시된 스트리머명 또는 사용자 입력 스트리머 후보를 참고해 가장 적절한 값을 넣어라.
-- 이미지에 명확히 표시된 이름이 있으면 우선 사용하라.
-- 명확히 알 수 없으면 null로 반환하라.
+- 사용자가 입력한 스트리머 이름을 우선 사용하라.
+- 사용자가 입력한 스트리머가 여러 명일 경우 이미지에 적힌 스트리머 이름을 참고해 가장 적절한 값을 넣어라.
 
 3. date
 - 반드시 YYYY-MM-DD 형식으로 반환하라.
-- 이미지에 연도가 없더라도 이미지 안의 문맥으로 명확히 판단 가능할 때만 채워라.
+- 이미지에 연도가 없으면 현재 연도를 사용하라.
 - 날짜 자체가 명확하지 않으면 null로 반환하라.
 - 요일만 있고 실제 날짜를 확정할 수 없으면 null로 반환하라.
 - 이미지 상단/좌측/주간 헤더 등에서 날짜 문맥을 찾을 수 있으면 활용하라.
-- 날짜를 임의로 추정하지 말라.
+- 연도를 제외한 날짜를 임의로 추정하지 말라.
 
 4. startTime
 - 반드시 HH:mm 24시간 형식으로 반환하라.
@@ -236,6 +235,17 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
       // 날짜는 있지만 시간이 없으면 종일 처리 (안전망)
       const forceAllDay = hasDate && !hasTime;
 
+      // 카테고리 텍스트 라벨을 내부 ID로 변환 (예: "게임" -> "game") 
+      // 사용자가 프롬프트에 '콘텐츠'로 작성했을 수 있으므로 '컨텐츠'로 보정
+      const mappedCategories = Array.isArray(item.categories) && item.categories.length > 0
+        ? item.categories.map((label: string) => {
+            const cleanLabel = label === "콘텐츠" ? "컨텐츠" : label;
+            return getCategoryByLabel(cleanLabel).id;
+          })
+        : [CATEGORIES.TALK.id];
+      
+      const finalCategories = [...new Set(mappedCategories)] as string[];
+
       return {
         id: `ai-extracted-${Date.now()}-${index}`,
         isSelected: status === "ready", // ready 상태일 때만 기본으로 선택 처리
@@ -245,7 +255,7 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
         startTime: item.startTime || null,
         endTime: item.endTime || null,
         isAllDay: item.isAllDay === true || forceAllDay,
-        categories: Array.isArray(item.categories) && item.categories.length > 0 ? item.categories : ["토크"],
+        categories: finalCategories,
         memo: "", // 항상 비워둠 (강제 처리)
         noticeUrl: link, // 공지 링크 공통값 사용
         status: status,
