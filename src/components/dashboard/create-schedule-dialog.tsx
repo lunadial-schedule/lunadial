@@ -195,7 +195,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
               </TabsList>
             </div>
 
-            <TabsContent value="manual" className="flex-1 flex flex-col overflow-hidden m-0 data-[state=active]:flex">
+            <TabsContent forceMount value="manual" className="flex-1 flex-col overflow-hidden m-0 data-[state=active]:flex data-[state=inactive]:hidden">
               <form onSubmit={onSubmit} className="flex flex-col flex-1 overflow-hidden">
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               {errorMsg && (
@@ -282,7 +282,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
           </form>
             </TabsContent>
             
-            <TabsContent value="ai" className="flex-1 flex flex-col overflow-hidden m-0 data-[state=active]:flex">
+            <TabsContent forceMount value="ai" className="flex-1 flex-col overflow-hidden m-0 data-[state=active]:flex data-[state=inactive]:hidden">
               <AiExtractionTab onOpenChange={setOpen} />
             </TabsContent>
           </Tabs>

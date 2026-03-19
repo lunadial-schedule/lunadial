@@ -16,11 +16,11 @@ export interface ExtractedScheduleDraft {
   isAllDay: boolean
   title: string
   streamerName: string | null
-  category: string | null
+  categories: string[]
   memo: string | null
   noticeUrl: string
   sourceImageUrl?: string | null
-  status: "ready" | "needs_review" | "incomplete" | "duplicate"
+  status: "ready" | "needs_review" | "incomplete" | "duplicate" | "manual"
   confidence?: number | null
   duplicate?: {
     isDuplicate: boolean

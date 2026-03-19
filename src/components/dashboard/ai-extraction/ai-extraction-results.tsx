@@ -17,6 +17,9 @@ interface MinSchedule {
   streamer: string
   start_time: string
   is_all_day: boolean | null
+  sourceImageUrl?: string | null
+  status: "ready" | "needs_review" | "incomplete" | "duplicate" | "manual"
+  confidence?: number | null
 }
 
 interface AiExtractionResultsProps {
@@ -130,10 +133,10 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
       isAllDay: true,
       title: "",
       streamerName: payload.streamers[0] || "",
-      category: CATEGORY_LIST[0]?.id || "default",
+      categories: [CATEGORY_LIST[0]?.id || "default"],
       memo: "사용자가 수동으로 추가함",
       noticeUrl: payload.link,
-      status: "ready"
+      status: "manual"
     }
     setDrafts(prev => [...prev, newDraft])
   }
@@ -146,9 +149,9 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
     }
 
     // Validate required fields
-    const invalid = selected.find(d => !d.title || !d.date || !d.streamerName || !d.noticeUrl)
+    const invalid = selected.find(d => !d.title || !d.date || !d.streamerName || !d.noticeUrl || !d.categories || d.categories.length === 0)
     if (invalid) {
-      alert("선택된 일정 중 필수입력값(제목, 날짜, 스트리머)이 누락된 항목이 있습니다.")
+      alert("선택된 일정 중 필수입력값(제목, 날짜, 스트리머, 카테고리)이 누락된 항목이 있습니다.")
       return
     }
 
@@ -164,7 +167,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
       const { error } = await createSchedule({
         title: draft.title,
         streamer: draft.streamerName!,
-        categories: draft.category ? [draft.category] : [],
+        categories: draft.categories || [],
         link: draft.noticeUrl,
         start_time: new Date(startTimeStr).toISOString(),
         end_time: null,
@@ -242,49 +245,74 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
                   {draft.status === "incomplete" && (
                      <Badge variant="outline" className="flex items-center gap-1 text-red-600 border-red-200 bg-red-50 text-[10px] px-1.5"><AlertCircle className="w-3 h-3" /> 정보 부족</Badge>
                   )}
+                  {draft.status === "manual" && (
+                     <Badge variant="outline" className="flex items-center gap-1 text-primary border-primary/30 bg-primary/10 text-[10px] px-1.5"><Plus className="w-3 h-3" /> 직접 추가</Badge>
+                  )}
                   {draft.duplicate?.isDuplicate && (
                     <span className="text-[10px] text-destructive ml-1">{draft.duplicate.reason}</span>
                   )}
                 </div>
 
                 {/* Inline Editing Form */}
-                <div className="grid grid-cols-6 gap-2">
-                  <div className="col-span-6 sm:col-span-3">
-                    <label className="text-xs font-medium text-muted-foreground mr-2 mb-1 hidden sm:block">날짜</label>
-                    <Input type="date" className="h-8 text-xs" value={draft.date || ""} onChange={(e) => handleUpdateDraft(draft.id, { date: e.target.value })} />
+                <div className="space-y-4 mt-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">제목 *</label>
+                    <Input className="h-8 text-sm font-medium" placeholder="일정 제목" value={draft.title} onChange={(e) => handleUpdateDraft(draft.id, { title: e.target.value })} />
                   </div>
-                  <div className="col-span-6 sm:col-span-3 flex items-center gap-2">
-                    <div className="flex items-center space-x-1 whitespace-nowrap bg-muted/50 px-2 rounded-md h-8 border">
-                      <Checkbox id={`allday-${draft.id}`} checked={draft.isAllDay} onCheckedChange={(c) => handleUpdateDraft(draft.id, { isAllDay: c === true, startTime: c === true ? null : draft.startTime })} />
-                      <label htmlFor={`allday-${draft.id}`} className="text-xs shrink-0 cursor-pointer">종일</label>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">스트리머 *</label>
+                    <Input className="h-8 text-sm" placeholder="스트리머" value={draft.streamerName || ""} onChange={(e) => handleUpdateDraft(draft.id, { streamerName: e.target.value })} />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">카테고리 *</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {CATEGORY_LIST.map(cat => {
+                        const isSelected = (draft.categories || []).includes(cat.id);
+                        return (
+                          <Badge
+                            key={cat.id}
+                            variant="outline"
+                            className={`cursor-pointer border-dashed text-[11px] px-2.5 py-0.5 transition-colors hover:bg-muted ${isSelected ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary' : ''}`}
+                            onClick={() => {
+                              const curr = draft.categories || [];
+                              handleUpdateDraft(draft.id, {
+                                categories: isSelected ? curr.filter(c => c !== cat.id) : [...curr, cat.id]
+                              })
+                            }}
+                          >
+                            {cat.label}
+                          </Badge>
+                        )
+                      })}
                     </div>
-                    {!draft.isAllDay && (
-                      <Input type="time" className="h-8 text-xs" value={draft.startTime || ""} onChange={(e) => handleUpdateDraft(draft.id, { startTime: e.target.value })} />
-                    )}
                   </div>
 
-                  <div className="col-span-6 sm:col-span-4">
-                     <label className="text-xs font-medium text-muted-foreground mb-1 hidden sm:block">제목</label>
-                     <Input className="h-8 text-xs font-medium" placeholder="일정 제목" value={draft.title} onChange={(e) => handleUpdateDraft(draft.id, { title: e.target.value })} />
-                  </div>
-                  
-                  <div className="col-span-6 sm:col-span-2">
-                     <label className="text-xs font-medium text-muted-foreground mb-1 hidden sm:block">스트리머</label>
-                     {/* MVP: Simple text input for inline editing */}
-                     <Input className="h-8 text-xs" placeholder="스트리머" value={draft.streamerName || ""} onChange={(e) => handleUpdateDraft(draft.id, { streamerName: e.target.value })} />
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-muted-foreground">시작 시간 *</label>
+                      <div className="flex items-center space-x-1.5">
+                        <Checkbox id={`allday-${draft.id}`} checked={draft.isAllDay} onCheckedChange={(c) => handleUpdateDraft(draft.id, { isAllDay: c === true, startTime: c === true ? null : draft.startTime })} />
+                        <label htmlFor={`allday-${draft.id}`} className="text-[11px] font-medium text-muted-foreground cursor-pointer pt-px">하루 종일</label>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <Input type="date" className="h-8 text-sm flex-1" value={draft.date || ""} onChange={(e) => handleUpdateDraft(draft.id, { date: e.target.value })} />
+                       {!draft.isAllDay && (
+                         <Input type="time" className="h-8 text-sm flex-1" value={draft.startTime || ""} onChange={(e) => handleUpdateDraft(draft.id, { startTime: e.target.value })} />
+                       )}
+                    </div>
                   </div>
 
-                  <div className="col-span-6 flex items-center gap-2">
-                    <select 
-                      className="h-8 text-xs rounded-md border border-input bg-background px-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      value={draft.category || ""}
-                      onChange={(e) => handleUpdateDraft(draft.id, { category: e.target.value })}
-                    >
-                      <option value="" disabled>카테고리 선택</option>
-                      {CATEGORY_LIST.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                    </select>
-                    
-                    <Input className="h-8 text-xs flex-1" placeholder="메모 (선택사항)" value={draft.memo || ""} onChange={(e) => handleUpdateDraft(draft.id, { memo: e.target.value })} />
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">메모</label>
+                    <textarea 
+                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[60px] resize-none"
+                      placeholder="추가 세부사항을 기록하세요."
+                       value={draft.memo || ""} 
+                       onChange={(e) => handleUpdateDraft(draft.id, { memo: e.target.value })}
+                    />
                   </div>
                 </div>
 
