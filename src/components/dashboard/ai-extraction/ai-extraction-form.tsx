@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { StreamerMultiInput } from "./streamer-multi-input"
 import { extractScheduleFromImage } from "@/app/actions/ai-extract"
 import { UploadCloud, Image as ImageIcon, Loader2 } from "lucide-react"
+import { STREAMER_PLACEHOLDERS } from "@/config/placeholders"
 
 export interface ExtractedScheduleDraft {
   id: string
@@ -44,6 +45,17 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
 
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const prevStreamerRef = React.useRef<string | null>(null)
+  const [streamerPlaceholder, setStreamerPlaceholder] = React.useState("스트리머 검색 및 추가 (엔터 키)")
+
+  React.useEffect(() => {
+    let newStreamer = STREAMER_PLACEHOLDERS[Math.floor(Math.random() * STREAMER_PLACEHOLDERS.length)]
+    while (STREAMER_PLACEHOLDERS.length > 1 && newStreamer === prevStreamerRef.current) {
+      newStreamer = STREAMER_PLACEHOLDERS[Math.floor(Math.random() * STREAMER_PLACEHOLDERS.length)]
+    }
+    setStreamerPlaceholder(newStreamer)
+    prevStreamerRef.current = newStreamer
+  }, [])
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -128,7 +140,7 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
             onChange={setStreamers} 
             inputValue={streamerInput}
             onInputChange={setStreamerInput}
-            placeholder="스트리머 검색 및 추가 (엔터 키)" 
+            placeholder={streamerPlaceholder} 
           />
           <p className="text-xs text-muted-foreground">이미지에 여러 명의 일정이 있으면 스트리머를 여러 명 추가하세요.</p>
         </div>
@@ -137,7 +149,7 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
           <label className="text-sm font-medium">공지 링크 *</label>
           <Input 
             type="url" 
-            placeholder="https://카페링크..." 
+            placeholder="https://..." 
             value={link} 
             onChange={e => setLink(e.target.value)} 
           />
@@ -183,7 +195,7 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
           {status === "loading" ? (
             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 추출 중...</>
           ) : (
-            "추출하기"
+            "추출하기✨"
           )}
         </Button>
       </div>

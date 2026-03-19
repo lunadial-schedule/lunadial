@@ -191,7 +191,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
             <div className="px-6 pt-4 shrink-0">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="manual">직접 입력</TabsTrigger>
-                <TabsTrigger value="ai">AI 자동 추출</TabsTrigger>
+                <TabsTrigger value="ai">일괄 등록(beta)✨</TabsTrigger>
               </TabsList>
             </div>
 
