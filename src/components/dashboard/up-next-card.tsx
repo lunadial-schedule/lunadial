@@ -53,9 +53,9 @@ export function UpNextCard() {
           </CardTitle>
           <Badge variant="secondary" className="text-[10px] px-1.5 h-4.5 font-medium whitespace-nowrap flex items-center m-0">다음 방송 예정</Badge>
         </CardHeader>
-        <CardContent className="p-0 flex flex-col">
+        <CardContent className="p-0 flex-1 flex flex-col min-h-0">
           {isLoading ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-4 text-center text-xs text-muted-foreground animate-pulse mt-8">
+            <div className="flex-1 flex items-center justify-center p-4 text-center text-xs text-muted-foreground animate-pulse">
               일정을 불러오는 중입니다...
             </div>
           ) : events.length === 0 ? (
@@ -67,7 +67,7 @@ export function UpNextCard() {
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col p-2.5 md:p-3 gap-1.5">
+            <div className="flex-1 flex flex-col p-2.5 md:p-3 gap-1.5 min-h-0">
               {events.map((event) => {
                 const now = new Date();
                 const isWithinOneHour = isAfter(parseISO(event.start_time), now) && isAfter(addHours(now, 1), parseISO(event.start_time));
