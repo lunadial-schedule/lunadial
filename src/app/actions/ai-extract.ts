@@ -24,7 +24,7 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
     }
 
     const genAI = new GoogleGenerativeAI(apiKey)
-    // 사용자 지시사항에 맞추어 모델을 선택합니다.
+    // 사용자 지시사항에 맞추어 모델을 선택합니다. (Gemini 2.5 Flash 기반)
     // 운영 안정성 우선: gemini-2.5-flash
     // 최신 성능 우선, preview 감수 가능: gemini-3-flash-preview
     const model = genAI.getGenerativeModel({ 
@@ -61,10 +61,7 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
 
 [입력 참고 정보]
 사용자가 입력한 스트리머 후보 목록:
-{{STREAMER_CANDIDATES}}
-
-공지 링크:
-{{NOTICE_URL}}
+[${streamers.join(", ")}]
 
 설명:
 - 스트리머 후보 목록은 이미지 속 일정이 누구의 일정인지 매칭할 때 참고용이다.
