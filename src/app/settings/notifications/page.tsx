@@ -136,7 +136,6 @@ export default function NotificationsSettingsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">알림 설정</h1>
-            <p className="text-muted-foreground">어떤 알림을 언제 받을지 결정하세요.</p>
           </div>
           <PushNotificationButton />
         </div>
