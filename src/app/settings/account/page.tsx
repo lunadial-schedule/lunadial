@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { createClient } from "@/lib/supabase/client"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { User } from "@supabase/supabase-js"
 import { toast } from "sonner"
 import { Crown, Star, ArrowRight } from "lucide-react"
@@ -30,6 +30,8 @@ export default function AccountSettingsPage() {
   const [favoritesCount, setFavoritesCount] = useState(0)
   
   const [chzzkAccount, setChzzkAccount] = useState<any>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -87,6 +89,61 @@ export default function AccountSettingsPage() {
     toast.success("프로필 정보가 저장되었습니다.")
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+      toast.error("이미지 파일만 업로드 가능합니다.")
+      return
+    }
+
+    // 파일 크기 제한 (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("이미지 크기는 2MB를 넘을 수 없습니다.")
+      return
+    }
+
+    try {
+      setUploading(true)
+      
+      const fileExt = file.name.split('.').pop()
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { 
+          avatar_url: publicUrl,
+          picture: publicUrl // 보조적으로 picture도 업데이트
+        }
+      })
+
+      if (updateError) throw updateError
+
+      toast.success("프로필 이미지가 성공적으로 변경되었습니다.")
+      
+      // 사용자 정보 갱신
+      const { data: { user: refreshedUser } } = await supabase.auth.getUser()
+      setUser(refreshedUser)
+    } catch (error: any) {
+      console.error('Error uploading image:', error)
+      toast.error(`이미지 업로드 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`)
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
   const isPro = false
   const maxFavorites = isPro ? "무제한" : 10
 
@@ -107,15 +164,38 @@ export default function AccountSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center gap-6">
-              <Avatar className="h-20 w-20">
+              <Avatar className="h-20 w-20 border">
                 <AvatarImage src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ""} />
                 <AvatarFallback className="text-2xl">
                   {user?.user_metadata?.name ? user.user_metadata.name.slice(0,1).toUpperCase() : "U"}
                 </AvatarFallback>
+                {uploading && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                  </div>
+                )}
               </Avatar>
-              <Button variant="outline" size="sm" onClick={() => toast("이미지 변경 기능은 준비 중입니다.")}>
-                이미지 변경
-              </Button>
+              <div className="flex flex-col gap-2">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  ref={fileInputRef} 
+                  onChange={handleImageUpload}
+                  disabled={uploading}
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? "업로드 중..." : "이미지 변경"}
+                </Button>
+                <p className="text-[10px] text-muted-foreground">
+                  JPG, PNG, GIF (최대 2MB)
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">
