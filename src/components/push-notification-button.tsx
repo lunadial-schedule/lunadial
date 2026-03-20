@@ -2,10 +2,13 @@
 
 /**
  * 웹 푸시 알림 버튼 — Service Worker 등록 및 구독 관리
+ * 보완사항: 중복 구독 방지, 권한 거부 시 안내, 토스트 알림 연동
  */
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { Bell, BellOff, Loader2 } from "lucide-react"
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4)
@@ -25,49 +28,93 @@ function urlBase64ToUint8Array(base64String: string) {
 export function PushNotificationButton() {
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [support, setSupport] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [permission, setPermission] = useState<NotificationPermission>("default")
 
   useEffect(() => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
       setSupport(true)
-      navigator.serviceWorker.register('/sw.js').then(reg => {
-        reg.pushManager.getSubscription().then(sub => {
-          if (sub) setIsSubscribed(true)
-        })
+      setPermission(Notification.permission)
+      
+      navigator.serviceWorker.register('/sw.js').then(async (reg) => {
+        const sub = await reg.pushManager.getSubscription()
+        if (sub) {
+          setIsSubscribed(true)
+        }
+        setLoading(false)
+      }).catch(err => {
+        console.error("SW Registration failed:", err)
+        setLoading(false)
       })
+    } else {
+      setLoading(false)
     }
   }, [])
 
   const subscribeUser = async () => {
+    if (permission === "denied") {
+      toast.error("알림 권한이 거부되어 있습니다. 브라우저 설정에서 알림을 허용해주세요.")
+      return
+    }
+
+    setLoading(true)
     try {
       const reg = await navigator.serviceWorker.ready
+      
+      // VAPID 키 확인
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      if (!vapidKey) {
+        throw new Error("VAPID Public Key is missing")
+      }
+
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!)
+        applicationServerKey: urlBase64ToUint8Array(vapidKey)
       })
       
-      await fetch('/api/push/subscribe', {
+      const response = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sub)
       })
 
+      if (!response.ok) throw new Error("서버 구독 등록 실패")
+
       setIsSubscribed(true)
-      alert("알림 설정이 완료되었습니다!")
+      setPermission("granted")
+      toast.success("기기 알림 설정이 완료되었습니다!")
     } catch (e) {
       console.error("Subscription failed:", e)
-      alert("알림 설정에 실패했습니다.")
+      toast.error("알림 설정 중 오류가 발생했습니다.")
+    } finally {
+      setLoading(false)
     }
   }
 
-  if (!support) return <Button variant="outline" disabled>알림 미지원 브라우저</Button>
+  if (!support) return (
+    <Button variant="outline" disabled size="sm" className="gap-2">
+      <BellOff className="h-4 w-4" />
+      알림 미지원
+    </Button>
+  )
+
+  if (loading) return (
+    <Button variant="outline" disabled size="sm" className="gap-2">
+      <Loader2 className="h-4 w-4 animate-spin" />
+      확인 중...
+    </Button>
+  )
 
   return (
     <Button 
       variant={isSubscribed ? "secondary" : "default"}
       onClick={subscribeUser}
-      disabled={isSubscribed}
+      disabled={isSubscribed || permission === "denied"}
+      size="sm"
+      className="gap-2"
     >
-      {isSubscribed ? "알림 설정됨" : "알림 받기"}
+      <Bell className="h-4 w-4" />
+      {isSubscribed ? "알림 설정됨" : permission === "denied" ? "알림 차단됨" : "알림 받기"}
     </Button>
   )
 }

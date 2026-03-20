@@ -1,24 +1,6 @@
-/**
- * 웹 푸시 구독 등록 API
- *
- * 브라우저의 PushSubscription 객체를 받아 서버에 저장한다.
- * VAPID 키를 사용하여 웹 푸시 알림을 발송할 수 있다.
- *
- * TODO(DB 저장): 현재 MVP에서는 로그만 남기며, 실제 push_subscriptions 테이블에 저장하도록 구현 필요
- */
 import { NextResponse } from 'next/server'
-import webpush from 'web-push'
-import { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } from '@/config/env'
 import { createClient } from '@/lib/supabase/server'
-
-// VAPID 키 설정 (서버 시작 시 1회)
-if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    VAPID_SUBJECT || 'mailto:admin@lunadial.com',
-    VAPID_PUBLIC_KEY,
-    VAPID_PRIVATE_KEY
-  )
-}
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(req: Request) {
   try {
@@ -30,14 +12,45 @@ export async function POST(req: Request) {
     }
 
     const subscription = await req.json()
+    if (!subscription || !subscription.endpoint) {
+      return NextResponse.json({ error: '유효하지 않은 구독 정보입니다.' }, { status: 400 })
+    }
 
-    // TODO(DB 저장): push_subscriptions 테이블에 저장 구현 필요
-    // await supabase.from('push_subscriptions').insert({ user_id: user.id, subscription })
-    console.log('웹 푸시 구독 등록:', user.id)
+    const adminClient = createAdminClient()
 
-    return NextResponse.json({ success: true })
+    // 1. 구독 정보 저장 (UPSERT)
+    const { error: subError } = await adminClient
+      .from('push_subscriptions')
+      .upsert({
+        user_id: user.id,
+        endpoint: subscription.endpoint,
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+        user_agent: req.headers.get('user-agent'),
+        is_active: true,
+        last_seen_at: new Date().toISOString()
+      }, { onConflict: 'endpoint' })
+
+    if (subError) {
+      console.error('Subscription save error:', subError)
+      return NextResponse.json({ error: '구독 저장 실패' }, { status: 500 })
+    }
+
+    // 2. 초기 알림 설정 생성 (없을 경우에만)
+    const { count } = await adminClient
+      .from('notification_preferences')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+
+    if (count === 0) {
+      await adminClient
+        .from('notification_preferences')
+        .insert({ user_id: user.id })
+    }
+
+    return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('웹 푸시 구독 저장 에러:', error)
-    return NextResponse.json({ error: '구독 등록 실패' }, { status: 500 })
+    console.error('Web Push Subscribe API Error:', error)
+    return NextResponse.json({ error: '다음에 다시 시도해주세요.' }, { status: 500 })
   }
 }
