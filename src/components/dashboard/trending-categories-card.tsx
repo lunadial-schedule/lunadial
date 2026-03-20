@@ -125,6 +125,7 @@ export function TrendingCategoriesCard() {
                       src={category.categoryImageUrl}
                       alt={category.categoryName}
                       fill
+                      sizes="(max-width: 768px) 33vw, (max-width: 1200px) 15vw, 150px"
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
