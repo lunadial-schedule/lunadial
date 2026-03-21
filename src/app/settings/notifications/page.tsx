@@ -14,6 +14,14 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { PushNotificationButton } from "@/components/push-notification-button"
 import { NotificationPreferences } from "@/types/push"
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 
 export default function NotificationsSettingsPage() {
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default")
@@ -25,7 +33,11 @@ export default function NotificationsSettingsPage() {
     notify_live_start: true,
     notify_schedule_change: true,
     notify_notice: false,
+    live_reminder_minutes: 5,
   })
+  
+  const [customMinutes, setCustomMinutes] = useState<string>("5")
+  const [isCustomMode, setIsCustomMode] = useState(false)
 
   // 초기 로드: 권한 확인 및 설정 조회
   useEffect(() => {
@@ -41,6 +53,14 @@ export default function NotificationsSettingsPage() {
         if (res.ok) {
           const data = await res.json()
           setPrefs(data)
+          
+          const mins = data.live_reminder_minutes || 5
+          if (![5, 10, 30].includes(mins)) {
+            setIsCustomMode(true)
+            setCustomMinutes(mins.toString())
+          } else {
+            setCustomMinutes(mins.toString())
+          }
         }
       } catch (e) {
         console.error("Failed to fetch preferences:", e)
@@ -71,8 +91,8 @@ export default function NotificationsSettingsPage() {
     }
   }
 
-  const handlePrefChange = async (key: keyof NotificationPreferences, checked: boolean) => {
-    const newPrefs = { ...prefs, [key]: checked }
+  const handlePrefChange = async (key: keyof NotificationPreferences, value: any) => {
+    const newPrefs = { ...prefs, [key]: value }
     setPrefs(newPrefs)
     setSaving(true)
 
@@ -80,7 +100,7 @@ export default function NotificationsSettingsPage() {
       const res = await fetch('/api/notifications/preferences', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [key]: checked })
+        body: JSON.stringify({ [key]: value })
       })
 
       if (!res.ok) throw new Error("저장 실패")
@@ -89,7 +109,7 @@ export default function NotificationsSettingsPage() {
     } catch (e) {
       toast.error("설정 저장 중 오류가 발생했습니다.")
       // 원복 (간단하게)
-      setPrefs(prev => ({ ...prev, [key]: !checked }))
+      setPrefs(prev => ({ ...prev, [key]: prefs[key] }))
     } finally {
       setSaving(false)
     }
@@ -147,7 +167,8 @@ export default function NotificationsSettingsPage() {
               브라우저 및 기기 상태
             </CardTitle>
             <CardDescription>
-              푸시 알림을 받으시려면 기기와 브라우저의 권한 허용이 필요합니다.
+              푸시 알림을 받으시려면 기기와 브라우저의 권한 허용이 필요합니다.<br/>
+              하나의 계정으로 여러 기기에서 알림을 켜면, 설정된 각 기기에서 알림을 받을 수 있습니다.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -239,8 +260,69 @@ export default function NotificationsSettingsPage() {
                 <p className="text-sm text-muted-foreground">Luna Dial 서비스의 주요 공지 및 기능 업데이트 소식입니다.</p>
               </div>
             </div>
+
+            <div className="pt-4 border-t space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">방송 시작 전 알림 시간</Label>
+                <div className="flex gap-4 items-center">
+                  <Select 
+                    value={isCustomMode ? "custom" : (prefs.live_reminder_minutes?.toString() || "5")} 
+                    onValueChange={(val) => {
+                      if (val === "custom") {
+                        setIsCustomMode(true)
+                      } else {
+                        setIsCustomMode(false)
+                        handlePrefChange("live_reminder_minutes", parseInt(val))
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="알림 시간 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5분 전</SelectItem>
+                      <SelectItem value="10">10분 전</SelectItem>
+                      <SelectItem value="30">30분 전</SelectItem>
+                      <SelectItem value="custom">직접 입력</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {isCustomMode && (
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        type="number" 
+                        value={customMinutes}
+                        onChange={(e) => setCustomMinutes(e.target.value)}
+                        className="w-20"
+                        min={5}
+                        max={60}
+                      />
+                      <span className="text-sm text-muted-foreground">분 전</span>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => {
+                          const mins = parseInt(customMinutes)
+                          if (isNaN(mins) || mins < 5 || mins > 60) {
+                            toast.error("5분에서 60분 사이의 숫자를 입력해주세요.")
+                            return
+                          }
+                          handlePrefChange("live_reminder_minutes", mins)
+                        }}
+                      >
+                        적용
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  방송 일정 시작 전에 미리 알림을 받습니다. 직접 입력은 5~60분 사이로 설정할 수 있습니다.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
+
 
         {permission === "denied" && (
           <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">

@@ -8,7 +8,7 @@ import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { PageContainer } from "@/components/layout/page-container"
-import { Search, Bell, Plus, Calendar as CalendarIcon, Star, Crown } from "lucide-react"
+import { Search, Bell, Plus, Calendar as CalendarIcon, Star, Crown, X } from "lucide-react"
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog"
 
 import { cn } from "@/lib/utils"
@@ -35,6 +35,59 @@ export function AppHeader() {
   const supabase = createClient()
   const router = useRouter()
   const pathname = usePathname()
+  const [notifications, setNotifications] = React.useState<any[]>([])
+  const [unreadCount, setUnreadCount] = React.useState(0)
+
+  const deleteNotification = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation() // 메뉴 닫힘 방지 또는 아이템 클릭 방지
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+      if (res.ok) {
+        setNotifications(prev => prev.filter(n => n.id !== id))
+        toast.success("알림이 삭제되었습니다.")
+      }
+    } catch (err) {
+      console.error('Delete notification failed:', err)
+      toast.error("삭제 실패")
+    }
+  }
+
+  const deleteAllNotifications = async () => {
+    if (!confirm("모든 알림을 삭제하시겠습니까?")) return
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true })
+      })
+      if (res.ok) {
+        setNotifications([])
+        toast.success("모든 알림이 삭제되었습니다.")
+      }
+    } catch (err) {
+      console.error('Delete all notifications failed:', err)
+      toast.error("삭제 실패")
+    }
+  }
+
+  const fetchNotifications = React.useCallback(async () => {
+    if (!user) return
+    try {
+      const res = await fetch('/api/notifications')
+      const data = await res.json()
+      if (data.items) {
+        setNotifications(data.items)
+        // 임시로 최근 5개 중 안읽은 처리 (실제 unread 컬럼이 없으므로 일단 갯수로만 표시하거나 생략 가능)
+        // 여기서는 그냥 전체 갯수를 unread 처럼 보여주거나 하지 않음. 테이블에 read 여부가 없으므로.
+      }
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err)
+    }
+  }, [user])
 
   React.useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -46,7 +99,15 @@ export function AppHeader() {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase, router])
+  }, [supabase])
+
+  React.useEffect(() => {
+    if (user) {
+      fetchNotifications()
+    } else {
+      setNotifications([])
+    }
+  }, [user, fetchNotifications])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -116,18 +177,75 @@ export function AppHeader() {
         {/* Right: Actions */}
         <div className="flex items-center gap-2 lg:gap-4 ml-auto w-auto order-2 lg:order-3">
           {/* Web Push Notification */}
-          <DropdownMenu>
+          <DropdownMenu onOpenChange={(open) => open && fetchNotifications()}>
             <DropdownMenuTrigger asChild>
               <Button id="notification-trigger" variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
                 <Bell className="h-5 w-5" />
+                {notifications.length > 0 && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-background" />
+                )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel>알림</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-80 sm:w-96 max-h-[400px] overflow-hidden flex flex-col">
+              <DropdownMenuLabel className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span>알림</span>
+                  {notifications.length > 0 && (
+                    <span className="text-[10px] text-muted-foreground font-normal">최근 {notifications.length}개</span>
+                  )}
+                </div>
+                {notifications.length > 0 && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 px-2 text-[11px] hover:text-destructive hover:bg-destructive/10"
+                    onClick={deleteAllNotifications}
+                  >
+                    전체 삭제
+                  </Button>
+                )}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                <p>새로운 알림이 없습니다.</p>
+              <div className="overflow-y-auto flex-1">
+                {notifications.length > 0 ? (
+                  notifications.map((notif) => (
+                    <DropdownMenuItem 
+                      key={notif.id} 
+                      className="group flex flex-col items-start gap-1 p-3 cursor-pointer border-b border-border/40 last:border-0 hover:bg-muted/50 transition-colors relative"
+                      onClick={() => notif.data?.url && router.push(notif.data.url)}
+                    >
+                      <div className="flex items-center justify-between w-full gap-2 pr-6">
+                        <span className="font-semibold text-xs truncate">{notif.title}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0">
+                          {new Date(notif.sent_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{notif.body}</p>
+                      
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => deleteNotification(notif.id, e)}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-sm text-muted-foreground">
+                    <p>새로운 알림이 없습니다.</p>
+                  </div>
+                )}
               </div>
+              {notifications.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="justify-center text-xs text-muted-foreground h-9" asChild>
+                    <Link href="/settings/notifications">알림 설정으로 이동</Link>
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
           

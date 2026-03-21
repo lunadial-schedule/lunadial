@@ -9,8 +9,8 @@ self.addEventListener('push', function (event) {
       const title = data.title || 'Luna Dial 알림'
       const options = {
         body: data.body || '',
-        icon: data.icon || '/icon-192x192.png',
-        badge: data.badge || '/badge.png',
+        icon: data.icon || '/logo.png',
+        badge: data.badge || '/logo.png',
         image: data.image || undefined,
         tag: data.tag || 'lunadial-push', // 태그를 붙이면 동일 태그 알림은 겹쳐서 표시됨
         vibrate: [100, 50, 100],
@@ -27,7 +27,7 @@ self.addEventListener('push', function (event) {
       event.waitUntil(
         self.registration.showNotification('Luna Dial', {
           body: text,
-          icon: '/icon-192x192.png',
+          icon: '/logo.png',
           data: { url: '/' }
         })
       )

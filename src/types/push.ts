@@ -7,6 +7,7 @@ export interface NotificationPreferences {
   notify_live_start: boolean;
   notify_schedule_change: boolean;
   notify_notice: boolean;
+  live_reminder_minutes: number;
   quiet_hours_enabled: boolean;
   quiet_hours_start: string | null; // HH:mm:ss
   quiet_hours_end: string | null;   // HH:mm:ss
@@ -38,7 +39,8 @@ export interface NotificationDelivery {
   id: string;
   user_id: string;
   subscription_id: string | null;
-  type: 'live_start' | 'schedule_changed' | 'notice' | 'test';
+  schedule_id: string | null;
+  type: 'live_start' | 'schedule_changed' | 'notice' | 'test' | 'schedule_live_reminder';
   entity_type: string | null;
   entity_id: string | null;
   title: string;

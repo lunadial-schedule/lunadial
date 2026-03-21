@@ -31,6 +31,7 @@ export async function GET() {
       notify_live_start: true,
       notify_schedule_change: true,
       notify_notice: true,
+      live_reminder_minutes: 5,
       quiet_hours_enabled: false,
       quiet_hours_start: null,
       quiet_hours_end: null
@@ -54,14 +55,36 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
     }
 
-    const body = await req.json()
+    const { 
+      notify_live_start, 
+      notify_schedule_change, 
+      notify_notice, 
+      live_reminder_minutes,
+      quiet_hours_enabled,
+      quiet_hours_start,
+      quiet_hours_end
+    } = await req.json()
+
+    // Validation
+    if (live_reminder_minutes !== undefined) {
+      if (live_reminder_minutes < 5 || live_reminder_minutes > 60) {
+        return NextResponse.json({ error: '사전 알림 시간은 5~60분 사이여야 합니다.' }, { status: 400 })
+      }
+    }
+
     const adminClient = createAdminClient()
 
     const { data, error } = await adminClient
       .from('notification_preferences')
       .upsert({
         user_id: user.id,
-        ...body,
+        notify_live_start,
+        notify_schedule_change,
+        notify_notice,
+        live_reminder_minutes: live_reminder_minutes ?? 5,
+        quiet_hours_enabled,
+        quiet_hours_start,
+        quiet_hours_end,
         updated_at: new Date().toISOString()
       })
       .select()

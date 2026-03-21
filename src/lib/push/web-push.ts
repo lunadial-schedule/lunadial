@@ -23,6 +23,8 @@ export async function sendWebPush(subscription: any, payload: any) {
       }
     }
 
+    console.log(`[sendWebPush] Sending notification to endpoint: ${subscription.endpoint.slice(0, 30)}...`)
+
     const response = await webpush.sendNotification(
       pushSubscription,
       JSON.stringify(payload)

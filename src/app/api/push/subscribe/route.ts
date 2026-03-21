@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     }
 
     const adminClient = createAdminClient()
+    const origin = req.headers.get('origin') || req.headers.get('referer')
 
     // 1. 구독 정보 저장 (UPSERT)
     const { error: subError } = await adminClient
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
         user_agent: req.headers.get('user-agent'),
+        app_origin: origin,
         is_active: true,
         last_seen_at: new Date().toISOString()
       }, { onConflict: 'endpoint' })
