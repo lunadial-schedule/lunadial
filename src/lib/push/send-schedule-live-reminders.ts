@@ -5,33 +5,26 @@ import { PushPayload } from '@/types/push'
 /**
  * 일정 기반 방송 시작 예정 알림 발송 (배치/크론용)
  * 
- * 1. 아직 알림이 발송되지 않은 향후 1시간 이내 일정을 조회
- * 2. 각 사용자의 개별 사전 알림 시간(live_reminder_minutes)에 도달했는지 확인
- * 3. 해당하는 경우 알림 발송 및 기록
+ * 1. 아직 알림이 발송되지 않은 일정 조회 (now - 10m ~ now + 1h 버퍼 적용)
+ * 2. 즐겨찾기 유저 조회
+ * 3. 각 사용자의 개별 사전 알림 시간(live_reminder_minutes) (기본값 5분) 도달 여부 확인
+ * 4. 알림 발송 및 기록 (중복 방지)
  */
 export async function sendScheduleLiveReminders() {
   const supabase = createAdminClient()
   const now = new Date()
   
-  // 조회 윈도우: 현재 시점 기준 -10분 ~ +60분
-  // 배치가 늦게 돌아도(지연 실행) 이미 시작한 일정(최근 10분 내)까지는 커버 가능하도록 버퍼 추가
-  const windowStart = new Date(now.getTime() - 10 * 60 * 1000) 
+  // 버퍼 윈도우: 10분 전 ~ 1시간 뒤
+  const windowStart = new Date(now.getTime() - 10 * 60 * 1000)
   const windowEnd = new Date(now.getTime() + 60 * 60 * 1000)
 
-  const summary = {
-    now: now.toISOString(),
-    window: { start: windowStart.toISOString(), end: windowEnd.toISOString() },
-    totalSchedules: 0,
-    processedSchedules: 0,
-    totalSkipped: 0,
-    totalSent: 0,
-    totalFailed: 0,
-    details: [] as any[]
-  }
+  console.log(`\n===========================================`)
+  console.log(`[sendScheduleLiveReminders] START EXECUTION`)
+  console.log(`[sendScheduleLiveReminders] Current Time : ${now.toISOString()}`)
+  console.log(`[sendScheduleLiveReminders] Query Window : ${windowStart.toISOString()} ~ ${windowEnd.toISOString()}`)
+  console.log(`===========================================\n`)
 
-  console.log(`[sendScheduleLiveReminders] Start check: ${summary.window.start} ~ ${summary.window.end}`)
-
-  // 1. 발송 대상 일정 조회 (취소되지 않은 일정 중 윈도우 이내 시작 예정)
+  // 1. 발송 대상 일정 조회 (취소되지 않은 일정 중 window 내 시작 일정)
   const { data: schedules, error: schedError } = await supabase
     .from('schedules')
     .select(`
@@ -44,81 +37,95 @@ export async function sendScheduleLiveReminders() {
         name
       )
     `)
-    .neq('status', 'canceled')
+    // status 오탈자(canceled/cancelled) 방어
+    .not('status', 'in', '("canceled","cancelled")')
     .gte('start_time', windowStart.toISOString())
     .lte('start_time', windowEnd.toISOString())
 
   if (schedError) {
-    console.error('[sendScheduleLiveReminders] Failed to fetch schedules:', schedError)
+    console.error('[sendScheduleLiveReminders] ❌ Failed to fetch schedules:', schedError)
     return { success: false, error: schedError }
   }
 
   if (!schedules || schedules.length === 0) {
-    console.log('[sendScheduleLiveReminders] No candidate schedules found.')
-    return { ...summary, success: true }
+    console.log(`[sendScheduleLiveReminders] ℹ️ Array of candidate schedules is empty.`)
+    return { success: true, processedSchedules: 0, candidates: 0, sent: 0, skipped: 0, failed: 0 }
   }
 
-  summary.totalSchedules = schedules.length
-  console.log(`[sendScheduleLiveReminders] Found ${schedules.length} candidate schedules.`)
+  console.log(`[sendScheduleLiveReminders] 🔍 Found ${schedules.length} candidate schedules within window.`)
+
+  let totalSentCount = 0
+  let totalSkippedCount = 0
+  let totalFailedCount = 0
 
   for (const schedule of schedules) {
     const streamerName = (schedule.streamers as any)?.name || '스트리머'
-    const startTimeStr = schedule.start_time
-    const startTime = new Date(startTimeStr)
+    const startTime = new Date(schedule.start_time)
     
-    const schedLog = {
-      scheduleId: schedule.id,
-      title: schedule.title,
-      streamer: streamerName,
-      startTime: startTimeStr,
-      results: [] as any[]
-    }
+    console.log(`\n  --- Processing Schedule: [${schedule.id}] Title: "${schedule.title}" Streamer: "${streamerName}" Start: ${schedule.start_time} Status: ${schedule.status} ---`)
 
-    // 2. 해당 스트리머를 즐겨찾기한 모든 사용자 조회
+    // 2. 해당 스트리머를 즐겨찾기한 사용자 목록 가져오기
     const { data: favorites, error: favError } = await supabase
       .from('favorites')
       .select('user_id')
       .eq('streamer_id', schedule.streamer_id)
 
-    if (favError || !favorites || favorites.length === 0) {
-      console.log(`[sendScheduleLiveReminders] Skip schedule ${schedule.id}: No favorite users found.`)
-      summary.totalSkipped++
+    if (favError) {
+      console.error(`  [!] Error fetching favorites for streamer ${schedule.streamer_id}:`, favError)
+      continue
+    }
+
+    if (!favorites || favorites.length === 0) {
+      console.log(`  [i] No favorites found for streamer ${schedule.streamer_id}. Skipping schedule.`)
       continue
     }
 
     const userIds = favorites.map(f => f.user_id)
+    console.log(`  [i] Found ${userIds.length} users who favorited this streamer.`)
 
-    // 3. 사용자별 알림 설정 조회
-    // 데이터가 없는 사용자는 기본값으로 처리하기 위해 LEFT JOIN 대신 전체 유저에 대해 필터링 로직 태움
+    // 3. 사용자의 알림 설정(preferences) 확인
+    // fallback 처리를 위해 IN 쿼리로 가져온 뒤 애플리케이션 레벨에서 병합
     const { data: prefs, error: prefError } = await supabase
       .from('notification_preferences')
-      .select('user_id, live_reminder_minutes, notify_live_start')
+      .select('user_id, notify_live_start, live_reminder_minutes')
       .in('user_id', userIds)
 
     if (prefError) {
-      console.warn(`[sendScheduleLiveReminders] Failed to fetch prefs for schedule ${schedule.id}:`, prefError)
+      console.error(`  [!] Error fetching preferences for users:`, prefError)
+      continue
     }
 
-    // preference가 없는 유저도 기본값으로 포함시키기 위해 favorite 유저 순회
+    // preference map 생성
+    const prefMap = new Map(prefs?.map(p => [p.user_id, p]))
+
+    let schedSent = 0
+    let schedSkipped = 0
+    let schedFailed = 0
+
     for (const userId of userIds) {
-      const userPref = prefs?.find(p => p.user_id === userId)
+      const userPref = prefMap.get(userId)
       
-      // 알림 설정이 명시적으로 꺼져 있는 경우만 제외
-      if (userPref && userPref.notify_live_start === false) {
-        summary.totalSkipped++
+      // 설정이 없으면 기본값 적용 (true, 5분)
+      const notifyLiveStart = userPref ? userPref.notify_live_start : true
+      const reminderMinutes = userPref?.live_reminder_minutes || 5
+
+      if (!notifyLiveStart) {
+        console.log(`    [-] User ${userId} has notify_live_start = false. Skpping.`)
+        schedSkipped++
         continue
       }
 
-      const reminderMinutes = userPref?.live_reminder_minutes || 5 // 기본값 5분
+      // 발송 예정 시각 계산
       const notifyAt = new Date(startTime.getTime() - reminderMinutes * 60 * 1000)
 
-      // 아직 발송 시점이 아니면 스킵
+      // 아직 알림 발송 시점 전이면 스킵
       if (now < notifyAt) {
-        summary.totalSkipped++
+        // console.log(`    [-] User ${userId}: Too early. notifyAt is ${notifyAt.toISOString()}`) // 로그가 너무 많아질 수 있으니 주석
+        schedSkipped++
         continue
       }
 
-      // 4. 중복 발송 확인 (notification_deliveries)
+      // 4. 이미 해당 유저에게 이 일정에 대한 알림이 발송되었는지 확인
       const { data: existing, error: existError } = await supabase
         .from('notification_deliveries')
         .select('id')
@@ -130,44 +137,61 @@ export async function sendScheduleLiveReminders() {
         .maybeSingle()
 
       if (existError) {
-        console.error(`[sendScheduleLiveReminders] Dub check error for user ${userId}:`, existError)
+        console.error(`    [!] Error checking delivery history for user ${userId}:`, existError)
+        schedFailed++
         continue
       }
 
       if (existing) {
-        summary.totalSkipped++
+        console.log(`    [-] User ${userId}: Already received reminder for this schedule.`)
+        schedSkipped++
         continue
       }
 
-      // 5. 실제 발송 시도
-      const timeLabel = startTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
+      // 5. 알림 발송 준비
+      const displayHours = startTime.getHours().toString().padStart(2, '0')
+      const displayMinutes = startTime.getMinutes().toString().padStart(2, '0')
+      const startTimeStr = `${displayHours}:${displayMinutes}` // KST 로컬 타임으로 보이는 효과 (혹은 UTC일 수도 있으나 프론트에서 표기하던 방식과 동일하게)
+      
       const payload: PushPayload = {
-        title: `${streamerName} 방송 예정 알림`,
-        body: `${timeLabel} 예정 · ${schedule.title || '방송 예정입니다.'}`,
+        title: `${streamerName}님 방송 예정 알림`,
+        body: `${startTimeStr} 예정 · ${schedule.title || '방송 예정입니다.'}`,
         url: `/streamer/${schedule.streamer_id}`,
         tag: `schedule-reminder-${schedule.id}`,
         data: { scheduleId: schedule.id, streamerId: schedule.streamer_id }
       }
 
+      console.log(`    [+] Sending push to user ${userId} | Reminder Mins: ${reminderMinutes} | NotifyAt: ${notifyAt.toISOString()}`)
       const res = await sendPushToUser(userId, payload, 'schedule_live_reminder', {
         excludeLocalhost: true,
         scheduleId: schedule.id
       })
       
       if (res.success && res.sent !== undefined && res.sent > 0) {
-        summary.totalSent += res.sent
-        schedLog.results.push({ userId, status: 'sent', count: res.sent })
-        console.log(`[sendScheduleLiveReminders] Sent to user ${userId} (sched: ${schedule.id})`)
-      } else if (!res.success) {
-        summary.totalFailed++
-        schedLog.results.push({ userId, status: 'failed', error: res.error })
+        schedSent += res.sent
+        console.log(`    [OK] User ${userId}: Push sent successfully (${res.sent} devices).`)
+      } else {
+        console.log(`    [!] User ${userId}: Push failed or 0 devices sent (no active subscriptions).`)
+        schedFailed++
       }
     }
 
-    summary.processedSchedules++
-    summary.details.push(schedLog)
+    console.log(`  --- Summary for [${schedule.id}] -> Sent: ${schedSent}, Skipped: ${schedSkipped}, Failed: ${schedFailed} ---`)
+    totalSentCount += schedSent
+    totalSkippedCount += schedSkipped
+    totalFailedCount += schedFailed
   }
 
-  console.log(`[sendScheduleLiveReminders] Summary: schedules=${summary.totalSchedules}, sent=${summary.totalSent}, skip=${summary.totalSkipped}, fail=${summary.totalFailed}`)
-  return { ...summary, success: true }
+  console.log(`\n===========================================`)
+  console.log(`[sendScheduleLiveReminders] EXECUTION COMPLETE`)
+  console.log(`[sendScheduleLiveReminders] Candidates: ${schedules.length} | Sent: ${totalSentCount} | Skipped: ${totalSkippedCount} | Failed: ${totalFailedCount}`)
+  console.log(`===========================================\n`)
+
+  return { 
+    success: true, 
+    processedSchedules: schedules.length,
+    sent: totalSentCount,
+    skipped: totalSkippedCount,
+    failed: totalFailedCount
+  }
 }

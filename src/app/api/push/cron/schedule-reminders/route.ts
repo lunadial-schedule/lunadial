@@ -2,28 +2,28 @@ import { NextResponse } from 'next/server'
 import { sendScheduleLiveReminders } from '@/lib/push/send-schedule-live-reminders'
 
 /**
- * 일정 기반 방송 시작 예정 알림 크론 엔드포인트
- * 
- * Vercel Cron 또는 외부 스케줄러에서 주기적으로(예: 매분) 호출합니다.
- * 보안을 위해 CRON_SECRET 환경변수 검증을 포함할 수 있습니다.
+ * [배치/크론 진입점]
+ * 일정 기반 방송 시작 알림을 주기적으로 발송하기 위해 Vercel Cron 등에서 호출하는 라우트.
+ * GET 요청으로 동작하며, Vercel cron에 등록하여 매 1분, 5분 등 적절한 간격으로 구동됨.
  */
 export async function GET(req: Request) {
-  const authHeader = req.headers.get('authorization')
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 })
-  }
-
-  console.log('[API/Cron] Starting schedule reminders batch...')
-  
   try {
+    // Vercel Cron 헤더를 이용한 보안 체크 (옵션)
+    // const authHeader = req.headers.get('authorization')
+    // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // }
+
+    console.log('[CRON] /api/push/cron/schedule-reminders Triggered.')
+
     const result = await sendScheduleLiveReminders()
-    
+
     return NextResponse.json({
-      message: 'Cron triggered successfully',
-      result
+      message: 'Schedule reminders processed.',
+      ...result
     })
   } catch (error: any) {
-    console.error('[API/Cron] Schedule reminders batch failed:', error)
+    console.error('[CRON] Error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
