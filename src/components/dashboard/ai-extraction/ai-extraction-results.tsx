@@ -160,6 +160,15 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
     let successCount = 0
     let failCount = 0
 
+    const currentYear = new Date().getFullYear();
+    const normalizeDateYear = (dateStr: string | null) => {
+      if (!dateStr) return null;
+      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return dateStr;
+      const [, , month, day] = match;
+      return `${currentYear}-${month}-${day}`;
+    };
+
     for (const draft of selected) {
       // 스트리머 자동 생성 (DB에 없는 경우 새로 등록)
       const streamerRes = await findOrCreateStreamer({ name: draft.streamerName! })
@@ -169,9 +178,12 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
         continue
       }
 
+      // 강제 연도 보정 (최종 저장 직전)
+      const finalDate = normalizeDateYear(draft.date) || draft.date;
+
       const startTimeStr = draft.isAllDay 
-        ? `${draft.date}T00:00:00` 
-        : `${draft.date}T${draft.startTime || "00:00"}:00`
+        ? `${finalDate}T00:00:00` 
+        : `${finalDate}T${draft.startTime || "00:00"}:00`
 
       const { error } = await createSchedule({
         title: draft.title,

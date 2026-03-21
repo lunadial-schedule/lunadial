@@ -236,10 +236,22 @@ F. 이미지에 요일만 있고 일자 숫자도 없고 주간 범위도 없으
       return { data: [] } // Empty array means nothing found -> UI will handle it naturally
     }
 
+    const currentYear = new Date().getFullYear()
+    const normalizeDateYear = (dateStr: string | null) => {
+      if (!dateStr) return null;
+      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return dateStr;
+      const [, , month, day] = match;
+      return `${currentYear}-${month}-${day}`;
+    }
+
     // 프론트의 ExtractedScheduleDraft 형식으로 매핑
     const drafts: ExtractedScheduleDraft[] = parsedData.map((item, index) => {
       
-      const hasDate = !!item.date
+      // 강제 연도 보정 적용
+      const normalizedDate = normalizeDateYear(item.date) || null;
+      
+      const hasDate = !!normalizedDate
       const hasTitle = !!item.title && item.title !== "방송 예정"
       const hasStreamer = !!item.streamerName
       const hasTime = !!item.startTime
@@ -272,7 +284,7 @@ F. 이미지에 요일만 있고 일자 숫자도 없고 주간 범위도 없으
         isSelected: status === "ready", // ready 상태일 때만 기본으로 선택 처리
         title: item.title || "방송 예정",
         streamerName: item.streamerName || streamers[0] || "",
-        date: item.date || null,
+        date: normalizedDate,
         startTime: item.startTime || null,
         endTime: item.endTime || null,
         isAllDay: item.isAllDay === true || forceAllDay,

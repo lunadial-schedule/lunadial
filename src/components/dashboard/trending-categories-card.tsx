@@ -74,7 +74,7 @@ export function TrendingCategoriesCard() {
   }, [updatedAt])
 
   return (
-    <Card className="border-border/50 shadow-sm flex flex-col h-full lg:h-[510px]">
+    <Card className="border-border/50 shadow-sm flex flex-col min-h-[510px] lg:h-[510px]">
       <CardHeader className="h-10 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
         <div className="flex items-center justify-between gap-2 w-full">
           <CardTitle className="text-[15px] font-bold m-0 flex items-center gap-1.5">
@@ -98,7 +98,7 @@ export function TrendingCategoriesCard() {
       </CardHeader>
       <CardContent className="pt-2.5 pb-3 px-3 md:pt-3 md:pb-3 md:px-3 flex-1">
         {fetchState === 'loading' ? (
-          <div className="py-8 flex flex-col items-center justify-center text-muted-foreground text-sm gap-2">
+          <div className="flex-1 min-h-0 flex flex-col items-center justify-center text-muted-foreground text-sm gap-2">
             <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></span>
             <p>카테고리 데이터를 불러오는 중...</p>
           </div>
@@ -108,7 +108,7 @@ export function TrendingCategoriesCard() {
             <p>카테고리 정보를 불러오지 못했습니다.<br/>잠시 후 다시 시도해주세요.</p>
           </div>
         ) : fetchState === 'empty' ? (
-          <div className="py-8 flex flex-col items-center justify-center text-muted-foreground text-sm gap-2">
+          <div className="flex-1 min-h-0 flex flex-col items-center justify-center text-muted-foreground text-sm gap-2">
             <Info className="h-5 w-5 opacity-50" />
             <p>현재 집계 중인 카테고리가 없습니다.</p>
           </div>
