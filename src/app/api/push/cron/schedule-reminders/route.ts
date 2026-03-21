@@ -2,33 +2,28 @@ import { NextResponse } from 'next/server'
 import { sendScheduleLiveReminders } from '@/lib/push/send-schedule-live-reminders'
 
 /**
- * 일정 기반 알림 발송 크론 API
+ * 일정 기반 방송 시작 예정 알림 크론 엔드포인트
  * 
- * 외부 크론 서비스(Vercel Cron, GitHub Actions 등)에서 
- * 주기적으로(예: 1~5분 간격) 이 API를 호출하여 알림을 발송한다.
+ * Vercel Cron 또는 외부 스케줄러에서 주기적으로(예: 매분) 호출합니다.
+ * 보안을 위해 CRON_SECRET 환경변수 검증을 포함할 수 있습니다.
  */
 export async function GET(req: Request) {
-  // 보안을 위한 단순 API 키 체크 (필요 시 환경변수 설정)
-  const authHeader = req.headers.get('Authorization')
+  const authHeader = req.headers.get('authorization')
   if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return new Response('Unauthorized', { status: 401 })
   }
 
+  console.log('[API/Cron] Starting schedule reminders batch...')
+  
   try {
-    console.log('[CRON] Starting schedule reminders batch...')
     const result = await sendScheduleLiveReminders()
     
     return NextResponse.json({
-      message: 'Schedule reminders processed',
-      ...result
+      message: 'Cron triggered successfully',
+      result
     })
   } catch (error: any) {
-    console.error('[CRON] Failed to process schedule reminders:', error)
+    console.error('[API/Cron] Schedule reminders batch failed:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
-}
-
-// POST로도 호출 가능하게 지원
-export async function POST(req: Request) {
-  return GET(req)
 }
