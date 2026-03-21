@@ -12,11 +12,12 @@ import { PushPayload } from '@/types/push'
 export async function sendScheduleLiveReminders() {
   const supabase = createAdminClient()
   const now = new Date()
+  const fifteenMinsAgo = new Date(now.getTime() - 15 * 60 * 1000)
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000)
 
-  console.log(`[sendScheduleLiveReminders] Checking schedules between ${now.toISOString()} and ${oneHourLater.toISOString()}`)
+  console.log(`[sendScheduleLiveReminders] Checking schedules starting between ${fifteenMinsAgo.toISOString()} and ${oneHourLater.toISOString()}`)
 
-  // 1. 발송 대상 일정 조회 (취소되지 않은 일정 중 1시간 이내 시작 예정)
+  // 1. 발송 대상 일정 조회 (취소되지 않은 일정 중 현재 시점 근처)
   const { data: schedules, error: schedError } = await supabase
     .from('schedules')
     .select(`
@@ -29,7 +30,7 @@ export async function sendScheduleLiveReminders() {
       )
     `)
     .neq('status', 'canceled')
-    .gte('start_time', now.toISOString())
+    .gte('start_time', fifteenMinsAgo.toISOString())
     .lte('start_time', oneHourLater.toISOString())
 
   if (schedError) {
