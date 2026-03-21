@@ -17,49 +17,41 @@ export type Database = {
       connected_accounts: {
         Row: {
           access_token_encrypted: string | null
-          created_at: string
+          created_at: string | null
           id: string
           provider: string
           provider_user_id: string
           provider_username: string | null
           refresh_token_encrypted: string | null
           token_expires_at: string | null
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           access_token_encrypted?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           provider: string
           provider_user_id: string
           provider_username?: string | null
           refresh_token_encrypted?: string | null
           token_expires_at?: string | null
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           access_token_encrypted?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           provider?: string
           provider_user_id?: string
           provider_username?: string | null
           refresh_token_encrypted?: string | null
           token_expires_at?: string | null
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "connected_accounts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       favorites: {
         Row: {
@@ -90,6 +82,150 @@ export type Database = {
           },
         ]
       }
+      notification_deliveries: {
+        Row: {
+          body: string | null
+          entity_id: string | null
+          entity_type: string | null
+          error_message: string | null
+          id: string
+          schedule_id: string | null
+          sent_at: string | null
+          status: string | null
+          subscription_id: string | null
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          id?: string
+          schedule_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subscription_id?: string | null
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          id?: string
+          schedule_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subscription_id?: string | null
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_deliveries_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_deliveries_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string | null
+          live_reminder_minutes: number
+          notify_live_start: boolean | null
+          notify_notice: boolean | null
+          notify_schedule_change: boolean | null
+          quiet_hours_enabled: boolean | null
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          live_reminder_minutes?: number
+          notify_live_start?: boolean | null
+          notify_notice?: boolean | null
+          notify_schedule_change?: boolean | null
+          quiet_hours_enabled?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          live_reminder_minutes?: number
+          notify_live_start?: boolean | null
+          notify_notice?: boolean | null
+          notify_schedule_change?: boolean | null
+          quiet_hours_enabled?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          app_origin: string | null
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          is_active: boolean | null
+          last_seen_at: string | null
+          p256dh: string
+          platform: string | null
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          app_origin?: string | null
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean | null
+          last_seen_at?: string | null
+          p256dh: string
+          platform?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          app_origin?: string | null
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean | null
+          last_seen_at?: string | null
+          p256dh?: string
+          platform?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       schedules: {
         Row: {
           categories: string[]
@@ -102,6 +238,7 @@ export type Database = {
           start_time: string
           status: string
           streamer: string
+          streamer_id: string | null
           title: string
           updated_at: string
           user_id: string
@@ -117,6 +254,7 @@ export type Database = {
           start_time: string
           status?: string
           streamer: string
+          streamer_id?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -132,11 +270,20 @@ export type Database = {
           start_time?: string
           status?: string
           streamer?: string
+          streamer_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "schedules_streamer_id_fkey"
+            columns: ["streamer_id"]
+            isOneToOne: false
+            referencedRelation: "streamers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       streamers: {
         Row: {

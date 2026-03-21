@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CATEGORY_LIST } from "@/config/categories";
 import { updateSchedule, type Schedule } from "@/app/actions/schedules";
+import { findOrCreateStreamer } from "@/app/actions/streamers";
 import { format, parseISO } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { StreamerAutocompleteInput } from "./streamer-autocomplete-input";
 
 interface UpdateScheduleDialogProps {
   schedule: Schedule;
@@ -28,6 +30,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
   const [selectedCats, setSelectedCats] = React.useState<string[]>([]);
   const [isAllDay, setIsAllDay] = React.useState<boolean>(false);
   const [startTime, setStartTime] = React.useState("");
+  const [streamerName, setStreamerName] = React.useState("");
 
   React.useEffect(() => {
     if (open) {
@@ -38,6 +41,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
       } else {
         setStartTime(schedule.start_time ? format(parseISO(schedule.start_time), "yyyy-MM-dd'T'HH:mm") : "");
       }
+      setStreamerName(schedule.streamer || "");
       setErrorMsg(null);
     }
   }, [open, schedule]);
@@ -68,6 +72,14 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
       setIsLoading(false);
       return;
     }
+
+    // 스트리머 찾기 및 생성 (id 매핑)
+    const streamerRes = await findOrCreateStreamer({ name: streamerName });
+    if (streamerRes.error) {
+      setErrorMsg("스트리머 확인 오류: " + streamerRes.error);
+      setIsLoading(false);
+      return;
+    }
     
     // server action updateSchedule(id, updates, currentUpdatedAt)
     const startTimeStr = isAllDay ? `${startTime}T00:00:00` : startTime;
@@ -75,7 +87,8 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
       schedule.id, 
       {
         title,
-        streamer,
+        streamer: streamerName,
+        streamer_id: streamerRes.data?.id,
         categories: selectedCats,
         link,
         status,
@@ -121,7 +134,12 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
           </div>
           <div className="space-y-2">
              <label className="text-sm font-medium">스트리머 *</label>
-             <Input name="streamer" required defaultValue={schedule.streamer} />
+             <StreamerAutocompleteInput
+               name="streamer"
+               value={streamerName}
+               onChange={setStreamerName}
+               required={true}
+             />
           </div>
           <div className="space-y-4">
             <div className="space-y-2">

@@ -119,7 +119,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
     const { data, error } = await createSchedule({
       title,
       streamer: streamerName,
-      //streamer_id: streamerId,
+      streamer_id: streamerId,
       categories: selectedCats,
       link,
       start_time: new Date(startTimeStr).toISOString(),

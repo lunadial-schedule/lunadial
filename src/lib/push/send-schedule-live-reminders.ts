@@ -64,6 +64,12 @@ export async function sendScheduleLiveReminders() {
     
     console.log(`\n  --- Processing Schedule: [${schedule.id}] Title: "${schedule.title}" Streamer: "${streamerName}" Start: ${schedule.start_time} Status: ${schedule.status} ---`)
 
+    if (!schedule.streamer_id) {
+      console.log(`  [!] Schedule ${schedule.id} has no streamer_id (null or empty). Skipping.`)
+      totalSkippedCount++
+      continue
+    }
+
     // 2. 해당 스트리머를 즐겨찾기한 사용자 목록 가져오기
     const { data: favorites, error: favError } = await supabase
       .from('favorites')

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { ExtractedScheduleDraft } from "./ai-extraction-form"
 import { CATEGORY_LIST } from "@/config/categories"
 import { getSchedules, createSchedule } from "@/app/actions/schedules"
+import { findOrCreateStreamer } from "@/app/actions/streamers"
 import { Loader2, ArrowLeft, Plus, AlertCircle, CheckCircle2, Copy } from "lucide-react"
 
 // Types to match DB format roughly
@@ -160,6 +161,14 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
     let failCount = 0
 
     for (const draft of selected) {
+      // 스트리머 자동 생성 (DB에 없는 경우 새로 등록)
+      const streamerRes = await findOrCreateStreamer({ name: draft.streamerName! })
+      if (streamerRes.error) {
+        failCount++
+        console.error("스트리머 등록 오류:", streamerRes.error)
+        continue
+      }
+
       const startTimeStr = draft.isAllDay 
         ? `${draft.date}T00:00:00` 
         : `${draft.date}T${draft.startTime || "00:00"}:00`
@@ -167,6 +176,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
       const { error } = await createSchedule({
         title: draft.title,
         streamer: draft.streamerName!,
+        streamer_id: streamerRes.data?.id,
         categories: draft.categories || [],
         link: draft.noticeUrl,
         start_time: new Date(startTimeStr).toISOString(),
