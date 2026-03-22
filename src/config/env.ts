@@ -9,7 +9,7 @@
 /** Supabase 프로젝트 URL (공개) */
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 /** Supabase 익명 키 (공개) */
-export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+export const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ''
 
 /** 치지직 Open API 클라이언트 ID (서버 전용) */
 export const CHZZK_CLIENT_ID = process.env.CHZZK_CLIENT_ID || ''
@@ -28,12 +28,6 @@ export const PORTONE_CHANNEL_KEY = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY |
 /** Gemini AI API 키 (서버 전용) */
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 
-/** 웹 푸시 VAPID 공개 키 (공개) */
-export const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
-/** 웹 푸시 VAPID 비공개 키 (서버 전용) */
-export const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || ''
-/** 웹 푸시 VAPID 연락처 (서버 전용, 예: mailto:admin@example.com) */
-export const VAPID_SUBJECT = process.env.VAPID_SUBJECT || ''
 
 /**
  * 앱 정책 상수

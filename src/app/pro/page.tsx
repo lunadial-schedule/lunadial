@@ -51,7 +51,7 @@ export default function ProPage() {
               </li>
               <li className="flex items-center gap-3">
                 <Check className="h-4 w-4 text-primary" />
-                <span>기본 앱 내 웹 알림</span>
+                <span>AI 일정 자동 추출</span>
               </li>
             </ul>
             <Button variant="outline" className="w-full" disabled>현재 사용 중인 플랜</Button>
@@ -82,19 +82,11 @@ export default function ProPage() {
               </li>
               <li className="flex items-center gap-3">
                 <Check className="h-4 w-4 text-amber-500" />
-                <span>스트리밍 시작/종료 실시간 알림 지원</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="h-4 w-4 text-amber-500" />
                 <span>서비스 내 모든 <strong>광고 제거</strong></span>
               </li>
               <li className="flex items-center gap-3">
                 <Check className="h-4 w-4 text-amber-500" />
                 <span>개인 캘린더 앱(Google, Apple) 연동 (내보내기)</span>
-              </li>
-              <li className="flex items-center gap-3 text-muted-foreground">
-                <span className="h-4 w-4 border-2 border-muted-foreground rounded-full flex items-center justify-center text-[10px]">!</span>
-                <span>AI 일정 자동 추출 (출시 예정)</span>
               </li>
             </ul>
             <Button 
