@@ -9,7 +9,7 @@
 /** Supabase 프로젝트 URL (공개) */
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 /** Supabase 익명 키 (공개) */
-export const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ''
+export const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 /** 치지직 Open API 클라이언트 ID (서버 전용) */
 export const CHZZK_CLIENT_ID = process.env.CHZZK_CLIENT_ID || ''
