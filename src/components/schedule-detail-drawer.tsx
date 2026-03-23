@@ -48,9 +48,15 @@ export function ScheduleDetailDrawer({
   const [internalSchedule, setInternalSchedule] = React.useState<Schedule | null>(externalSchedule);
   const initialEventId = searchParams.get('event');
 
-  // 외부 schedule prop 연동
+  // 외부 schedule prop 연동 — HomeSchedule(최소 필드)로 즉시 표시 후, 상세 데이터 fetch
   React.useEffect(() => {
-    if (externalSchedule) setInternalSchedule(externalSchedule);
+    if (externalSchedule) {
+      setInternalSchedule(externalSchedule);
+      // link, memo 등 누락 필드를 보완하기 위해 전체 데이터 조회
+      getScheduleById(externalSchedule.id).then(({ data }) => {
+        if (data) setInternalSchedule(data);
+      });
+    }
   }, [externalSchedule]);
 
   // 1. 직접 URL 진입 (또는 새로고침) 처리
