@@ -1,45 +1,28 @@
 /**
  * 메인 페이지 (대시보드) — 서버 컴포넌트
  *
- * 서버에서 핵심 데이터(일정, 즐겨찾기 이름)를 미리 fetch하여
- * 초기 렌더에 포함시킨다. "오늘의 일정"과 "곧 시작"에 동일한 데이터를
- * 1회 조회 후 전달하여 중복 요청을 제거한다.
+ * 초기 페이지 응답을 빠르게 하기 위해 페이지 껍데기(Shell)와 클라이언트 컴포넌트를 즉시 렌더한다.
+ * 데이터 의존성이 있는 컴포넌트는 Suspense로 묶어 별도로 스트리밍(Chunking)되도록 처리한다.
  *
- * - 좌측: 오늘의 일정(TodayScheduleCard)
- * - 우측: 곧 시작(UpNextCard), 현재 라이브(LiveNowCard), 트렌딩 카테고리(TrendingCategoriesCard)
+ * - 좌측: 오늘의 일정(TodayScheduleSection)
+ * - 우측: 곧 시작(UpNextSection), 현재 라이브(LiveNowCard), 트렌딩 카테고리(TrendingCategoriesCard)
  */
 import { LiveNowCard } from "@/components/dashboard/live-now-card";
 import { TrendingCategoriesCard } from "@/components/dashboard/trending-categories-card";
-import { UpNextCard } from "@/components/dashboard/up-next-card";
-import { TodayScheduleCard } from "@/components/dashboard/today-schedule-card";
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog";
 import { OAuthCallbackHandler } from "@/components/oauth-callback-handler";
 import { PageContainer } from "@/components/layout/page-container";
 import { Suspense } from "react";
-import { addDays, addHours, isAfter, parseISO } from "date-fns";
-import { getHomeSchedules, getMyFavoriteStreamerNames } from "@/app/actions/schedules";
-import type { HomeSchedule } from "@/app/actions/schedules";
 
-export default async function Home() {
-  const now = new Date();
+// Async Server Components (직접 데이터를 fetch)
+import { TodayScheduleSection } from "@/components/dashboard/today-schedule-section";
+import { UpNextSection } from "@/components/dashboard/up-next-section";
 
-  // 서버에서 병렬로 데이터 fetch — schedules 1회, favorites 1회
-  const todayStart = addDays(now, -2);
-  const todayEnd = addDays(now, 2);
+// Skeletons (데이터 로딩 전 즉시 그려지는 껍데기 프레임)
+import { TodayScheduleSkeleton } from "@/components/dashboard/today-schedule-skeleton";
+import { UpNextSkeleton } from "@/components/dashboard/up-next-skeleton";
 
-  const [schedulesRes, favoriteNames] = await Promise.all([
-    getHomeSchedules(todayStart, todayEnd),
-    getMyFavoriteStreamerNames(),
-  ]);
-
-  const allSchedules: HomeSchedule[] = schedulesRes.data ?? [];
-
-  // "곧 시작" 데이터: 현재 이후 24시간 내 일정 최대 5개
-  const upNextEnd = addHours(now, 24);
-  const upNextEvents = allSchedules
-    .filter(e => isAfter(parseISO(e.start_time), now) && !isAfter(parseISO(e.start_time), upNextEnd))
-    .slice(0, 5);
-
+export default function Home() {
   return (
     <>
       <Suspense>
@@ -49,15 +32,19 @@ export default async function Home() {
         <div className="flex flex-col lg:grid lg:grid-cols-10 gap-4 lg:gap-6 w-full items-start">
           {/* Left Column wrapper (Desktop: 70%, Mobile: Full width) */}
           <div className="flex flex-col w-full lg:col-span-7 h-full min-w-0 order-1 lg:order-none">
-            <TodayScheduleCard
-              initialEvents={allSchedules}
-              initialFavoriteNames={favoriteNames}
-            />
+            {/* 데이터 로딩 전에는 껍데기를 즉시 보여주고, 완료 시 실제 일정 리스트를 렌더 */}
+            <Suspense fallback={<TodayScheduleSkeleton />}>
+              <TodayScheduleSection />
+            </Suspense>
           </div>
 
           {/* Right Column wrapper (Desktop: 30%, Mobile: Full width) */}
           <div className="flex flex-col w-full lg:col-span-3 gap-4 lg:gap-6 min-w-0 order-2 lg:order-none">
-            <UpNextCard initialEvents={upNextEvents} />
+            <Suspense fallback={<UpNextSkeleton />}>
+              <UpNextSection />
+            </Suspense>
+            
+            {/* 이 아래는 클라이언트 마운트 후 자체 상태(fetch)로 데이터를 로드하므로 차단 없음 */}
             <LiveNowCard />
             <TrendingCategoriesCard />
           </div>
