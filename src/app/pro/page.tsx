@@ -25,7 +25,7 @@ export default function ProPage() {
         </div>
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight">Pro로 업그레이드</h1>
         <p className="text-muted-foreground text-lg md:text-xl">
-          스트리머의 일정을 더욱 전문적으로 관리하고 실시간 알림을 놓치지 마세요.
+          스트리머의 일정을 더욱 전문적으로 관리하세요.
         </p>
       </div>
 

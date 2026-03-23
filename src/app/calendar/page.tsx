@@ -243,7 +243,9 @@ function CalendarContent() {
             {view === 'day' ? (
               <div className="flex justify-between items-center text-xs font-semibold px-2 border-r last:border-0">
                 <span className="text-muted-foreground">{format(currentDate, "MM.dd")} ({format(currentDate, "E", { locale: ko })})</span>
-                <span className="text-primary tracking-tighter bg-primary/10 px-2 py-0.5 rounded-full">TODAY</span>
+                {isSameDay(currentDate, new Date()) && (
+                  <span className="text-primary tracking-tighter bg-primary/10 px-2 py-0.5 rounded-full">TODAY</span>
+                )}
               </div>
             ) : (
               ['일', '월', '화', '수', '목', '금', '토'].map((day, idx) => (

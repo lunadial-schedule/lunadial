@@ -135,7 +135,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
       title: "",
       streamerName: payload.streamers[0] || "",
       categories: [CATEGORY_LIST[0]?.id || "default"],
-      memo: "사용자가 수동으로 추가함",
+      memo: "",
       noticeUrl: payload.link,
       status: "manual"
     }

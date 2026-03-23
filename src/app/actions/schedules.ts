@@ -150,3 +150,24 @@ export async function deleteSchedule(id: string) {
   revalidatePath("/calendar");
   return { error: null };
 }
+
+/**
+ * 단일 일정을 조회한다. (URL 딥링크 등으로 직접 접근할 때 사용)
+ * @param id - 일정 ID
+ */
+export async function getScheduleById(id: string) {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from("schedules")
+    .select("*")
+    .eq("id", id)
+    .single();
+    
+  if (error) {
+    console.error("단일 일정 조회 에러:", error);
+    return { data: null, error: error.message };
+  }
+  
+  return { data, error: null };
+}

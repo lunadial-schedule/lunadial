@@ -192,7 +192,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
                defaultValue={schedule.memo || ""} 
                rows={3}
                className="flex w-full rounded-md border border-input bg-background px-1 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-               placeholder="합방 멤버나 상세 컨텐츠 등을 자유롭게 메모하세요."
+               placeholder=" 추가 세부사항을 기록하세요."
              />
           </div>
           <DialogFooter className="pt-4">
