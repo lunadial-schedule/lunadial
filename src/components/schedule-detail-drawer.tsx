@@ -207,13 +207,14 @@ export function ScheduleDetailDrawer({
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-[15px] font-bold text-foreground">
-                    {internalSchedule.is_all_day 
-                      ? format(parseISO(internalSchedule.start_time), "yyyy년 M월 d일 (eee)", { locale: ko })
-                      : format(parseISO(internalSchedule.start_time), "yyyy년 M월 d일 (eee) a h:mm", { locale: ko })
-                    }
+                    {format(parseISO(internalSchedule.start_time), "yyyy년 M월 d일 (eee)", { locale: ko })}
                   </span>
-                  {internalSchedule.is_all_day && (
-                    <span className="text-[13px] font-semibold text-primary/80 mt-0.5">하루 종일</span>
+                  {internalSchedule.is_all_day ? (
+                    <span className="text-[15px] font-semibold text-primary/80 mt-0.5">하루 종일</span>
+                  ) : (
+                    <span className="text-[15px] font-semibold text-muted-foreground mt-0.5">
+                      {format(parseISO(internalSchedule.start_time), "a h:mm", { locale: ko })}
+                    </span>
                   )}
                 </div>
               </div>
