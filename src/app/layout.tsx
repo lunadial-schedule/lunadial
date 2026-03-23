@@ -34,6 +34,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-1MEXXLESCG"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1MEXXLESCG');
+`,
+          }}
+        />
         {process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID && (
           <>
             <meta
