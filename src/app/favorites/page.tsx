@@ -6,6 +6,8 @@
  * 좌측: 내 즐겨찾기 스트리머 목록 (추가/제거/편집)
  * 우측: 스트리머 검색 및 추가 (데스크톱), 하단 FAB (모바일)
  * 인증되지 않은 사용자는 로그인 페이지로 리다이렉트한다.
+ *
+ * 성능: auth는 AuthProvider의 useAuth()로 통합 (중복 호출 제거)
  */
 import * as React from "react"
 import { PageContainer } from "@/components/layout/page-container"
@@ -16,34 +18,25 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { FavoriteSearchSheet } from "@/components/favorites/favorite-search-sheet"
 import { AddFavoriteFloatingButton } from "@/components/favorites/add-favorite-floating-button"
-import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "@/components/providers/auth-provider"
 import { useRouter } from "next/navigation"
 
 export default function FavoritesPage() {
   const router = useRouter()
+  const { user, isLoading } = useAuth()
   
   React.useEffect(() => {
-    let mounted = true
-    const checkUser = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!mounted) return
-      
-      if (!user) {
-        if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
-          router.push("/login")
-        } else {
-          router.back()
-        }
+    // AuthProvider 로딩 완료 후 비로그인 시 리다이렉트
+    if (isLoading) return
+    
+    if (!user) {
+      if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
+        router.push("/login")
+      } else {
+        router.back()
       }
     }
-    checkUser()
-    
-    return () => {
-      mounted = false
-    }
-  }, [router])
+  }, [user, isLoading, router])
 
   return (
     <PageContainer className="py-4 lg:py-4 bg-background min-h-[calc(100vh-4rem)] flex flex-col gap-5 lg:gap-6">

@@ -11,6 +11,12 @@
  * - view: 'month' | 'day' (뷰 모드)
  * - date: 'yyyy-MM-dd' (현재 날짜)
  * - q: 검색어
+ *
+ * 성능 최적화:
+ * - auth는 AuthProvider의 useAuth()로 통합 (중복 호출 제거)
+ * - schedules 조회 범위: 캘린더 그리드 표시에 필요한 최소 범위(~5주)
+ * - select 경량화: 캘린더 셀 렌더에 필요한 최소 필드만 조회
+ * - favorites 비차단: 일정 먼저 렌더, favorites 병렬 처리
  */
 import * as React from "react"
 import { Button } from "@/components/ui/button"
@@ -21,23 +27,20 @@ import { ChevronLeft, ChevronRight, Loader2, List, Grid } from "lucide-react"
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer"
 import { PageContainer } from "@/components/layout/page-container"
 import { CATEGORY_LIST } from "@/config/categories"
-import { getSchedules, type Schedule } from "@/app/actions/schedules"
-import { getMyFavorites } from "@/app/actions/favorites"
-import { isSameDay, parseISO, format, addMonths, subMonths, addDays, subDays } from "date-fns"
+import { getHomeSchedules, getMyFavoriteStreamerNames } from "@/app/actions/schedules"
+import type { HomeSchedule, Schedule } from "@/app/actions/schedules"
+import { isSameDay, parseISO, format, addMonths, subMonths, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns"
 import { ko } from "date-fns/locale"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog"
-import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "@/components/providers/auth-provider"
 
 function CalendarContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
 
-  const [user, setUser] = React.useState<any>(null)
-  React.useEffect(() => {
-    createClient().auth.getUser().then(({ data }) => setUser(data?.user))
-  }, [])
+  const { user } = useAuth()
 
   const scope = searchParams.get('scope') || 'all'
   const rawView = searchParams.get('view')
@@ -68,47 +71,68 @@ function CalendarContent() {
 
   const [isDetailOpen, setIsDetailOpen] = React.useState(false)
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null)
-  const [events, setEvents] = React.useState<Schedule[]>([])
+  const [events, setEvents] = React.useState<HomeSchedule[]>([])
   const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>([])
-  const [isLoading, setIsLoading] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(true)
 
-  const handleEventClick = (event: Schedule) => {
-    setSelectedEvent(event)
+  const handleEventClick = (event: HomeSchedule) => {
+    setSelectedEvent(event as unknown as Schedule)
     setIsDetailOpen(true)
   }
 
-  const loadInitialData = React.useCallback(async () => {
-    setIsLoading(true);
-    
-    try {
-      // 1. 일정 로딩
-      const start = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-      const end = new Date(currentDate.getFullYear(), currentDate.getMonth() + 2, 1);
-      const { data: scheduleData } = await getSchedules(start, end);
-      if (scheduleData) setEvents(scheduleData);
+  /**
+   * 캘린더 그리드에 표시되는 정확한 날짜 범위를 계산.
+   * 월 뷰: 해당 월의 첫 주 일요일 ~ 마지막 주 토요일 (약 5주)
+   * 일 뷰: 현재 날짜 ± 1일
+   */
+  const getDateRange = React.useCallback((date: Date, currentView: string) => {
+    if (currentView === 'month') {
+      const monthStart = startOfMonth(date)
+      const monthEnd = endOfMonth(date)
+      // 캘린더 그리드는 항상 일요일부터 시작
+      const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 })
+      // 35칸(5주)이므로 gridStart + 34일
+      const gridEnd = addDays(gridStart, 34)
+      return { start: gridStart, end: gridEnd }
+    }
+    // 일 뷰: 현재 날짜만
+    return { start: date, end: date }
+  }, [])
 
-      // 2. 즐겨찾기 로딩 (스콥 상관 없이 필요 시 캐싱)
-      const { data: favData } = await getMyFavorites();
-      if (favData) {
-        setFavoriteStreamerNames(
-          favData.map(f => {
-            const s = f.streamers as any;
-            return Array.isArray(s) ? s[0]?.name : s?.name;
-          }).filter(Boolean)
-        );
-      }
+  const loadSchedules = React.useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const { start, end } = getDateRange(currentDate, view)
+      const { data } = await getHomeSchedules(start, end)
+      if (data) setEvents(data)
     } catch (e) {
       console.error(e)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [currentDate.getFullYear(), currentDate.getMonth()]);
+  }, [currentDate, view, getDateRange])
+
+  const loadFavorites = React.useCallback(async () => {
+    try {
+      const names = await getMyFavoriteStreamerNames()
+      setFavoriteStreamerNames(names)
+    } catch (e) {
+      console.error(e)
+    }
+  }, [])
 
   React.useEffect(() => {
-    loadInitialData();
-    window.addEventListener("schedulesUpdated", loadInitialData);
-    return () => window.removeEventListener("schedulesUpdated", loadInitialData);
-  }, [loadInitialData]);
+    // 일정과 즐겨찾기를 병렬로 로드 — favorites가 schedules 렌더를 차단하지 않음
+    loadSchedules()
+    loadFavorites()
+    
+    window.addEventListener("schedulesUpdated", loadSchedules)
+    window.addEventListener("favoritesUpdated", loadFavorites)
+    return () => {
+      window.removeEventListener("schedulesUpdated", loadSchedules)
+      window.removeEventListener("favoritesUpdated", loadFavorites)
+    }
+  }, [loadSchedules, loadFavorites])
 
   const getDayEvents = (targetDate: Date) => {
     return events.filter(e => {
@@ -130,9 +154,7 @@ function CalendarContent() {
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
-  const handleFavoritesScope = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+  const handleFavoritesScope = () => {
     if (!user) {
       if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
         router.push("/login");
@@ -282,7 +304,7 @@ function CalendarContent() {
                       <div className="flex-1 flex flex-col gap-[2px] mt-0.5 p-0.5">
                         {(() => {
                           const dayEvents = getDayEvents(date);
-                          const maxVisible = 8; // Limit up to 8 items thinly
+                          const maxVisible = 8;
                           const displayEvents = dayEvents.slice(0, maxVisible);
                           const overflowCount = Math.max(0, dayEvents.length - maxVisible);
                           
