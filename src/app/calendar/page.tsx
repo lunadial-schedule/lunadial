@@ -29,7 +29,7 @@ import { PageContainer } from "@/components/layout/page-container"
 import { CATEGORY_LIST } from "@/config/categories"
 import { getHomeSchedules, getMyFavoriteStreamerNames } from "@/app/actions/schedules"
 import type { HomeSchedule, Schedule } from "@/app/actions/schedules"
-import { isSameDay, parseISO, format, addMonths, subMonths, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns"
+import { isSameDay, parseISO, format, addMonths, subMonths, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfDay, endOfDay } from "date-fns"
 import { ko } from "date-fns/locale"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog"
@@ -95,8 +95,8 @@ function CalendarContent() {
       const gridEnd = addDays(gridStart, 34)
       return { start: gridStart, end: gridEnd }
     }
-    // 일 뷰: 현재 날짜만
-    return { start: date, end: date }
+    // 일 뷰: 해당 날짜의 시작~끝
+    return { start: startOfDay(date), end: endOfDay(date) }
   }, [])
 
   const loadSchedules = React.useCallback(async () => {
