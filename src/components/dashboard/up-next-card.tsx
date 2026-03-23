@@ -2,6 +2,9 @@
 
 /**
  * 곧 시작 카드 — 다음 방송 예정 일정 표시
+ *
+ * 서버에서 전달받은 초기 데이터(initialEvents)를 사용하여
+ * 초기 로드 시 추가 fetch 없이 즉시 렌더한다.
  */;
 
 import * as React from "react";
@@ -12,35 +15,43 @@ import { Badge } from "@/components/ui/badge";
 import { format, parseISO, isAfter, addHours, formatDistanceToNowStrict } from "date-fns";
 import { ko } from "date-fns/locale";
 import Link from "next/link";
-import { getSchedules, type Schedule } from "@/app/actions/schedules";
+import type { HomeSchedule } from "@/app/actions/schedules";
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer";
 import { CATEGORY_LIST } from "@/config/categories";
 import { cn } from "@/lib/utils";
+import type { Schedule } from "@/app/actions/schedules";
 
-export function UpNextCard() {
-  const [events, setEvents] = React.useState<Schedule[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+interface UpNextCardProps {
+  initialEvents?: HomeSchedule[];
+}
+
+export function UpNextCard({ initialEvents = [] }: UpNextCardProps) {
+  const [events, setEvents] = React.useState<HomeSchedule[]>(initialEvents);
+  const [isLoading, setIsLoading] = React.useState(initialEvents.length === 0 ? false : false);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null);
 
-  const handleEventClick = (event: Schedule) => {
-    setSelectedEvent(event);
+  const handleEventClick = (event: HomeSchedule) => {
+    setSelectedEvent(event as unknown as Schedule);
     setIsDetailOpen(true);
   };
 
+  // 서버에서 초기 데이터가 전달되므로 클라이언트 fetch는 불필요
+  // schedulesUpdated 이벤트에만 반응하여 데이터 갱신
   React.useEffect(() => {
-    async function loadSchedules() {
-      setIsLoading(true);
+    const handleUpdate = async () => {
+      const { getHomeSchedules } = await import("@/app/actions/schedules");
       const now = new Date();
       const end = addHours(now, 24);
-      const { data } = await getSchedules(now, end);
+      const { data } = await getHomeSchedules(now, end);
       if (data) {
         const upcoming = data.filter(e => isAfter(parseISO(e.start_time), now)).slice(0, 5);
         setEvents(upcoming);
       }
-      setIsLoading(false);
-    }
-    loadSchedules();
+    };
+    
+    window.addEventListener("schedulesUpdated", handleUpdate);
+    return () => window.removeEventListener("schedulesUpdated", handleUpdate);
   }, []);
 
   return (

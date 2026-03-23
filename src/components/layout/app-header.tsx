@@ -26,27 +26,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
-import { User } from "@supabase/supabase-js"
+import { useAuth } from "@/components/providers/auth-provider"
 import { useRouter, usePathname } from "next/navigation"
 
 export function AppHeader() {
-  const [user, setUser] = React.useState<User | null>(null)
+  const { user } = useAuth()
   const [searchQuery, setSearchQuery] = React.useState("")
-  const supabase = createClient()
+  const supabase = React.useMemo(() => createClient(), [])
   const router = useRouter()
   const pathname = usePathname()
-
-  React.useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()

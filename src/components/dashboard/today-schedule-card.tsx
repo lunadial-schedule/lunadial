@@ -2,6 +2,10 @@
 
 /**
  * 오늘의 일정 카드 — 날짜별 일정 목록, 즐겨찾기 필터 지원
+ *
+ * 서버에서 전달받은 초기 데이터(initialEvents, initialFavoriteNames)를
+ * 사용하여 초기 로드 시 추가 fetch 없이 즉시 렌더한다.
+ * 날짜 변경 시에만 클라이언트에서 추가 조회한다.
  */;
 
 import * as React from "react";
@@ -9,8 +13,8 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucid
 import { addDays, format, isSameDay, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
 
-import { getSchedules, type Schedule } from "@/app/actions/schedules";
-import { getMyFavorites } from "@/app/actions/favorites";
+import { getHomeSchedules, getMyFavoriteStreamerNames } from "@/app/actions/schedules";
+import type { HomeSchedule } from "@/app/actions/schedules";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,17 +25,30 @@ import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer";
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog";
 import { CATEGORY_LIST } from "@/config/categories";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/components/providers/auth-provider";
+import type { Schedule } from "@/app/actions/schedules";
 
-export function TodayScheduleCard() {
+interface TodayScheduleCardProps {
+  initialEvents?: HomeSchedule[];
+  initialFavoriteNames?: string[];
+}
+
+export function TodayScheduleCard({
+  initialEvents = [],
+  initialFavoriteNames = [],
+}: TodayScheduleCardProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [currentDate, setCurrentDate] = React.useState(new Date());
-  const [events, setEvents] = React.useState<Schedule[]>([]);
+  const [events, setEvents] = React.useState<HomeSchedule[]>(initialEvents);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null);
   const [isFavoritesOnly, setIsFavoritesOnly] = React.useState(false);
-  const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>([]);
+  const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>(initialFavoriteNames);
+
+  // 초기 날짜(오늘) 기준인지 추적 — 서버 데이터를 그대로 사용할지 판단
+  const initialDateRef = React.useRef(true);
 
   // 어제, 오늘, 내일 Date 객체 배열
   const targetDays = React.useMemo(() => [
@@ -40,34 +57,37 @@ export function TodayScheduleCard() {
     addDays(currentDate, 1)
   ], [currentDate]);
 
-  const goNext = () => setCurrentDate(prev => addDays(prev, 1));
-  const goPrev = () => setCurrentDate(prev => addDays(prev, -1));
+  const goNext = () => { initialDateRef.current = false; setCurrentDate(prev => addDays(prev, 1)); };
+  const goPrev = () => { initialDateRef.current = false; setCurrentDate(prev => addDays(prev, -1)); };
   const goToday = () => setCurrentDate(new Date());
 
-  const handleEventClick = (event: Schedule) => {
-    setSelectedEvent(event);
+  const handleEventClick = (event: HomeSchedule) => {
+    // HomeSchedule을 Schedule로 캐스팅 — ScheduleDetailDrawer에서 getScheduleById로 상세 조회함
+    setSelectedEvent(event as unknown as Schedule);
     setIsDetailOpen(true);
   };
 
   const loadData = React.useCallback(async () => {
+    // 초기 로드 시에는 서버에서 받은 데이터 사용
+    if (initialDateRef.current) {
+      initialDateRef.current = false;
+      return;
+    }
+    
     setIsLoading(true);
-    // 3일치 여유 있게 앞뒤로 좀 더 가져온다 (안전하게 -2일 ~ +2일)
     const startDate = addDays(currentDate, -2);
     const endDate = addDays(currentDate, 2);
     
-    // 일정과 즐겨찾기를 동시에 가져온다
-    const [schedulesRes, favoritesRes] = await Promise.all([
-      getSchedules(startDate, endDate),
-      getMyFavorites()
+    // 일정과 즐겨찾기를 병렬로 가져온다
+    const [schedulesRes, favNames] = await Promise.all([
+      getHomeSchedules(startDate, endDate),
+      getMyFavoriteStreamerNames()
     ]);
     
     if (schedulesRes.data) {
       setEvents(schedulesRes.data);
     }
-    if (favoritesRes.data) {
-      const fNames = favoritesRes.data.map(f => (f.streamers as any)?.name).filter(Boolean) as string[];
-      setFavoriteStreamerNames(fNames);
-    }
+    setFavoriteStreamerNames(favNames);
     
     setIsLoading(false);
   }, [currentDate]);
@@ -94,16 +114,12 @@ export function TodayScheduleCard() {
     return format(day, "EEEE", { locale: ko });
   };
 
-  const handleFavoritesFilterChange = async (checked: boolean) => {
-    if (checked) {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
-          router.push("/login");
-        }
-        return; // do not check
+  const handleFavoritesFilterChange = (checked: boolean) => {
+    if (checked && !user) {
+      if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
+        router.push("/login");
       }
+      return;
     }
     setIsFavoritesOnly(checked);
   };

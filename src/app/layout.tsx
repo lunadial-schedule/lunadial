@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { AppHeader } from "@/components/layout/app-header";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -50,11 +51,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background font-sans`}
       >
-        <AppHeader />
-        <main className="flex-1 w-full mx-auto pb-10">
-          {children}
-        </main>
-        <Toaster />
+        <AuthProvider>
+          <AppHeader />
+          <main className="flex-1 w-full mx-auto pb-10">
+            {children}
+          </main>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

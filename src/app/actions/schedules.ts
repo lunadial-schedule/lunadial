@@ -171,3 +171,57 @@ export async function getScheduleById(id: string) {
   
   return { data, error: null };
 }
+
+/** 홈 카드 렌더에 필요한 최소 필드만 포함하는 타입 */
+export type HomeSchedule = Pick<
+  Schedule,
+  "id" | "title" | "start_time" | "streamer" | "streamer_id" | "status" | "categories" | "is_all_day"
+>;
+
+/**
+ * 홈 화면 전용 경량화 일정 조회.
+ * memo, link, end_time, updated_at, user_id 등 홈 카드 초기 렌더에 불필요한 필드를 제외한다.
+ * @param startDate - 조회 시작일
+ * @param endDate - 조회 종료일
+ */
+export async function getHomeSchedules(startDate: Date, endDate: Date) {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from("schedules")
+    .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day")
+    .gte("start_time", startDate.toISOString())
+    .lte("start_time", endDate.toISOString())
+    .order("start_time", { ascending: true });
+  
+  if (error) {
+    console.error("홈 일정 조회 에러:", error);
+    return { data: null, error: error.message };
+  }
+  
+  return { data: data as HomeSchedule[], error: null };
+}
+
+/**
+ * 현재 사용자의 즐겨찾기 스트리머 이름 목록만 반환.
+ * 비로그인 시 빈 배열 반환 (에러가 아니라 정상 흐름).
+ * 홈 화면에서 즐겨찾기 필터에만 사용하므로 이름만 필요하다.
+ */
+export async function getMyFavoriteStreamerNames(): Promise<string[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("favorites")
+    .select("streamers ( name )")
+    .eq("user_id", user.id);
+
+  if (error || !data) return [];
+
+  return data
+    .map((f: any) => (f.streamers as any)?.name)
+    .filter(Boolean) as string[];
+}
+

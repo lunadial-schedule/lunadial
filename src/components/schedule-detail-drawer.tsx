@@ -25,8 +25,7 @@ import { CATEGORY_LIST } from "@/config/categories"
 import { format, parseISO } from "date-fns"
 import { ko } from "date-fns/locale"
 import { useRouter, useSearchParams } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
-import { User } from "@supabase/supabase-js"
+import { useAuth } from "@/components/providers/auth-provider"
 
 interface ScheduleDetailDrawerProps {
   open: boolean;
@@ -44,17 +43,10 @@ export function ScheduleDetailDrawer({
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = React.useState(false);
 
-  const [user, setUser] = React.useState<User | null>(null);
-  const supabase = createClient();
+  const { user } = useAuth();
   
   const [internalSchedule, setInternalSchedule] = React.useState<Schedule | null>(externalSchedule);
   const initialEventId = searchParams.get('event');
-
-  React.useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
-    return () => subscription.unsubscribe();
-  }, [supabase]);
 
   // 외부 schedule prop 연동
   React.useEffect(() => {

@@ -17,12 +17,11 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { TITLE_PLACEHOLDERS, STREAMER_PLACEHOLDERS } from "@/config/placeholders";
-import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
 import { findOrCreateStreamer } from "@/app/actions/streamers";
 import { StreamerAutocompleteInput } from "./streamer-autocomplete-input";
 import { useIsOverlayOpen } from "@/hooks/use-is-overlay-open";
 import { AiExtractionTab } from "./ai-extraction/ai-extraction-tab";
+import { useAuth } from "@/components/providers/auth-provider";
 
 interface CreateScheduleDialogProps {
   isMobileTrigger?: boolean;
@@ -31,6 +30,7 @@ interface CreateScheduleDialogProps {
 export function CreateScheduleDialog({ isMobileTrigger = false }: CreateScheduleDialogProps = {}) {
   const isOverlayOpen = useIsOverlayOpen();
   const router = useRouter();
+  const { user } = useAuth();
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
@@ -46,15 +46,6 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
   const [streamerPlaceholder, setStreamerPlaceholder] = React.useState("예: 풍월량");
   const prevTitleRef = React.useRef<string | null>(null);
   const prevStreamerRef = React.useRef<string | null>(null);
-
-  const [user, setUser] = React.useState<User | null>(null);
-  const supabase = createClient();
-
-  React.useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
-    return () => subscription.unsubscribe();
-  }, [supabase]);
 
   React.useEffect(() => {
     if (open) {
