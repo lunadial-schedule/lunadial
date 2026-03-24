@@ -19,7 +19,7 @@ export default async function AdminLogsPage() {
         </div>
       ) : (
         <div className="bg-card rounded-xl border p-4 shadow-sm">
-          <UpdateLogList initialLogs={logs || []} />
+          <UpdateLogList initialLogs={logs || []} isAdminView={true} />
         </div>
       )}
     </div>

@@ -336,6 +336,7 @@ export type Database = {
       schedule_update_logs: {
         Row: {
           action_type: string
+          actor_ip: string | null
           actor_ip_masked: string | null
           actor_nickname: string
           actor_role: string
@@ -354,6 +355,7 @@ export type Database = {
         }
         Insert: {
           action_type: string
+          actor_ip?: string | null
           actor_ip_masked?: string | null
           actor_nickname: string
           actor_role: string
@@ -372,6 +374,7 @@ export type Database = {
         }
         Update: {
           action_type?: string
+          actor_ip?: string | null
           actor_ip_masked?: string | null
           actor_nickname?: string
           actor_role?: string

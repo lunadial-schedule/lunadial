@@ -22,7 +22,8 @@ export async function getScheduleUpdateLogs(limit = 50, fetchAdminData = false) 
     const publicData = data.map(log => ({
       ...log,
       before_data: null,
-      after_data: null
+      after_data: null,
+      actor_ip: null
     }));
     return { data: publicData, error: null };
   }

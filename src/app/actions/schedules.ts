@@ -83,6 +83,7 @@ export async function createSchedule(schedule: Omit<ScheduleInsert, "user_id">, 
     actor_user_id: actor.userId,
     actor_nickname: actor.nickname,
     actor_ip_masked: actor.maskedIp,
+    actor_ip: actor.ip,
     actor_role: actor.role,
     change_summary: "새 일정 등록",
     after_data: data as any
@@ -155,6 +156,7 @@ export async function updateSchedule(id: string, updates: ScheduleUpdate, curren
     actor_user_id: actor.userId,
     actor_nickname: actor.nickname,
     actor_ip_masked: actor.maskedIp,
+    actor_ip: actor.ip,
     actor_role: actor.role,
     change_summary: changeSummary,
     before_data: currentSchedule as any,
@@ -209,8 +211,9 @@ export async function deleteSchedule(id: string) {
     actor_user_id: actor.userId,
     actor_nickname: actor.nickname,
     actor_ip_masked: actor.maskedIp,
+    actor_ip: actor.ip,
     actor_role: actor.role,
-    change_summary: "일정 삭제",
+    change_summary: "일정 삭제됨",
     before_data: currentSchedule as any
   });
 

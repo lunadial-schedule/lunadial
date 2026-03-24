@@ -15,16 +15,15 @@ export async function getActorDetails() {
   const role = roleData?.role || 'user';
   const nickname = user.user_metadata?.name || '사용자';
 
+  let ip = 'Unknown';
   let maskedIp: string | null = '***';
   
   try {
     const headersList = await headers();
     const forwardedFor = headersList.get('x-forwarded-for');
-    const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : headersList.get('x-real-ip') || 'Unknown';
+    ip = forwardedFor ? forwardedFor.split(',')[0].trim() : headersList.get('x-real-ip') || 'Unknown';
     
-    if (role === 'admin') {
-      maskedIp = null; // 관리자는 IP 마스킹 생략
-    } else if (ip !== 'Unknown') {
+    if (ip !== 'Unknown') {
       if (ip.includes('.')) {
         const parts = ip.split('.');
         maskedIp = `${parts[0]}.***.***.${parts[parts.length - 1]}`;
@@ -41,6 +40,7 @@ export async function getActorDetails() {
     userId: user.id,
     nickname,
     role,
-    maskedIp
+    maskedIp,
+    ip
   };
 }
