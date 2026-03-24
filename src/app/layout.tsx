@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { AppHeader } from "@/components/layout/app-header";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -69,6 +70,7 @@ export default function RootLayout({
           <main className="flex-1 w-full mx-auto pb-10">
             {children}
           </main>
+          <SiteFooter />
           <Toaster />
         </AuthProvider>
       </body>
