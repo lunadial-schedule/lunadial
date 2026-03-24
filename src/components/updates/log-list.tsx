@@ -97,7 +97,7 @@ export function UpdateLogList({ initialLogs }: Props) {
                 <span className="font-medium text-foreground/90 bg-muted px-2 py-0.5 rounded-md text-xs">{log.change_summary || "상태 변경"}</span>
                 <span className="text-xs text-muted-foreground/80 flex items-center gap-1.5 opacity-80">
                   <span className="hidden sm:inline">변경자:</span> 
-                  {log.actor_role === 'admin' ? `🛡️ 운영자 ${log.actor_nickname}` : `👤 ${log.actor_nickname} (${log.actor_ip_masked})`}
+                  {log.actor_role === 'admin' ? `🛡️ ${log.actor_nickname}` : `👤 ${log.actor_nickname} (${log.actor_ip_masked})`}
                 </span>
               </div>
 

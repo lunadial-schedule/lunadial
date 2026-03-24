@@ -32,6 +32,7 @@ export default function AccountSettingsPage() {
   
   const [chzzkAccount, setChzzkAccount] = useState<any>(null)
   const [uploading, setUploading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -95,8 +96,30 @@ export default function AccountSettingsPage() {
     }
   }, [supabase.auth])
 
-  const handleSave = () => {
-    toast.success("프로필 정보가 저장되었습니다.")
+  const handleSave = async () => {
+    if (!nickname.trim()) {
+      toast.error("닉네임을 입력해주세요.")
+      return
+    }
+
+    try {
+      setIsSaving(true)
+      const { error } = await supabase.auth.updateUser({
+        data: { name: nickname.trim() }
+      })
+
+      if (error) throw error
+
+      toast.success("프로필 정보가 저장되었습니다.")
+      
+      const { data: { user: refreshedUser } } = await supabase.auth.getUser()
+      setUser(refreshedUser)
+    } catch (error: any) {
+      console.error('Error saving profile:', error)
+      toast.error(`프로필 변경 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -228,7 +251,9 @@ export default function AccountSettingsPage() {
               />
             </div>
             
-            <Button onClick={handleSave}>변경사항 저장</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? "저장 중..." : "변경사항 저장"}
+            </Button>
           </CardContent>
         </Card>
 
