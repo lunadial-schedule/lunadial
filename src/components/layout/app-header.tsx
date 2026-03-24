@@ -32,9 +32,26 @@ import { useRouter, usePathname } from "next/navigation"
 export function AppHeader() {
   const { user } = useAuth()
   const [searchQuery, setSearchQuery] = React.useState("")
+  const [profile, setProfile] = React.useState<{ nickname: string | null; avatar_url: string | null } | null>(null)
   const supabase = React.useMemo(() => createClient(), [])
   const router = useRouter()
   const pathname = usePathname()
+
+  React.useEffect(() => {
+    if (user) {
+      const fetchProfile = async () => {
+        const { data } = await supabase
+          .from("profiles")
+          .select("nickname, avatar_url")
+          .eq("id", user.id)
+          .maybeSingle()
+        if (data) setProfile(data)
+      }
+      fetchProfile()
+    } else {
+      setProfile(null)
+    }
+  }, [user, supabase])
 
   const handleLogout = async () => {
     const isProtectedPage = pathname === "/favorites" || pathname.startsWith("/settings")
@@ -118,16 +135,16 @@ export function AppHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-8 w-8 cursor-pointer ring-1 ring-border">
-                  <AvatarImage src={user.user_metadata?.avatar_url || user.user_metadata?.picture || ""} alt={user.user_metadata?.name || "User"} />
+                  <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture || ""} alt={profile?.nickname || user.user_metadata?.name || "User"} />
                   <AvatarFallback className="bg-primary/10 text-xs text-primary">
-                    {user.user_metadata?.name ? user.user_metadata.name.slice(0, 1).toUpperCase() : "U"}
+                    {(profile?.nickname || user.user_metadata?.name) ? (profile?.nickname || user.user_metadata.name).slice(0, 1).toUpperCase() : "U"}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.user_metadata?.name || '사용자'}</p>
+                    <p className="text-sm font-medium leading-none">{profile?.nickname || user.user_metadata?.name || '사용자'}</p>
                     <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                   </div>
                 </DropdownMenuLabel>

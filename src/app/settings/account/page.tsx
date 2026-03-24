@@ -29,6 +29,7 @@ export default function AccountSettingsPage() {
   const [favorites, setFavorites] = useState<any[]>([])
   const [favoritesCount, setFavoritesCount] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [profile, setProfile] = useState<{ nickname: string | null; avatar_url: string | null } | null>(null)
   
   const [chzzkAccount, setChzzkAccount] = useState<any>(null)
   const [uploading, setUploading] = useState(false)
@@ -42,6 +43,23 @@ export default function AccountSettingsPage() {
         setNickname(user.user_metadata.name)
       }
     })
+
+    const loadProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("nickname, avatar_url")
+          .eq("id", user.id)
+          .maybeSingle()
+        
+        if (profileData) {
+          setProfile(profileData)
+          if (profileData.nickname) setNickname(profileData.nickname)
+        }
+      }
+    }
+    loadProfile()
 
     const loadFavs = async () => {
       const { data } = await getMyFavorites()
@@ -94,7 +112,7 @@ export default function AccountSettingsPage() {
         window.history.replaceState({}, '', window.location.pathname)
       }
     }
-  }, [supabase.auth])
+  }, [supabase])
 
   const handleSave = async () => {
     if (!nickname.trim()) {
@@ -102,18 +120,30 @@ export default function AccountSettingsPage() {
       return
     }
 
+    if (!user) return
+
     try {
       setIsSaving(true)
+      // 1. Auth 메타데이터 업데이트
       const { error } = await supabase.auth.updateUser({
         data: { name: nickname.trim() }
       })
-
       if (error) throw error
+
+      // 2. 전용 프로필 테이블(public.profiles)에 저장 (영구적)
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          nickname: nickname.trim(),
+        })
+      if (profileError) throw profileError
 
       toast.success("프로필 정보가 저장되었습니다.")
       
       const { data: { user: refreshedUser } } = await supabase.auth.getUser()
       setUser(refreshedUser)
+      setProfile(prev => ({ ...prev, nickname: nickname.trim(), avatar_url: prev?.avatar_url || null }))
     } catch (error: any) {
       console.error('Error saving profile:', error)
       toast.error(`프로필 변경 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`)
@@ -126,13 +156,11 @@ export default function AccountSettingsPage() {
     const file = e.target.files?.[0]
     if (!file || !user) return
 
-    // 파일 타입 검증
     if (!file.type.startsWith('image/')) {
       toast.error("이미지 파일만 업로드 가능합니다.")
       return
     }
 
-    // 파일 크기 제한 (2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast.error("이미지 크기는 2MB를 넘을 수 없습니다.")
       return
@@ -154,20 +182,29 @@ export default function AccountSettingsPage() {
         .from('avatars')
         .getPublicUrl(filePath)
 
+      // 1. Auth 메타데이터 업데이트
       const { error: updateError } = await supabase.auth.updateUser({
         data: { 
           avatar_url: publicUrl,
-          picture: publicUrl // 보조적으로 picture도 업데이트
+          picture: publicUrl 
         }
       })
-
       if (updateError) throw updateError
+
+      // 2. 전용 프로필 테이블(public.profiles)에 저장 (영구적)
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          avatar_url: publicUrl,
+        })
+      if (profileError) throw profileError
 
       toast.success("프로필 이미지가 성공적으로 변경되었습니다.")
       
-      // 사용자 정보 갱신
       const { data: { user: refreshedUser } } = await supabase.auth.getUser()
       setUser(refreshedUser)
+      setProfile(prev => ({ ...prev, avatar_url: publicUrl, nickname: prev?.nickname || nickname || null }))
     } catch (error: any) {
       console.error('Error uploading image:', error)
       toast.error(`이미지 업로드 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`)
@@ -198,9 +235,9 @@ export default function AccountSettingsPage() {
           <CardContent className="space-y-6">
             <div className="flex items-center gap-6">
               <Avatar className="h-20 w-20 border">
-                <AvatarImage src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ""} />
+                <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ""} />
                 <AvatarFallback className="text-2xl">
-                  {user?.user_metadata?.name ? user.user_metadata.name.slice(0,1).toUpperCase() : "U"}
+                  {profile?.nickname ? profile.nickname.slice(0,1).toUpperCase() : (user?.user_metadata?.name ? user.user_metadata.name.slice(0,1).toUpperCase() : "U")}
                 </AvatarFallback>
                 {uploading && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
@@ -333,12 +370,10 @@ export default function AccountSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Chzzk Connect Integration */}
         {user && (
           <ChzzkConnectCard 
             initialAccount={chzzkAccount} 
             onAccountChange={() => {
-              // Refresh account status on disconnect
               supabase
                 .from("connected_accounts")
                 .select("*")
