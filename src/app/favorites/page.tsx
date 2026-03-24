@@ -25,13 +25,29 @@ export default function FavoritesPage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
   
+  // 최초 렌더링 시 유저가 로그인 상태였는지 추적 (로그아웃 vs 비로그인 직접접근 구분)
+  const wasLoggedIn = React.useRef<boolean | null>(null)
+
   React.useEffect(() => {
-    // AuthProvider 로딩 완료 후 비로그인 시 리다이렉트
     if (isLoading) return
-    
+
+    // 초기값 설정 (최초 1회)
+    if (wasLoggedIn.current === null) {
+      wasLoggedIn.current = !!user
+    }
+
     if (!user) {
-      // 로그아웃 또는 미인증 상태: 알림 없이 메인페이지로 이동
-      router.replace("/")
+      if (wasLoggedIn.current) {
+        // 로그아웃 케이스: 알림 없이 메인으로 이동
+        router.replace("/")
+      } else {
+        // 비로그인 직접 접근: 로그인 유도 알림
+        if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
+          router.push("/login")
+        } else {
+          router.back()
+        }
+      }
     }
   }, [user, isLoading, router])
 
