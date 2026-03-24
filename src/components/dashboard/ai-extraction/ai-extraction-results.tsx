@@ -196,7 +196,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
         memo: draft.memo || "",
         is_all_day: draft.isAllDay,
         status: "scheduled"
-      })
+      }, "bulk")
 
       if (error) {
         failCount++

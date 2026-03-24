@@ -78,18 +78,20 @@ export function UpdateLogList({ initialLogs }: Props) {
         ) : (
           filteredLogs.map((log) => (
             <div key={log.id} className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm space-y-3 relative overflow-hidden">
-              <div className="flex flex-wrap items-center justify-between gap-y-2 border-b border-border/50 pb-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {getActionBadge(log.action_type)}
-                  {getMethodBadge(log.input_method)}
-                  <span className="text-sm font-semibold break-all">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-border/50 pb-3">
+                <div className="flex items-start gap-2 flex-wrap flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {getActionBadge(log.action_type)}
+                    {getMethodBadge(log.input_method)}
+                  </div>
+                  <div className="text-sm font-semibold break-all leading-relaxed max-w-full">
                     <span className="text-primary/80 mr-1">[{log.streamer_name_snapshot}]</span>
                     {log.title_snapshot}
-                  </span>
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground flex flex-col items-end whitespace-nowrap">
+                <div className="text-xs text-muted-foreground flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-0 whitespace-nowrap shrink-0 pt-0.5">
                   <span>{format(new Date(log.logged_at), "yyyy-MM-dd HH:mm", { locale: ko })}</span>
-                  <span className="opacity-70 mt-0.5">시작: {format(new Date(log.start_at_snapshot), "MM/dd HH:mm", { locale: ko })}</span>
+                  <span className="opacity-70 sm:mt-0.5">시작: {format(new Date(log.start_at_snapshot), "MM/dd HH:mm", { locale: ko })}</span>
                 </div>
               </div>
               
