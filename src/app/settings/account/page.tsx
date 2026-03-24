@@ -28,6 +28,7 @@ export default function AccountSettingsPage() {
   
   const [favorites, setFavorites] = useState<any[]>([])
   const [favoritesCount, setFavoritesCount] = useState(0)
+  const [isAdmin, setIsAdmin] = useState(false)
   
   const [chzzkAccount, setChzzkAccount] = useState<any>(null)
   const [uploading, setUploading] = useState(false)
@@ -50,22 +51,31 @@ export default function AccountSettingsPage() {
     }
     loadFavs()
     
-    // 치지직 계정 연동 정보 불러오기
-    const loadChzzkAccount = async () => {
+    // 치지직 계정 연동 및 역할 정보 불러오기
+    const loadAccountInfo = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data } = await supabase
+        const { data: chzzkData } = await supabase
           .from("connected_accounts")
           .select("*")
           .eq("user_id", user.id)
           .eq("provider", "chzzk")
           .maybeSingle()
-        if (data) {
-          setChzzkAccount(data)
+        if (chzzkData) {
+          setChzzkAccount(chzzkData)
+        }
+
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .maybeSingle()
+        if (roleData?.role === 'admin') {
+          setIsAdmin(true)
         }
       }
     }
-    loadChzzkAccount()
+    loadAccountInfo()
 
     // OAuth 결과 처리
     if (typeof window !== "undefined") {
@@ -144,7 +154,7 @@ export default function AccountSettingsPage() {
     }
   }
 
-  const isPro = false
+  const isPro = isAdmin || false
   const maxFavorites = isPro ? "무제한" : 10
 
   return (

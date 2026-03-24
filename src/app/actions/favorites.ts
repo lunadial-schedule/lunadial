@@ -60,8 +60,9 @@ export async function addFavorite(streamerId: string) {
     return { data: null, error: "로그인이 필요합니다." };
   }
 
-  // TODO(Pro 플랜 연동): isPro 확인 로직 연동 시 구독 상태에 따라 변경
-  const isPro = false;
+  // 관리자인 경우 Pro 권한과 동일하게 처리
+  const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).single();
+  const isPro = roleData?.role === 'admin' || false;
   const maxFavorites = 10;
 
   if (!isPro) {

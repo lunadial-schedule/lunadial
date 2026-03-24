@@ -8,6 +8,8 @@ export const metadata: Metadata = {
 
 // ✏️ 아래 CONTENT 상수에 마크다운 문구를 입력하세요.
 const CONTENT = `
+## 운영정책
+
 ## 1. 목적
 
 본 운영정책은 LUNA DIAL 서비스 내 일정 등록, 수정, 즐겨찾기 및 기타 이용 과정에서 필요한 세부 운영 기준을 정하기 위한 것입니다.

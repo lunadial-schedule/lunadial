@@ -38,7 +38,22 @@ export async function updateSession(request: NextRequest) {
   )
 
   // 인증 토큰 갱신 (만료 시 자동 리프레시)
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!roleData || roleData.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
 
   return supabaseResponse
 }

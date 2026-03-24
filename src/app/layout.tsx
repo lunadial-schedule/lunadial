@@ -36,8 +36,9 @@ export default function RootLayout({
     <html lang="en">
       <head>
         {/* Google tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-1MEXXLESCG"></script>
-        <script
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-1MEXXLESCG" />
+        <Script
+          id="google-analytics"
           dangerouslySetInnerHTML={{
             __html: `
   window.dataLayer = window.dataLayer || [];
@@ -54,7 +55,8 @@ export default function RootLayout({
               name="google-adsense-account"
               content={process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID}
             />
-            <script
+            <Script
+              id="google-adsense"
               async
               src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID}`}
               crossOrigin="anonymous"

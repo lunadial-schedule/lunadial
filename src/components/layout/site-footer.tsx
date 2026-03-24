@@ -10,6 +10,8 @@ const NAV_LINKS = [
   { label: "이용약관", href: "/terms" },
   { label: "개인정보처리방침", href: "/privacy" },
   { label: "운영정책", href: "/policy" },
+  { label: "업데이트 로그", href: "/updates" },
+  { label: "공지사항", href: "/notices" },
 ] as const;
 
 async function copyEmail() {

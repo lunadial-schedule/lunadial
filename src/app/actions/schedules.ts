@@ -9,6 +9,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Database } from "@/types/supabase";
 import { revalidatePath } from "next/cache";
+import { getActorDetails } from "@/lib/actor";
 
 /** 일정 Row 타입 (DB 스키마 기반) */
 export type Schedule = Database["public"]["Tables"]["schedules"]["Row"];
@@ -25,7 +26,7 @@ export type ScheduleUpdate = Database["public"]["Tables"]["schedules"]["Update"]
 export async function getSchedules(startDate?: Date, endDate?: Date) {
   const supabase = await createClient();
   
-  let query = supabase.from("schedules").select("*").order("start_time", { ascending: true });
+  let query = supabase.from("schedules").select("*").eq("is_deleted", false).order("start_time", { ascending: true });
   
   if (startDate) {
     query = query.gte("start_time", startDate.toISOString());
@@ -49,11 +50,11 @@ export async function getSchedules(startDate?: Date, endDate?: Date) {
  * user_id는 현재 인증된 사용자에서 자동 설정된다.
  * @param schedule - 생성할 일정 데이터 (user_id 제외)
  */
-export async function createSchedule(schedule: Omit<ScheduleInsert, "user_id">) {
+export async function createSchedule(schedule: Omit<ScheduleInsert, "user_id">, inputMethod: 'manual' | 'bulk' = 'manual') {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const actor = await getActorDetails();
   
-  if (!user) {
+  if (!actor) {
     return { data: null, error: "로그인이 필요합니다." };
   }
   
@@ -61,7 +62,7 @@ export async function createSchedule(schedule: Omit<ScheduleInsert, "user_id">) 
     .from("schedules")
     .insert({
       ...schedule,
-      user_id: user.id
+      user_id: actor.userId
     })
     .select()
     .single();
@@ -71,8 +72,25 @@ export async function createSchedule(schedule: Omit<ScheduleInsert, "user_id">) 
     return { data: null, error: error.message };
   }
   
+  // 로그 기록
+  await supabase.from("schedule_update_logs").insert({
+    schedule_id: data.id,
+    action_type: "create",
+    input_method: inputMethod,
+    title_snapshot: data.title,
+    streamer_name_snapshot: data.streamer,
+    start_at_snapshot: data.start_time,
+    actor_user_id: actor.userId,
+    actor_nickname: actor.nickname,
+    actor_ip_masked: actor.maskedIp,
+    actor_role: actor.role,
+    change_summary: "새 일정 등록",
+    after_data: data as any
+  });
+  
   revalidatePath("/");
   revalidatePath("/calendar");
+  revalidatePath("/updates");
   return { data, error: null };
 }
 
@@ -85,16 +103,16 @@ export async function createSchedule(schedule: Omit<ScheduleInsert, "user_id">) 
  */
 export async function updateSchedule(id: string, updates: ScheduleUpdate, currentUpdatedAt: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const actor = await getActorDetails();
   
-  if (!user) {
+  if (!actor) {
     return { data: null, error: "로그인이 필요합니다." };
   }
   
-  // 동시성 제어: 현재 DB의 updated_at 확인
+  // 동시성 제어: 현재 DB의 정보 확인
   const { data: currentSchedule, error: fetchError } = await supabase
     .from("schedules")
-    .select("updated_at")
+    .select("*")
     .eq("id", id)
     .single();
     
@@ -102,7 +120,6 @@ export async function updateSchedule(id: string, updates: ScheduleUpdate, curren
     return { data: null, error: "일정을 찾을 수 없습니다." };
   }
   
-  // 다른 사용자가 이미 수정했는지 확인
   if (currentSchedule.updated_at !== currentUpdatedAt) {
     return { data: null, error: "다른 사용자에 의해 일정이 이미 수정되었습니다. 최신 정보를 확인 후 다시 시도해주세요.", conflict: true };
   }
@@ -119,8 +136,34 @@ export async function updateSchedule(id: string, updates: ScheduleUpdate, curren
     return { data: null, error: error.message };
   }
   
+  let changeSummary = "일정 수정됨";
+  if (updates.start_time && currentSchedule.start_time !== updates.start_time) {
+    changeSummary = "시작 시간 수정";
+  } else if (updates.title && currentSchedule.title !== updates.title) {
+    changeSummary = "제목 수정";
+  } else if (updates.status && currentSchedule.status !== updates.status) {
+    changeSummary = `상태 변경: ${updates.status}`;
+  }
+
+  await supabase.from("schedule_update_logs").insert({
+    schedule_id: data.id,
+    action_type: "update",
+    input_method: "manual",
+    title_snapshot: data.title,
+    streamer_name_snapshot: data.streamer,
+    start_at_snapshot: data.start_time,
+    actor_user_id: actor.userId,
+    actor_nickname: actor.nickname,
+    actor_ip_masked: actor.maskedIp,
+    actor_role: actor.role,
+    change_summary: changeSummary,
+    before_data: currentSchedule as any,
+    after_data: data as any
+  });
+  
   revalidatePath("/");
   revalidatePath("/calendar");
+  revalidatePath("/updates");
   return { data, error: null };
 }
 
@@ -130,15 +173,25 @@ export async function updateSchedule(id: string, updates: ScheduleUpdate, curren
  */
 export async function deleteSchedule(id: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const actor = await getActorDetails();
   
-  if (!user) {
+  if (!actor) {
     return { error: "로그인이 필요합니다." };
   }
   
+  const { data: currentSchedule, error: fetchError } = await supabase
+    .from("schedules")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !currentSchedule) {
+    return { error: "삭제할 일정을 찾을 수 없습니다." };
+  }
+
   const { error } = await supabase
     .from("schedules")
-    .delete()
+    .update({ is_deleted: true, deleted_at: new Date().toISOString() })
     .eq("id", id);
     
   if (error) {
@@ -146,8 +199,24 @@ export async function deleteSchedule(id: string) {
     return { error: error.message };
   }
   
+  await supabase.from("schedule_update_logs").insert({
+    schedule_id: id,
+    action_type: "delete",
+    input_method: "manual",
+    title_snapshot: currentSchedule.title,
+    streamer_name_snapshot: currentSchedule.streamer,
+    start_at_snapshot: currentSchedule.start_time,
+    actor_user_id: actor.userId,
+    actor_nickname: actor.nickname,
+    actor_ip_masked: actor.maskedIp,
+    actor_role: actor.role,
+    change_summary: "일정 삭제",
+    before_data: currentSchedule as any
+  });
+
   revalidatePath("/");
   revalidatePath("/calendar");
+  revalidatePath("/updates");
   return { error: null };
 }
 
@@ -162,6 +231,7 @@ export async function getScheduleById(id: string) {
     .from("schedules")
     .select("*")
     .eq("id", id)
+    .eq("is_deleted", false)
     .single();
     
   if (error) {
@@ -190,6 +260,7 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
   const { data, error } = await supabase
     .from("schedules")
     .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day")
+    .eq("is_deleted", false)
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())
     .order("start_time", { ascending: true });

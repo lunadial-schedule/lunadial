@@ -230,9 +230,11 @@ export type Database = {
         Row: {
           categories: string[]
           created_at: string
+          deleted_at: string | null
           end_time: string | null
           id: string
           is_all_day: boolean | null
+          is_deleted: boolean
           link: string
           memo: string | null
           start_time: string
@@ -246,9 +248,11 @@ export type Database = {
         Insert: {
           categories: string[]
           created_at?: string
+          deleted_at?: string | null
           end_time?: string | null
           id?: string
           is_all_day?: boolean | null
+          is_deleted?: boolean
           link: string
           memo?: string | null
           start_time: string
@@ -262,9 +266,11 @@ export type Database = {
         Update: {
           categories?: string[]
           created_at?: string
+          deleted_at?: string | null
           end_time?: string | null
           id?: string
           is_all_day?: boolean | null
+          is_deleted?: boolean
           link?: string
           memo?: string | null
           start_time?: string
@@ -281,6 +287,113 @@ export type Database = {
             columns: ["streamer_id"]
             isOneToOne: false
             referencedRelation: "streamers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notices: {
+        Row: {
+          author_nickname: string
+          author_user_id: string | null
+          content: string
+          created_at: string
+          id: string
+          is_important: boolean
+          is_pinned: boolean
+          is_published: boolean
+          published_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_nickname: string
+          author_user_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_important?: boolean
+          is_pinned?: boolean
+          is_published?: boolean
+          published_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_nickname?: string
+          author_user_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_important?: boolean
+          is_pinned?: boolean
+          is_published?: boolean
+          published_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schedule_update_logs: {
+        Row: {
+          action_type: string
+          actor_ip_masked: string | null
+          actor_nickname: string
+          actor_role: string
+          actor_user_id: string | null
+          after_data: Json | null
+          before_data: Json | null
+          change_summary: string | null
+          created_at: string
+          id: string
+          input_method: string
+          logged_at: string
+          schedule_id: string
+          start_at_snapshot: string
+          streamer_name_snapshot: string
+          title_snapshot: string
+        }
+        Insert: {
+          action_type: string
+          actor_ip_masked?: string | null
+          actor_nickname: string
+          actor_role: string
+          actor_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          change_summary?: string | null
+          created_at?: string
+          id?: string
+          input_method: string
+          logged_at?: string
+          schedule_id: string
+          start_at_snapshot: string
+          streamer_name_snapshot: string
+          title_snapshot: string
+        }
+        Update: {
+          action_type?: string
+          actor_ip_masked?: string | null
+          actor_nickname?: string
+          actor_role?: string
+          actor_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          change_summary?: string | null
+          created_at?: string
+          id?: string
+          input_method?: string
+          logged_at?: string
+          schedule_id?: string
+          start_at_snapshot?: string
+          streamer_name_snapshot?: string
+          title_snapshot?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_update_logs_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
             referencedColumns: ["id"]
           },
         ]
@@ -327,6 +440,27 @@ export type Database = {
           source_type?: string
           updated_at?: string
           verified_mark?: boolean
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
