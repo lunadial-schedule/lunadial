@@ -30,11 +30,8 @@ export default function FavoritesPage() {
     if (isLoading) return
     
     if (!user) {
-      if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
-        router.push("/login")
-      } else {
-        router.back()
-      }
+      // 로그아웃 또는 미인증 상태: 알림 없이 메인페이지로 이동
+      router.replace("/")
     }
   }, [user, isLoading, router])
 

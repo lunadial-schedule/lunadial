@@ -37,9 +37,14 @@ export function AppHeader() {
   const pathname = usePathname()
 
   const handleLogout = async () => {
+    const isProtectedPage = pathname === "/favorites" || pathname.startsWith("/settings")
     await supabase.auth.signOut()
     toast.success("로그아웃 되었습니다.")
-    router.refresh()
+    if (isProtectedPage) {
+      router.push("/")
+    } else {
+      router.refresh()
+    }
   }
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
