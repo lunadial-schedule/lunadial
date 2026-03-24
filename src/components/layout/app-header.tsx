@@ -4,7 +4,7 @@
  * 앱 헤더 — 네비게이션, 로그인/로그아웃, 모바일 메뉴
  */
 
-import * as React from "react"
+import { useState, useMemo, useEffect, KeyboardEvent } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { PageContainer } from "@/components/layout/page-container"
@@ -31,13 +31,13 @@ import { useRouter, usePathname } from "next/navigation"
 
 export function AppHeader() {
   const { user } = useAuth()
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [profile, setProfile] = React.useState<{ nickname: string | null; avatar_url: string | null } | null>(null)
-  const supabase = React.useMemo(() => createClient(), [])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [profile, setProfile] = useState<{ nickname: string | null; avatar_url: string | null } | null>(null)
+  const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
   const pathname = usePathname()
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       const fetchProfile = async () => {
         const { data } = await supabase
@@ -64,7 +64,7 @@ export function AppHeader() {
     }
   }
 
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       const isCalendarPage = window.location.pathname === '/calendar'
       

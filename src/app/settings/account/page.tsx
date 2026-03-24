@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { createClient } from "@/lib/supabase/client"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 import { User } from "@supabase/supabase-js"
 import { toast } from "sonner"
 import { Crown, Star, ArrowRight } from "lucide-react"
@@ -24,7 +24,7 @@ import { ChzzkConnectCard } from "@/components/mypage/chzzk-connect-card"
 export default function AccountSettingsPage() {
   const [user, setUser] = useState<User | null>(null)
   const [nickname, setNickname] = useState("")
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
   
   const [favorites, setFavorites] = useState<any[]>([])
   const [favoritesCount, setFavoritesCount] = useState(0)
@@ -39,8 +39,9 @@ export default function AccountSettingsPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
+      // 초기 부팅 시에만 메타데이터에서 닉네임 가져옴
       if (user?.user_metadata?.name) {
-        setNickname(user.user_metadata.name)
+        setNickname(prev => prev || user.user_metadata.name)
       }
     })
 
@@ -55,7 +56,10 @@ export default function AccountSettingsPage() {
         
         if (profileData) {
           setProfile(profileData)
-          if (profileData.nickname) setNickname(profileData.nickname)
+          // 닉네임이 비어있을 때만(초기 로드) DB 값으로 채움
+          if (profileData.nickname) {
+            setNickname(prev => prev || profileData.nickname)
+          }
         }
       }
     }
@@ -136,6 +140,7 @@ export default function AccountSettingsPage() {
         .upsert({
           id: user.id,
           nickname: nickname.trim(),
+          avatar_url: profile?.avatar_url || null // 기존 아바타 유지
         })
       if (profileError) throw profileError
 
@@ -143,7 +148,7 @@ export default function AccountSettingsPage() {
       
       const { data: { user: refreshedUser } } = await supabase.auth.getUser()
       setUser(refreshedUser)
-      setProfile(prev => ({ ...prev, nickname: nickname.trim(), avatar_url: prev?.avatar_url || null }))
+      setProfile({ nickname: nickname.trim(), avatar_url: profile?.avatar_url || null })
     } catch (error: any) {
       console.error('Error saving profile:', error)
       toast.error(`프로필 변경 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`)
@@ -196,6 +201,7 @@ export default function AccountSettingsPage() {
         .from("profiles")
         .upsert({
           id: user.id,
+          nickname: nickname.trim() || profile?.nickname || null, // 현재 입력된 닉네임 또는 기존 닉네임 유지
           avatar_url: publicUrl,
         })
       if (profileError) throw profileError
@@ -204,7 +210,7 @@ export default function AccountSettingsPage() {
       
       const { data: { user: refreshedUser } } = await supabase.auth.getUser()
       setUser(refreshedUser)
-      setProfile(prev => ({ ...prev, avatar_url: publicUrl, nickname: prev?.nickname || nickname || null }))
+      setProfile({ nickname: nickname.trim() || profile?.nickname || null, avatar_url: publicUrl })
     } catch (error: any) {
       console.error('Error uploading image:', error)
       toast.error(`이미지 업로드 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`)
