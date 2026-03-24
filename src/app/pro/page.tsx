@@ -1,20 +1,50 @@
 "use client"
 
-/**
- * Pro 업그레이드 페이지
- *
- * Free와 Pro 플랜의 기능을 비교 카드로 보여주고,
- * Pro 결제 버튼을 제공한다. (현재 결제 연동 준비 중)
- */
+import * as React from "react"
 import { PageContainer } from "@/components/layout/page-container"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Crown, Check } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/components/providers/auth-provider"
+import { createClient } from "@/lib/supabase/client"
 
 export default function ProPage() {
+  const { user, isLoading: isAuthLoading } = useAuth()
+  const [role, setRole] = React.useState<string | null>(null)
+  const [isRoleLoading, setIsRoleLoading] = React.useState(true)
+  const supabase = React.useMemo(() => createClient(), [])
+
+  React.useEffect(() => {
+    if (isAuthLoading) return
+    if (!user) {
+      setRole(null)
+      setIsRoleLoading(false)
+      return
+    }
+
+    const fetchRole = async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle()
+      setRole(data?.role || "user")
+      setIsRoleLoading(false)
+    }
+
+    fetchRole()
+  }, [user, isAuthLoading, supabase])
+
+  const isPro = role === 'pro' || role === 'admin'
+  const isLoading = isAuthLoading || isRoleLoading
+
   const handleUpgradeClick = () => {
     toast("Pro 결제 연동은 준비 중입니다.")
+  }
+
+  const handleCancelClick = () => {
+    toast("구독 취소 기능은 준비 중입니다.")
   }
 
   return (
@@ -23,9 +53,11 @@ export default function ProPage() {
         <div className="inline-flex h-16 w-16 bg-amber-100 dark:bg-amber-900/30 rounded-full items-center justify-center mb-2">
           <Crown className="h-8 w-8 text-amber-600 dark:text-amber-500" />
         </div>
-        <h1 className="text-3xl md:text-5xl font-bold tracking-tight">Pro로 업그레이드</h1>
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
+          {isPro ? "현재 요금제" : "Pro로 업그레이드"}
+        </h1>
         <p className="text-muted-foreground text-lg md:text-xl">
-          스트리머의 일정을 더욱 전문적으로 관리하세요.
+          {isPro ? "Pro의 모든 기능을 이미 자유롭게 이용하고 있습니다." : "스트리머의 일정을 더욱 전문적으로 관리하세요."}
         </p>
       </div>
 
@@ -54,7 +86,13 @@ export default function ProPage() {
                 <span>AI 일정 자동 추출</span>
               </li>
             </ul>
-            <Button variant="outline" className="w-full" disabled>현재 사용 중인 플랜</Button>
+            {isPro ? (
+              <Button variant="outline" className="w-full text-destructive hover:bg-destructive/5" onClick={handleCancelClick}>
+                구독 취소
+              </Button>
+            ) : (
+              <Button variant="outline" className="w-full" disabled>현재 사용 중인 플랜</Button>
+            )}
           </CardContent>
         </Card>
 
@@ -89,12 +127,20 @@ export default function ProPage() {
                 <span>개인 캘린더 앱(Google, Apple) 연동 (내보내기)</span>
               </li>
             </ul>
-            <Button 
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white" 
-              onClick={handleUpgradeClick}
-            >
-              Pro로 업그레이드
-            </Button>
+            {isLoading ? (
+              <Button className="w-full" disabled>로딩 중...</Button>
+            ) : isPro ? (
+              <Button variant="outline" className="w-full border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/10" disabled>
+                현재 사용 중인 플랜
+              </Button>
+            ) : (
+              <Button 
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white" 
+                onClick={handleUpgradeClick}
+              >
+                Pro로 업그레이드
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -60,9 +60,9 @@ export async function addFavorite(streamerId: string) {
     return { data: null, error: "로그인이 필요합니다." };
   }
 
-  // 관리자인 경우 Pro 권한과 동일하게 처리
-  const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).single();
-  const isPro = roleData?.role === 'admin' || false;
+  // 관리자 또는 Pro 유저인 경우 무제한 즐겨찾기 허용
+  const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle();
+  const isPro = roleData?.role === 'admin' || roleData?.role === 'pro';
   const maxFavorites = 10;
 
   if (!isPro) {
