@@ -20,64 +20,41 @@ import { Crown, Star, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { getMyFavorites } from "@/app/actions/favorites"
 import { ChzzkConnectCard } from "@/components/mypage/chzzk-connect-card"
+import { useAuth } from "@/components/providers/auth-provider"
 
 export default function AccountSettingsPage() {
-  const [user, setUser] = useState<User | null>(null)
+  const { user, profile, refreshProfile, isLoading: isAuthLoading } = useAuth()
   const [nickname, setNickname] = useState("")
+  const isInitialized = useRef(false)
   const supabase = useMemo(() => createClient(), [])
   
   const [favorites, setFavorites] = useState<any[]>([])
   const [favoritesCount, setFavoritesCount] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [profile, setProfile] = useState<{ nickname: string | null; avatar_url: string | null } | null>(null)
-  
-  const [chzzkAccount, setChzzkAccount] = useState<any>(null)
-  const [uploading, setUploading] = useState(false)
+  const [chzzkAccount, setChzzkAccount] = useState<any | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-      // 초기 부팅 시에만 메타데이터에서 닉네임 가져옴
-      if (user?.user_metadata?.name) {
-        setNickname(prev => prev || user.user_metadata.name)
-      }
-    })
-
-    const loadProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("nickname, avatar_url")
-          .eq("id", user.id)
-          .maybeSingle()
-        
-        if (profileData) {
-          setProfile(profileData)
-          // 닉네임이 비어있을 때만(초기 로드) DB 값으로 채움
-          if (profileData.nickname) {
-            setNickname(prev => prev || profileData.nickname)
-          }
-        }
-      }
+    // Only initialized once when auth completes loading
+    if (!isAuthLoading && !isInitialized.current && user) {
+      setNickname(profile?.nickname || user.user_metadata?.name || "")
+      isInitialized.current = true
     }
-    loadProfile()
+  }, [isAuthLoading, user, profile])
 
-    const loadFavs = async () => {
-      const { data } = await getMyFavorites()
-      if (data) {
-        setFavorites(data)
-        setFavoritesCount(data.length)
-      }
-    }
-    loadFavs()
-    
-    // 치지직 계정 연동 및 역할 정보 불러오기
+  useEffect(() => {
+    if (!user) return
+
     const loadAccountInfo = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
+      try {
+        const { data: favs } = await getMyFavorites()
+        if (favs) {
+          setFavorites(favs)
+          setFavoritesCount(favs.length)
+        }
+
         const { data: chzzkData } = await supabase
           .from("connected_accounts")
           .select("*")
@@ -96,8 +73,11 @@ export default function AccountSettingsPage() {
         if (roleData?.role === 'admin') {
           setIsAdmin(true)
         }
+      } catch (error) {
+        console.error("Failed to load account info:", error)
       }
     }
+
     loadAccountInfo()
 
     // OAuth 결과 처리
@@ -144,11 +124,8 @@ export default function AccountSettingsPage() {
         })
       if (profileError) throw profileError
 
+      await refreshProfile()
       toast.success("프로필 정보가 저장되었습니다.")
-      
-      const { data: { user: refreshedUser } } = await supabase.auth.getUser()
-      setUser(refreshedUser)
-      setProfile({ nickname: nickname.trim(), avatar_url: profile?.avatar_url || null })
     } catch (error: any) {
       console.error('Error saving profile:', error)
       toast.error(`프로필 변경 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`)
@@ -206,11 +183,8 @@ export default function AccountSettingsPage() {
         })
       if (profileError) throw profileError
 
+      await refreshProfile()
       toast.success("프로필 이미지가 성공적으로 변경되었습니다.")
-      
-      const { data: { user: refreshedUser } } = await supabase.auth.getUser()
-      setUser(refreshedUser)
-      setProfile({ nickname: nickname.trim() || profile?.nickname || null, avatar_url: publicUrl })
     } catch (error: any) {
       console.error('Error uploading image:', error)
       toast.error(`이미지 업로드 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`)

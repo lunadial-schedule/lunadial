@@ -17,38 +17,71 @@ import { User } from "@supabase/supabase-js"
 
 interface AuthContextValue {
   user: User | null
+  profile: { nickname: string | null; avatar_url: string | null } | null
   isLoading: boolean
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = React.createContext<AuthContextValue>({
   user: null,
+  profile: null,
   isLoading: true,
+  refreshProfile: async () => {},
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null)
+  const [profile, setProfile] = React.useState<AuthContextValue['profile']>(null)
   const [isLoading, setIsLoading] = React.useState(true)
   const supabase = React.useMemo(() => createClient(), [])
+
+  const fetchProfile = React.useCallback(async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("nickname, avatar_url")
+      .eq("id", userId)
+      .maybeSingle()
+    if (data) {
+      setProfile(data)
+    } else {
+      setProfile(null)
+    }
+  }, [supabase])
+
+  const refreshProfile = React.useCallback(async () => {
+    if (user?.id) {
+      await fetchProfile(user.id)
+    }
+  }, [user, fetchProfile])
 
   React.useEffect(() => {
     // 초기 사용자 정보 1회 조회
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-      setIsLoading(false)
+      if (user) {
+        fetchProfile(user.id).finally(() => setIsLoading(false))
+      } else {
+        setIsLoading(false)
+      }
     })
 
     // 인증 상태 변경 구독 (로그인/로그아웃/토큰 갱신)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setUser(session?.user ?? null)
-        setIsLoading(false)
+        const currentUser = session?.user ?? null
+        setUser(currentUser)
+        if (currentUser) {
+          fetchProfile(currentUser.id)
+        } else {
+          setProfile(null)
+        }
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [supabase])
+  }, [supabase, fetchProfile])
 
-  const value = React.useMemo(() => ({ user, isLoading }), [user, isLoading])
+  const value = React.useMemo(() => ({ user, profile, isLoading, refreshProfile }), [user, profile, isLoading, refreshProfile])
 
   return (
     <AuthContext.Provider value={value}>

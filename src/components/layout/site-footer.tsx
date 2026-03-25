@@ -36,7 +36,7 @@ export function SiteFooter() {
           <div className="flex flex-col items-center gap-1 md:items-start">
             <span className="flex items-baseline gap-1.5">
               <span className="text-base font-semibold text-foreground">LUNA DIAL</span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">0.1.0 beta</span>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">0.1.0 Beta</span>
             </span>
             <span className="text-xs flex flex-wrap gap-x-1 items-center">
               Built with{" "}

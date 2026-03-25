@@ -30,28 +30,11 @@ import { useAuth } from "@/components/providers/auth-provider"
 import { useRouter, usePathname } from "next/navigation"
 
 export function AppHeader() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
-  const [profile, setProfile] = useState<{ nickname: string | null; avatar_url: string | null } | null>(null)
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
   const pathname = usePathname()
-
-  useEffect(() => {
-    if (user) {
-      const fetchProfile = async () => {
-        const { data } = await supabase
-          .from("profiles")
-          .select("nickname, avatar_url")
-          .eq("id", user.id)
-          .maybeSingle()
-        if (data) setProfile(data)
-      }
-      fetchProfile()
-    } else {
-      setProfile(null)
-    }
-  }, [user, supabase])
 
   const handleLogout = async () => {
     const isProtectedPage = pathname === "/favorites" || pathname.startsWith("/settings")
