@@ -16,7 +16,6 @@ export default async function UpdatesPage() {
     <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 lg:px-8 min-h-[calc(100vh-4rem)]">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">업데이트 로그</h1>
-        <p className="mt-2 text-muted-foreground">최근 추가·수정·삭제된 일정 내역을 확인할 수 있어요.</p>
       </div>
 
       {error ? (

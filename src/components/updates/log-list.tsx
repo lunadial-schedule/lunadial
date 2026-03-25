@@ -99,7 +99,6 @@ export function UpdateLogList({ initialLogs, isAdminView = false }: Props) {
               <div className="flex flex-wrap items-center justify-between gap-y-2 text-sm pt-1">
                 <span className="font-medium text-foreground/90 bg-muted px-2 py-0.5 rounded-md text-xs">{log.change_summary || "상태 변경"}</span>
                 <span className="text-xs text-muted-foreground/80 flex items-center gap-1.5 opacity-80">
-                  <span className="hidden sm:inline">변경자:</span> 
                   {log.actor_role === 'admin' ? (
                     `🛡️ ${log.actor_nickname}`
                   ) : isAdminView ? (
