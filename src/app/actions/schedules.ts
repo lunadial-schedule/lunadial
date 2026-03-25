@@ -137,38 +137,23 @@ export async function updateSchedule(id: string, updates: ScheduleUpdate, curren
     return { data: null, error: error.message };
   }
   
-  // 변경사항 요약 생성
-  const changes: string[] = [];
-  if (updates.title && currentSchedule.title !== updates.title) changes.push("제목");
-  if (updates.streamer && currentSchedule.streamer !== updates.streamer) changes.push("스트리머");
-  
-  if (updates.start_time) {
-    const oldTime = new Date(currentSchedule.start_time).getTime();
-    const newTime = new Date(updates.start_time).getTime();
-    if (oldTime !== newTime) changes.push("시작 시간");
+  // 변경 사항 요약 생성
+  const changedFields: string[] = [];
+  if (updates.title && currentSchedule.title !== updates.title) changedFields.push("제목");
+  if (updates.streamer && currentSchedule.streamer !== updates.streamer) changedFields.push("스트리머");
+  if (updates.start_time && new Date(currentSchedule.start_time).getTime() !== new Date(updates.start_time).getTime()) changedFields.push("시작 시간");
+  if (updates.status && currentSchedule.status !== updates.status) changedFields.push("상태");
+  if (updates.is_all_day !== undefined && currentSchedule.is_all_day !== updates.is_all_day) changedFields.push("종일 여부");
+  if (updates.categories && JSON.stringify(currentSchedule.categories) !== JSON.stringify(updates.categories)) changedFields.push("카테고리");
+
+  let changeSummary = "일정 수정됨";
+  if (changedFields.length === 1) {
+    const field = changedFields[0];
+    if (field === "상태") changeSummary = `상태 변경: ${updates.status}`;
+    else changeSummary = `${field} 수정`;
+  } else if (changedFields.length > 1) {
+    changeSummary = `${changedFields[0]} 외 ${changedFields.length - 1}개 수정`;
   }
-
-  if (updates.status && currentSchedule.status !== updates.status) {
-    const statusMap: Record<string, string> = {
-      scheduled: "예정",
-      changed: "변경",
-      canceled: "취소"
-    };
-    changes.push(`상태(${statusMap[updates.status] || updates.status})`);
-  }
-
-  if (updates.memo !== undefined && currentSchedule.memo !== updates.memo) changes.push("메모");
-  if (updates.link && currentSchedule.link !== updates.link) changes.push("링크");
-  if (updates.is_all_day !== undefined && currentSchedule.is_all_day !== updates.is_all_day) changes.push("종일 여부");
-
-  // 카테고리 비교 (배열)
-  if (updates.categories) {
-    const oldCats = [...(currentSchedule.categories || [])].sort().join(",");
-    const newCats = [...(updates.categories)].sort().join(",");
-    if (oldCats !== newCats) changes.push("카테고리");
-  }
-
-  const changeSummary = changes.length > 0 ? `${changes.join(", ")} 수정` : "일정 수정";
 
   await supabase.from("schedule_update_logs").insert({
     schedule_id: data.id,
