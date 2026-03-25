@@ -251,7 +251,7 @@ function CalendarContent() {
 
         {/* Calendar Grid */}
         <CardContent className="flex-1 p-0 flex flex-col relative h-[500px] lg:h-auto min-h-[500px]">
-          {isLoading && view === 'month' && (
+          {isLoading && (
             <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-3">
               <div className="flex items-center justify-center bg-card p-4 rounded-full shadow-sm border border-border/50">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
