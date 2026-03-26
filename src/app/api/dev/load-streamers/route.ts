@@ -63,13 +63,19 @@ export async function POST(req: Request) {
      return NextResponse.json({ success: true, message: "No channels fetched", summary, preview });
   }
 
-  const { data: existingStreamers, error: existingError } = await supabase
-    .from('streamers')
-    .select('id, channel_id, name, aliases, image_url, follower_count, verified_mark')
-    .in('channel_id', channelIds);
+  // URI 길이가 너무 길어지는 것(16KB 이상)을 방지하기 위해 100개씩 Chunk
+  let existingStreamers: any[] = [];
+  for (let i = 0; i < channelIds.length; i += 100) {
+    const chunkIds = channelIds.slice(i, i + 100);
+    const { data, error } = await supabase
+      .from('streamers')
+      .select('id, channel_id, name, aliases, image_url, follower_count, verified_mark')
+      .in('channel_id', chunkIds);
 
-  if (existingError) {
-    return NextResponse.json({ success: false, error: existingError.message }, { status: 500 });
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+    if (data) existingStreamers.push(...data);
   }
 
   const existingMap = new Map();
@@ -79,6 +85,7 @@ export async function POST(req: Request) {
     }
   }
 
+  const batchUpserts: any[] = [];
   for (const ch of fetchedChannels) {
     try {
       if (ch.followerCount === 0 && ch.followerCountSource === 'unknown') {
@@ -161,18 +168,7 @@ export async function POST(req: Request) {
         updated_at: new Date().toISOString()
       };
 
-      if (!dryRun) {
-        const { error: upsertError } = await supabase
-          .from('streamers')
-          .upsert(upsertPayload, { onConflict: 'channel_id' });
-
-        if (upsertError) {
-          summary.errors++;
-          console.error("Upsert error:", upsertError);
-          if (preview.errors.length < 50) preview.errors.push(`Failed to upsert ${ch.channelName}: ${upsertError.message}`);
-          continue;
-        }
-      }
+      batchUpserts.push(upsertPayload);
 
       const previewItem = {
          channel_id: ch.channelId,
@@ -204,6 +200,24 @@ export async function POST(req: Request) {
     } catch (e: any) {
       summary.errors++;
       if (preview.errors.length < 50) preview.errors.push(`Exception processing ${ch.channelName}: ${e.message}`);
+    }
+  }
+
+  // 일괄 Upsert 실행 (성능 확보 및 타임아웃 방지)
+  if (!dryRun && batchUpserts.length > 0) {
+    for (let i = 0; i < batchUpserts.length; i += 100) {
+      const chunk = batchUpserts.slice(i, i + 100);
+      const { error: upsertError } = await supabase
+        .from('streamers')
+        .upsert(chunk, { onConflict: 'channel_id' });
+
+      if (upsertError) {
+        console.error("Batch upsert error:", upsertError);
+        preview.errors.push(`Failed to batch upsert chunk: ${upsertError.message}`);
+        // 실제 실패한 갯수만큼 보정
+        summary.errors += chunk.length;
+        summary.upserted_count -= chunk.length;
+      }
     }
   }
 
