@@ -173,7 +173,7 @@ export function StreamerMultiInput({ value, onChange, placeholder, inputValue: e
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-sm font-medium truncate">{streamer.name}</span>
                     {streamer.verified_mark && (
-                      <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium">단독</span>
+                      <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium">파트너</span>
                     )}
                   </div>
                 </li>

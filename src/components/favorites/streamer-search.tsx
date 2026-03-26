@@ -11,7 +11,6 @@ import { searchStreamers } from "@/app/actions/streamers"
 import { getMyFavorites } from "@/app/actions/favorites"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FavoriteButton } from "./favorite-button"
-import { CreateStreamerModal } from "./create-streamer-modal"
 import { StreamerEditModal } from "./streamer-edit-modal"
 import { Button } from "@/components/ui/button"
 
@@ -102,14 +101,6 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
 
   return (
     <div className="w-full flex flex-col gap-1">
-      <CreateStreamerModal 
-        initialSearchQuery={query} 
-        onSuccess={() => {
-          if (query.trim()) {
-            performSearch(query)
-          }
-        }} 
-      />
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -130,7 +121,8 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
 
         {!isLoading && hasSearched && results.length === 0 && (
           <div className="py-12 flex flex-col items-center justify-center text-center gap-3 bg-muted/30 rounded-lg border border-dashed">
-            <p className="text-sm text-muted-foreground">검색 결과가 없습니다.</p>
+            <p className="text-sm text-muted-foreground">'{query}' 검색 결과가 없습니다.</p>
+            <p className="text-xs text-blue-500/80">찾는 스트리머가 없다면 이메일로 추가 문의해주세요.</p>
           </div>
         )}
 
@@ -153,7 +145,7 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold text-sm">{streamer.name}</span>
                       {streamer.verified_mark && (
-                        <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium shrink-0">단독</span>
+                        <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium shrink-0">파트너</span>
                       )}
                     </div>
                     {streamer.follower_count !== null && (

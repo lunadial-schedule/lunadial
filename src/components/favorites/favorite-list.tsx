@@ -1,16 +1,46 @@
 "use client"
 
 /**
- * 즐겨찾기 스트리머 목록 — 로딩/빈 상태/목록 렌더링
+ * 즐겨찾기 스트리머 목록 — 로딩/빈 상태/목록 렌더링/정렬/다음방송 표시
  */
 
 import * as React from "react"
 import { getMyFavorites, isFavorited } from "@/app/actions/favorites"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FavoriteButton } from "./favorite-button"
-import { Loader2, Edit2 } from "lucide-react"
+import { Loader2, Edit2, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StreamerEditModal } from "./streamer-edit-modal"
+import { format, isToday, isTomorrow, differenceInHours, differenceInMinutes, parseISO } from "date-fns"
+
+function formatNextBroadcast(schedule: any) {
+  if (!schedule) return "예정 없음";
+  const start = parseISO(schedule.start_time);
+  
+  if (schedule.is_all_day) {
+    if (isToday(start)) return "오늘 종일";
+    if (isTomorrow(start)) return "내일 종일";
+    return `${format(start, 'M/d')} 종일`;
+  }
+
+  const timeStr = format(start, 'HH:mm');
+  if (isToday(start)) {
+    const diffH = differenceInHours(start, new Date());
+    const diffM = differenceInMinutes(start, new Date());
+    let relative = "";
+    if (diffH > 0) relative = ` · ${diffH}시간 후`;
+    else if (diffM >= 0) relative = ` · ${diffM}분 후`;
+    else relative = ` · 진행중`;
+    
+    return `오늘 ${timeStr}${relative}`;
+  }
+  if (isTomorrow(start)) {
+    return `내일 ${timeStr}`;
+  }
+  return `${format(start, 'M/d')} ${timeStr}`;
+}
+
+type SortOption = 'next_broadcast' | 'latest' | 'name';
 
 export function FavoriteList() {
   const [favorites, setFavorites] = React.useState<any[]>([])
@@ -18,6 +48,7 @@ export function FavoriteList() {
   const [error, setError] = React.useState<string | null>(null)
   const [isExpanded, setIsExpanded] = React.useState(false)
   const [editingStreamer, setEditingStreamer] = React.useState<any | null>(null)
+  const [sortOption, setSortOption] = React.useState<SortOption>('next_broadcast')
 
   const loadFavorites = React.useCallback(async () => {
     setIsLoading(true)
@@ -26,7 +57,6 @@ export function FavoriteList() {
     if (error) {
       setError(error)
     } else if (data) {
-      // data: { id, created_at, streamers: { id, channel_id, name, ... } }[]
       setFavorites(data)
     }
     setIsLoading(false)
@@ -35,7 +65,6 @@ export function FavoriteList() {
   React.useEffect(() => {
     loadFavorites()
     
-    // 타 컴포넌트(검색 버튼, 추가 모달)에서 발생시킨 이벤트 구독
     const handleFavoritesUpdated = () => {
       loadFavorites()
     }
@@ -45,6 +74,26 @@ export function FavoriteList() {
       window.removeEventListener("favoritesUpdated", handleFavoritesUpdated)
     }
   }, [loadFavorites])
+
+  const sortedFavorites = React.useMemo(() => {
+    return [...favorites].sort((a, b) => {
+      if (sortOption === 'name') {
+        const nameA = a.streamers.name || "";
+        const nameB = b.streamers.name || "";
+        return nameA.localeCompare(nameB, 'ko-KR');
+      } else if (sortOption === 'latest') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else {
+        // next_broadcast
+        const tA = a.next_broadcast ? new Date(a.next_broadcast.start_time).getTime() : Infinity;
+        const tB = b.next_broadcast ? new Date(b.next_broadcast.start_time).getTime() : Infinity;
+        if (tA === tB) {
+           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        return tA - tB;
+      }
+    });
+  }, [favorites, sortOption]);
 
   if (isLoading) {
     return (
@@ -73,79 +122,96 @@ export function FavoriteList() {
   }
 
   const displayLimit = 15
-  const displayedFavorites = isExpanded ? favorites : favorites.slice(0, displayLimit)
+  const displayedFavorites = isExpanded ? sortedFavorites : sortedFavorites.slice(0, displayLimit)
 
   return (
-    <div className="flex flex-col gap-0 border border-border/50 rounded-lg overflow-hidden bg-background max-h-[800px] overflow-y-auto">
-      {displayedFavorites.map((fav) => {
-        const streamer = fav.streamers
-        return (
-          <div 
-            key={fav.id}
-            className="flex items-center gap-3 p-[10px] sm:p-3 border-b border-border/50 last:border-0 hover:bg-muted/30 transition-all group"
-          >
-            <Avatar className="h-9 w-9 sm:h-10 sm:w-10 border border-border/40 shrink-0">
-              <AvatarImage src={streamer.image_url || undefined} alt={streamer.name} />
-              <AvatarFallback>{streamer.name[0]}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col flex-1 min-w-0 justify-center">
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{streamer.name}</span>
-                {streamer.verified_mark && (
-                  <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium shrink-0">단독</span>
-                )}
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-end px-1">
+        <select 
+          value={sortOption} 
+          onChange={(e) => setSortOption(e.target.value as SortOption)}
+          className="text-xs bg-transparent border-none text-muted-foreground font-medium focus:ring-0 cursor-pointer outline-none"
+        >
+          <option value="next_broadcast">다음 방송 빠른 순</option>
+          <option value="latest">최근 추가 순</option>
+          <option value="name">가나다 순</option>
+        </select>
+      </div>
+      <div className="flex flex-col gap-0 border border-border/50 rounded-lg overflow-hidden bg-background max-h-[800px] overflow-y-auto">
+        {displayedFavorites.map((fav) => {
+          const streamer = fav.streamers
+          const nextBroadcastInfo = formatNextBroadcast(fav.next_broadcast)
+          const hasSchedule = !!fav.next_broadcast
+          
+          return (
+            <div 
+              key={fav.id}
+              className="flex items-center gap-3 p-[10px] sm:p-3 border-b border-border/50 last:border-0 hover:bg-muted/30 transition-all group"
+            >
+              <Avatar className="h-9 w-9 sm:h-10 sm:w-10 border border-border/40 shrink-0">
+                <AvatarImage src={streamer.image_url || undefined} alt={streamer.name} />
+                <AvatarFallback>{streamer.name[0]}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col flex-1 min-w-0 justify-center">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{streamer.name}</span>
+                  {streamer.verified_mark && (
+                    <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium shrink-0">파트너</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Clock className={`w-3 h-3 ${hasSchedule ? 'text-primary/70' : 'text-muted-foreground/50'}`} />
+                  <span className={`text-[11px] sm:text-xs truncate block ${hasSchedule ? 'text-foreground/80 font-medium' : 'text-muted-foreground'}`}>
+                    {nextBroadcastInfo}
+                  </span>
+                </div>
               </div>
-              {streamer.follower_count !== null && (
-                <span className="text-[10px] sm:text-[11px] text-muted-foreground truncate w-full block">
-                  팔로워 {streamer.follower_count.toLocaleString()}
-                </span>
-              )}
+              
+              <div className="flex items-center gap-1 shrink-0">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                  onClick={() => setEditingStreamer(streamer)}
+                >
+                  <Edit2 className="h-4 w-4" />
+                  <span className="sr-only">정보 수정</span>
+                </Button>
+                <FavoriteButton 
+                  streamerId={streamer.id} 
+                  initialFavorited={true}
+                  onFavoriteChange={(isFav) => {
+                    if (!isFav) {
+                      setFavorites(prev => prev.filter(f => f.streamers.id !== streamer.id))
+                    }
+                  }}
+                />
+              </div>
             </div>
-            
-            <div className="flex items-center gap-1 shrink-0">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                onClick={() => setEditingStreamer(streamer)}
-              >
-                <Edit2 className="h-4 w-4" />
-                <span className="sr-only">정보 수정</span>
-              </Button>
-              <FavoriteButton 
-                streamerId={streamer.id} 
-                initialFavorited={true}
-                onFavoriteChange={(isFav) => {
-                  if (!isFav) {
-                    setFavorites(prev => prev.filter(f => f.streamers.id !== streamer.id))
-                  }
-                }}
-              />
-            </div>
+          )
+        })}
+
+        {favorites.length > displayLimit && !isExpanded && (
+          <div className="p-2 border-t border-border/50 bg-muted/5 flex justify-center">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsExpanded(true)}
+              className="w-full text-xs text-muted-foreground hover:text-foreground"
+            >
+              {favorites.length - displayLimit}명 더 보기
+            </Button>
           </div>
-        )
-      })}
+        )}
 
-      {favorites.length > displayLimit && !isExpanded && (
-        <div className="p-2 border-t border-border/50 bg-muted/5 flex justify-center">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setIsExpanded(true)}
-            className="w-full text-xs text-muted-foreground hover:text-foreground"
-          >
-            {favorites.length - displayLimit}명 더 보기
-          </Button>
-        </div>
-      )}
-
-      {editingStreamer && (
-        <StreamerEditModal 
-          open={!!editingStreamer} 
-          onOpenChange={(open) => !open && setEditingStreamer(null)} 
-          streamer={editingStreamer} 
-        />
-      )}
+        {editingStreamer && (
+          <StreamerEditModal 
+            open={!!editingStreamer} 
+            onOpenChange={(open) => !open && setEditingStreamer(null)} 
+            streamer={editingStreamer} 
+          />
+        )}
+      </div>
     </div>
   )
 }

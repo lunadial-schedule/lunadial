@@ -57,6 +57,10 @@ export async function createSchedule(schedule: Omit<ScheduleInsert, "user_id">, 
   if (!actor) {
     return { data: null, error: "로그인이 필요합니다." };
   }
+
+  if (!schedule.streamer_id) {
+    return { data: null, error: "정상적으로 등록된 스트리머를 선택해주세요." };
+  }
   
   const { data, error } = await supabase
     .from("schedules")
@@ -108,6 +112,10 @@ export async function updateSchedule(id: string, updates: ScheduleUpdate, curren
   
   if (!actor) {
     return { data: null, error: "로그인이 필요합니다." };
+  }
+
+  if (updates.streamer && !updates.streamer_id) {
+    return { data: null, error: "정상적으로 등록된 스트리머를 선택해주세요." };
   }
   
   // 동시성 제어: 현재 DB의 정보 확인

@@ -41,6 +41,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
   
   // 스트리머 입력 관리를 위한 상태
   const [streamerName, setStreamerName] = React.useState("");
+  const [streamerId, setStreamerId] = React.useState<string | null>(null);
 
   const [titlePlaceholder, setTitlePlaceholder] = React.useState("예: 마크 대규모 합방");
   const [streamerPlaceholder, setStreamerPlaceholder] = React.useState("예: 풍월량");
@@ -54,6 +55,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
       setSelectedCats([]);
       setErrorMsg(null);
       setStreamerName("");
+      setStreamerId(null);
 
       let newTitle = TITLE_PLACEHOLDERS[Math.floor(Math.random() * TITLE_PLACEHOLDERS.length)];
       while (TITLE_PLACEHOLDERS.length > 1 && newTitle === prevTitleRef.current) {
@@ -93,15 +95,11 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
     const link = formData.get("link") as string;
     const memo = formData.get("memo") as string;
     
-    // 1. 스트리머 존재 여부 확인 및 자동 생성
-    const streamerRes = await findOrCreateStreamer({ name: streamerName });
-    if (streamerRes.error) {
-      setErrorMsg("스트리머 등록 오류: " + streamerRes.error);
+    if (!streamerId) {
+      setErrorMsg("검색 목록에서 등록된 스트리머를 눌러 선택해주세요.");
       setIsLoading(false);
       return;
     }
-    
-    const streamerId = streamerRes.data?.id;
 
     // 하루 종일일 경우, 시간 부분을 00:00으로 강제
     const startTimeStr = isAllDay ? `${startTime}T00:00:00` : startTime;
@@ -203,9 +201,16 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
               <div className="space-y-2">
                  <label className="text-sm font-medium">스트리머 *</label>
                  <StreamerAutocompleteInput
-                   name="streamer"
+                   name="streamer_input_text"
                    value={streamerName}
-                   onChange={setStreamerName}
+                   onTextChange={(val) => {
+                     setStreamerName(val);
+                     setStreamerId(null); // 사용자가 직접 타이핑하면 선택 해제
+                   }}
+                   onSelectStreamer={(id, name) => {
+                     setStreamerName(name);
+                     setStreamerId(id);
+                   }}
                    placeholder={streamerPlaceholder}
                    required={true}
                  />

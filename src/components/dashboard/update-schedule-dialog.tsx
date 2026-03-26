@@ -31,6 +31,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
   const [isAllDay, setIsAllDay] = React.useState<boolean>(false);
   const [startTime, setStartTime] = React.useState("");
   const [streamerName, setStreamerName] = React.useState("");
+  const [streamerId, setStreamerId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (open) {
@@ -42,6 +43,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
         setStartTime(schedule.start_time ? format(parseISO(schedule.start_time), "yyyy-MM-dd'T'HH:mm") : "");
       }
       setStreamerName(schedule.streamer || "");
+      setStreamerId(schedule.streamer_id || null);
       setErrorMsg(null);
     }
   }, [open, schedule]);
@@ -73,10 +75,8 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
       return;
     }
 
-    // 스트리머 찾기 및 생성 (id 매핑)
-    const streamerRes = await findOrCreateStreamer({ name: streamerName });
-    if (streamerRes.error) {
-      setErrorMsg("스트리머 확인 오류: " + streamerRes.error);
+    if (!streamerId) {
+      setErrorMsg("검색 목록에서 등록된 스트리머를 눌러 선택해주세요.");
       setIsLoading(false);
       return;
     }
@@ -88,7 +88,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
       {
         title,
         streamer: streamerName,
-        streamer_id: streamerRes.data?.id,
+        streamer_id: streamerId,
         categories: selectedCats,
         link,
         status,
@@ -135,9 +135,16 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
           <div className="space-y-2">
              <label className="text-sm font-medium">스트리머 *</label>
              <StreamerAutocompleteInput
-               name="streamer"
+               name="streamer_input_text"
                value={streamerName}
-               onChange={setStreamerName}
+               onTextChange={(val) => {
+                 setStreamerName(val);
+                 setStreamerId(null);
+               }}
+               onSelectStreamer={(id, name) => {
+                 setStreamerName(name);
+                 setStreamerId(id);
+               }}
                required={true}
              />
           </div>

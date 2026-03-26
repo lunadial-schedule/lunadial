@@ -25,7 +25,7 @@ export async function searchStreamers(query: string) {
     .from("streamers")
     .select("*")
     .eq("is_active", true)
-    .or(`name.ilike.%${query}%,normalized_name.ilike.%${normalizedQuery}%`)
+    .or(`name.ilike.%${query}%,normalized_name.ilike.%${normalizedQuery}%,aliases.cs.{${query}},normalized_aliases.cs.{${normalizedQuery}}`)
     .order("follower_count", { ascending: false, nullsFirst: false })
     .limit(20);
 
@@ -72,39 +72,21 @@ export async function findOrCreateStreamer(input: {
   const { data: existing, error: searchError } = await supabase
     .from("streamers")
     .select("*")
-    .eq("normalized_name", normalizedName)
+    .or(`normalized_name.eq.${normalizedName},normalized_aliases.cs.{${normalizedName}}`)
     .maybeSingle();
 
   if (searchError && searchError.details !== "The result contains 0 rows") {
-      console.error("스트리머 중복 확인 에러:", searchError);
+      console.error("스트리머 확인 에러:", searchError);
   }
 
   if (existing) {
     return { data: existing, error: null, isNew: false };
   }
 
-  // 2. 중복 없음 → 새로 생성
-  const insertData = {
-    name: input.name.trim(),
-    normalized_name: normalizedName,
-    channel_url: input.channelUrl || null,
-    image_url: input.imageUrl || null,
-    source_type: "manual",
-    is_active: true,
+  return { 
+    data: null, 
+    error: "등록되지 않은 스트리머입니다. 찾는 스트리머가 없다면 이메일로 추가 문의해주세요." 
   };
-
-  const { data: newStreamer, error: insertError } = await supabase
-    .from("streamers")
-    .insert(insertData)
-    .select()
-    .single();
-
-  if (insertError) {
-    console.error("스트리머 생성 에러:", insertError);
-    return { data: null, error: "스트리머 생성에 실패했습니다." };
-  }
-
-  return { data: newStreamer, error: null, isNew: true };
 }
 
 /**

@@ -23,12 +23,13 @@ function useDebounce<T>(value: T, delay: number = 500): T {
 interface StreamerAutocompleteInputProps {
   name: string
   value: string
-  onChange: (value: string) => void
+  onTextChange: (text: string) => void
+  onSelectStreamer: (id: string, name: string) => void
   placeholder?: string
   required?: boolean
 }
 
-export function StreamerAutocompleteInput({ name, value, onChange, placeholder, required }: StreamerAutocompleteInputProps) {
+export function StreamerAutocompleteInput({ name, value, onTextChange, onSelectStreamer, placeholder, required }: StreamerAutocompleteInputProps) {
   const debouncedValue = useDebounce(value, 300)
   const [results, setResults] = React.useState<any[]>([])
   const [isLoading, setIsLoading] = React.useState(false)
@@ -78,13 +79,13 @@ export function StreamerAutocompleteInput({ name, value, onChange, placeholder, 
     }
   }, [debouncedValue, isOpen, performSearch])
 
-  const handleSelect = (streamerName: string) => {
-    onChange(streamerName)
+  const handleSelect = (streamerId: string, streamerName: string) => {
+    onSelectStreamer(streamerId, streamerName)
     setIsOpen(false)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value)
+    onTextChange(e.target.value)
     setIsOpen(true)
   }
 
@@ -114,7 +115,7 @@ export function StreamerAutocompleteInput({ name, value, onChange, placeholder, 
           {!isLoading && results.length === 0 && (
             <div className="py-4 px-3 text-sm text-muted-foreground flex flex-col gap-1">
               <span className="font-medium text-foreground">'{value}' 검색 결과가 없습니다.</span>
-              <span className="text-xs">일정을 등록하면 스트리머가 자동으로 추가됩니다.</span>
+              <span className="text-xs text-blue-500/80 mt-1">찾는 스트리머가 없다면 이메일로 추가 문의해주세요.</span>
             </div>
           )}
 
@@ -125,7 +126,10 @@ export function StreamerAutocompleteInput({ name, value, onChange, placeholder, 
                 <li
                   key={streamer.id}
                   className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => handleSelect(streamer.name)}
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // 입력 포커스 유지 방지, onClick보다 빨리 발생
+                    handleSelect(streamer.id, streamer.name);
+                  }}
                 >
                   <Avatar className="h-6 w-6 border">
                     <AvatarImage src={streamer.image_url || undefined} alt={streamer.name} />
@@ -134,7 +138,7 @@ export function StreamerAutocompleteInput({ name, value, onChange, placeholder, 
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-sm font-medium truncate">{streamer.name}</span>
                     {streamer.verified_mark && (
-                      <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium">단독</span>
+                      <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium">파트너</span>
                     )}
                   </div>
                 </li>
