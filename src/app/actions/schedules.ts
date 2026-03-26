@@ -249,7 +249,7 @@ export async function getScheduleById(id: string) {
   
   const { data, error } = await supabase
     .from("schedules")
-    .select("*")
+    .select("*, streamers(image_url)")
     .eq("id", id)
     .eq("is_deleted", false)
     .single();
@@ -259,7 +259,7 @@ export async function getScheduleById(id: string) {
     return { data: null, error: error.message };
   }
   
-  return { data, error: null };
+  return { data: data as any, error: null };
 }
 
 /** 홈 카드 렌더에 필요한 최소 필드만 포함하는 타입 */

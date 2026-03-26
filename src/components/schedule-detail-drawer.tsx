@@ -188,7 +188,7 @@ export function ScheduleDetailDrawer({
             
             <div className="flex items-center gap-2.5 mt-4">
               <Avatar className="h-7 w-7 border border-border/80 shadow-sm">
-                <AvatarImage src="" />
+                <AvatarImage src={(internalSchedule as any).streamers?.image_url || ""} />
                 <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">{internalSchedule.streamer.slice(0, 1)}</AvatarFallback>
               </Avatar>
               <span className="font-bold text-[15px] text-foreground/90">{internalSchedule.streamer}</span>

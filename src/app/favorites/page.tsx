@@ -11,7 +11,7 @@
  */
 import * as React from "react"
 import { PageContainer } from "@/components/layout/page-container"
-import { FavoriteList } from "@/components/favorites/favorite-list"
+import { FavoriteList, SortOption } from "@/components/favorites/favorite-list"
 import { StreamerSearchSection } from "@/components/favorites/streamer-search"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation"
 export default function FavoritesPage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
+  const [sortOption, setSortOption] = React.useState<SortOption>('next_broadcast')
   
   // 최초 렌더링 시 유저가 로그인 상태였는지 추적 (로그아웃 vs 비로그인 직접접근 구분)
   const wasLoggedIn = React.useRef<boolean | null>(null)
@@ -58,21 +59,45 @@ export default function FavoritesPage() {
         {/* Left Side: My Favorites */}
         <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
           <Card className="border-border/50 shadow-sm overflow-hidden flex flex-col h-full">
-            <CardHeader className="h-9 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
-              <div className="flex flex-col gap-1.5">
+            <CardHeader className="h-10 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
+              <div className="flex items-center gap-3">
                 <CardTitle className="text-lg">내 즐겨찾기</CardTitle>
+                <div className="hidden sm:block">
+                  <select 
+                    value={sortOption} 
+                    onChange={(e) => setSortOption(e.target.value as SortOption)}
+                    className="text-xs bg-transparent border-none text-muted-foreground font-medium focus:ring-0 cursor-pointer outline-none hover:text-foreground transition-colors"
+                  >
+                    <option value="next_broadcast">다음 방송 빠른 순</option>
+                    <option value="latest">최근 추가 순</option>
+                    <option value="name">가나다 순</option>
+                  </select>
+                </div>
               </div>
-              <div className="lg:hidden pl-2 shrink-0">
-                <FavoriteSearchSheet>
-                  <Button size="sm" variant="outline" className="h-8 px-2 flex items-center gap-1">
-                    <Plus className="h-4 w-4" />
-                    <span className="sr-only sm:not-sr-only">추가</span>
-                  </Button>
-                </FavoriteSearchSheet>
+              <div className="flex items-center gap-2">
+                <div className="sm:hidden">
+                  <select 
+                    value={sortOption} 
+                    onChange={(e) => setSortOption(e.target.value as SortOption)}
+                    className="text-xs bg-transparent border-none text-muted-foreground font-medium focus:ring-0 cursor-pointer outline-none"
+                  >
+                    <option value="next_broadcast">방송순</option>
+                    <option value="latest">최근순</option>
+                    <option value="name">이름순</option>
+                  </select>
+                </div>
+                <div className="lg:hidden shrink-0">
+                  <FavoriteSearchSheet>
+                    <Button size="sm" variant="outline" className="h-8 px-2 flex items-center gap-1">
+                      <Plus className="h-4 w-4" />
+                      <span className="sr-only sm:not-sr-only">추가</span>
+                    </Button>
+                  </FavoriteSearchSheet>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="pt-1 pb-3 bg-muted/5">
-              <FavoriteList />
+              <FavoriteList sortOption={sortOption} />
             </CardContent>
           </Card>
         </div>

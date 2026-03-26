@@ -8,9 +8,8 @@ import * as React from "react"
 import { getMyFavorites, isFavorited } from "@/app/actions/favorites"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FavoriteButton } from "./favorite-button"
-import { Loader2, Edit2, Clock } from "lucide-react"
+import { Loader2, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { StreamerEditModal } from "./streamer-edit-modal"
 import { format, isToday, isTomorrow, differenceInHours, differenceInMinutes, parseISO } from "date-fns"
 
 function formatNextBroadcast(schedule: any) {
@@ -40,15 +39,17 @@ function formatNextBroadcast(schedule: any) {
   return `${format(start, 'M/d')} ${timeStr}`;
 }
 
-type SortOption = 'next_broadcast' | 'latest' | 'name';
+export type SortOption = 'next_broadcast' | 'latest' | 'name';
 
-export function FavoriteList() {
+interface FavoriteListProps {
+  sortOption?: SortOption;
+}
+
+export function FavoriteList({ sortOption = 'next_broadcast' }: FavoriteListProps) {
   const [favorites, setFavorites] = React.useState<any[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [isExpanded, setIsExpanded] = React.useState(false)
-  const [editingStreamer, setEditingStreamer] = React.useState<any | null>(null)
-  const [sortOption, setSortOption] = React.useState<SortOption>('next_broadcast')
 
   const loadFavorites = React.useCallback(async () => {
     setIsLoading(true)
@@ -126,17 +127,6 @@ export function FavoriteList() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex justify-end px-1">
-        <select 
-          value={sortOption} 
-          onChange={(e) => setSortOption(e.target.value as SortOption)}
-          className="text-xs bg-transparent border-none text-muted-foreground font-medium focus:ring-0 cursor-pointer outline-none"
-        >
-          <option value="next_broadcast">다음 방송 빠른 순</option>
-          <option value="latest">최근 추가 순</option>
-          <option value="name">가나다 순</option>
-        </select>
-      </div>
       <div className="flex flex-col gap-0 border border-border/50 rounded-lg overflow-hidden bg-background max-h-[800px] overflow-y-auto">
         {displayedFavorites.map((fav) => {
           const streamer = fav.streamers
@@ -168,15 +158,6 @@ export function FavoriteList() {
               </div>
               
               <div className="flex items-center gap-1 shrink-0">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                  onClick={() => setEditingStreamer(streamer)}
-                >
-                  <Edit2 className="h-4 w-4" />
-                  <span className="sr-only">정보 수정</span>
-                </Button>
                 <FavoriteButton 
                   streamerId={streamer.id} 
                   initialFavorited={true}
@@ -204,13 +185,6 @@ export function FavoriteList() {
           </div>
         )}
 
-        {editingStreamer && (
-          <StreamerEditModal 
-            open={!!editingStreamer} 
-            onOpenChange={(open) => !open && setEditingStreamer(null)} 
-            streamer={editingStreamer} 
-          />
-        )}
       </div>
     </div>
   )
