@@ -85,10 +85,18 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
   }
 
   const isStreamerValid = streamers.length > 0 || streamerInput.trim() !== ""
-  const isFormValid = isStreamerValid && link.trim() !== "" && imageFile !== null
+  const isFormValid = isStreamerValid && imageFile !== null
 
   const handleExtract = async () => {
     if (!isFormValid) return
+    
+    // 공지 링크 미입력 시 확인 알림
+    if (!link.trim()) {
+      if (!window.confirm("공지 링크를 입력하지 않았습니다. 계속하시겠습니까?")) {
+        return;
+      }
+    }
+
     setStatus("loading")
     setErrorMsg(null)
 
@@ -126,7 +134,7 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
         <div className="bg-primary/5 text-primary text-xs p-3 rounded-md font-medium">
           <ul className="list-disc list-inside space-y-1">
             <li>이미지에 적힌 일정을 AI가 자동으로 분석하여 초안을 작성합니다.</li>
-            <li>추출된 내용은 수정이 가능하며, 추가로 직접 일정을 등록할 수 있습니다.</li>
+            <li>추출된 내용은 수정 가능하며, 추가로 일정을 등록할 수 있습니다.</li>
             <li>이미지에 누락된 내용은 작성자가 직접 입력해야 합니다.</li>
             <li>AI는 실수를 할 수 있습니다. 추출된 내용을 다시 확인하세요.</li>
           </ul>
@@ -151,7 +159,7 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">공지 링크 *</label>
+          <label className="text-sm font-medium">공지 링크</label>
           <Input 
             type="url" 
             placeholder="https://..." 

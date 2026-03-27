@@ -95,6 +95,14 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
     const link = formData.get("link") as string;
     const memo = formData.get("memo") as string;
     
+    // 공지 링크 미입력 시 확인 알림
+    if (!link.trim()) {
+      if (!window.confirm("공지 링크를 입력하지 않았습니다. 계속하시겠습니까?")) {
+        setIsLoading(false);
+        return;
+      }
+    }
+    
     if (!streamerId) {
       setErrorMsg("검색 목록에서 등록된 스트리머를 눌러 선택해주세요.");
       setIsLoading(false);
@@ -249,8 +257,8 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
               </div>
 
               <div className="space-y-2">
-                 <label className="text-sm font-medium">공지 링크 *</label>
-                 <Input type="url" name="link" required placeholder="https://..." />
+                 <label className="text-sm font-medium">공지 링크</label>
+                 <Input type="url" name="link" placeholder="https://..." />
               </div>
 
               <div className="space-y-2">

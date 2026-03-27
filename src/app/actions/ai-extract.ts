@@ -13,7 +13,7 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
     const link = formData.get("link") as string
     const streamersRaw = formData.get("streamers") as string
     
-    if (!image || !link || !streamersRaw) {
+    if (!image || !streamersRaw) {
       return { error: "필수 정보가 누락되었습니다." }
     }
 

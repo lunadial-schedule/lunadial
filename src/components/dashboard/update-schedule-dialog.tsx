@@ -66,6 +66,15 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
     const title = formData.get("title") as string;
     const streamer = formData.get("streamer") as string;
     const link = formData.get("link") as string;
+    
+    // 공지 링크 미입력 시 확인 알림
+    if (!link.trim()) {
+      if (!window.confirm("공지 링크를 입력하지 않았습니다. 계속하시겠습니까?")) {
+        setIsLoading(false);
+        return;
+      }
+    }
+    
     const status = formData.get("status") as string;
     const memo = formData.get("memo") as string;
 
@@ -189,8 +198,8 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
              <Input type={isAllDay ? "date" : "datetime-local"} name="start_time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} />
           </div>
           <div className="space-y-2">
-             <label className="text-sm font-medium">공지 링크 *</label>
-             <Input type="url" name="link" required defaultValue={schedule.link} />
+             <label className="text-sm font-medium">공지 링크</label>
+             <Input type="url" name="link" defaultValue={schedule.link} />
           </div>
           <div className="space-y-2">
              <label className="text-sm font-medium">메모</label>

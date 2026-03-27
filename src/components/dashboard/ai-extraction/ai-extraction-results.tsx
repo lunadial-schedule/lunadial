@@ -149,8 +149,8 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
       return
     }
 
-    // Validate required fields
-    const invalid = selected.find(d => !d.title || !d.date || !d.streamerName || !d.noticeUrl || !d.categories || d.categories.length === 0)
+    // Validate required fields (공지 링크는 선택 사항으로 변경됨)
+    const invalid = selected.find(d => !d.title || !d.date || !d.streamerName || !d.categories || d.categories.length === 0)
     if (invalid) {
       alert("선택된 일정 중 필수입력값(제목, 날짜, 스트리머, 카테고리)이 누락된 항목이 있습니다.")
       return
