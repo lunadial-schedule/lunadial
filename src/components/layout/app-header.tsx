@@ -133,7 +133,7 @@ export function AppHeader() {
                 </DropdownMenuLabel>
                 <DropdownMenuItem asChild>
                   <Link href="/settings/account" className="w-full cursor-pointer">
-                    계정 / 설정
+                    계정 설정
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
