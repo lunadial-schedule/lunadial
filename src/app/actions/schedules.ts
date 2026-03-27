@@ -268,6 +268,7 @@ export type HomeSchedule = Pick<
   "id" | "title" | "start_time" | "streamer" | "streamer_id" | "status" | "categories" | "is_all_day"
 > & {
   streamers?: {
+    image_url: string | null;
     verified_mark: boolean | null;
   } | null;
 };
@@ -283,7 +284,7 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
   
   const { data, error } = await supabase
     .from("schedules")
-    .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(verified_mark)")
+    .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark)")
     .eq("is_deleted", false)
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())

@@ -35,6 +35,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog"
 import { useAuth } from "@/components/providers/auth-provider"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 function CalendarContent() {
   const router = useRouter()
@@ -398,8 +399,16 @@ function CalendarContent() {
                          <div className="flex items-start gap-3 pl-2 w-full min-w-0">
                            {/* 시간 영역 고정 */}
                            <div className="flex items-start text-[13px] md:text-sm font-semibold shrink-0 pt-[1px] text-foreground/80 w-[48px] md:w-[56px] whitespace-nowrap">
-                              {event.is_all_day ? "종일" : format(parseISO(event.start_time), "HH:mm")}
-                           </div>
+                               {event.is_all_day ? "종일" : format(parseISO(event.start_time), "HH:mm")}
+                            </div>
+
+                            {/* 프로필 이미지 */}
+                            <div className="shrink-0 pt-0.5">
+                              <Avatar className="h-7 w-7 border">
+                                <AvatarImage src={event.streamers?.image_url || undefined} alt={event.streamer} />
+                                <AvatarFallback className="text-[10px]">{event.streamer[0]}</AvatarFallback>
+                              </Avatar>
+                            </div>
 
                            {/* 세부 정보 영역 */}
                            <div className="flex-1 min-w-0 flex flex-col">
