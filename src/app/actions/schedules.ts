@@ -249,7 +249,7 @@ export async function getScheduleById(id: string) {
   
   const { data, error } = await supabase
     .from("schedules")
-    .select("*, streamers(image_url)")
+    .select("*, streamers(image_url, verified_mark)")
     .eq("id", id)
     .eq("is_deleted", false)
     .single();
@@ -266,7 +266,11 @@ export async function getScheduleById(id: string) {
 export type HomeSchedule = Pick<
   Schedule,
   "id" | "title" | "start_time" | "streamer" | "streamer_id" | "status" | "categories" | "is_all_day"
->;
+> & {
+  streamers?: {
+    verified_mark: boolean | null;
+  } | null;
+};
 
 /**
  * 홈 화면 전용 경량화 일정 조회.
@@ -279,7 +283,7 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
   
   const { data, error } = await supabase
     .from("schedules")
-    .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day")
+    .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(verified_mark)")
     .eq("is_deleted", false)
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())
@@ -290,7 +294,7 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
     return { data: null, error: error.message };
   }
   
-  return { data: data as HomeSchedule[], error: null };
+  return { data: data as any as HomeSchedule[], error: null };
 }
 
 /**

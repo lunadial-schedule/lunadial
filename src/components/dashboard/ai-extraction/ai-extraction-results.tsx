@@ -10,6 +10,8 @@ import { CATEGORY_LIST } from "@/config/categories"
 import { getSchedules, createSchedule } from "@/app/actions/schedules"
 import { findOrCreateStreamer } from "@/app/actions/streamers"
 import { Loader2, ArrowLeft, Plus, AlertCircle, CheckCircle2, Copy } from "lucide-react"
+import { StreamerSelector } from "../streamer-selector"
+import { StreamerShortInfo } from "@/types/streamer"
 
 // Types to match DB format roughly
 interface MinSchedule {
@@ -25,7 +27,7 @@ interface MinSchedule {
 
 interface AiExtractionResultsProps {
   results: ExtractedScheduleDraft[]
-  payload: { streamers: string[], link: string }
+  payload: { streamers: StreamerShortInfo[], link: string }
   onBack: () => void
   onComplete: () => void
 }
@@ -125,6 +127,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
   }
 
   const handleAddManual = () => {
+    const defaultStreamer = payload.streamers[0]
     const newDraft: ExtractedScheduleDraft = {
       id: `manual-${Date.now()}`,
       isSelected: true,
@@ -133,7 +136,8 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
       endTime: null,
       isAllDay: true,
       title: "",
-      streamerName: payload.streamers[0] || "",
+      streamerName: defaultStreamer?.name || "",
+      streamerId: defaultStreamer?.id || null,
       categories: [CATEGORY_LIST[0]?.id || "default"],
       memo: "",
       noticeUrl: payload.link,
@@ -150,9 +154,13 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
     }
 
     // Validate required fields (공지 링크는 선택 사항으로 변경됨)
-    const invalid = selected.find(d => !d.title || !d.date || !d.streamerName || !d.categories || d.categories.length === 0)
+    const invalid = selected.find(d => !d.title || !d.date || !d.streamerId || !d.categories || d.categories.length === 0)
     if (invalid) {
-      alert("선택된 일정 중 필수입력값(제목, 날짜, 스트리머, 카테고리)이 누락된 항목이 있습니다.")
+      if (selected.find(d => !d.streamerId)) {
+        alert("검색 목록에서 등록된 스트리머를 눌러 선택해주세요.")
+      } else {
+        alert("선택된 일정 중 필수입력값(제목, 날짜, 카테고리)이 누락된 항목이 있습니다.")
+      }
       return
     }
 
@@ -170,14 +178,6 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
     };
 
     for (const draft of selected) {
-      // 스트리머 자동 생성 (DB에 없는 경우 새로 등록)
-      const streamerRes = await findOrCreateStreamer({ name: draft.streamerName! })
-      if (streamerRes.error) {
-        failCount++
-        console.error("스트리머 등록 오류:", streamerRes.error)
-        continue
-      }
-
       // 강제 연도 보정 (최종 저장 직전)
       const finalDate = normalizeDateYear(draft.date) || draft.date;
 
@@ -188,7 +188,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
       const { error } = await createSchedule({
         title: draft.title,
         streamer: draft.streamerName!,
-        streamer_id: streamerRes.data?.id,
+        streamer_id: draft.streamerId!,
         categories: draft.categories || [],
         link: draft.noticeUrl,
         start_time: new Date(startTimeStr).toISOString(),
@@ -231,7 +231,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
         </div>
         <div className="text-xs text-muted-foreground flex flex-col gap-1">
           <span className="truncate">공지 링크: <a href={payload.link} target="_blank" rel="noreferrer" className="text-primary hover:underline">{payload.link}</a></span>
-          <span className="truncate">스트리머: {payload.streamers.join(", ")}</span>
+          <span className="truncate">스트리머 후보: {payload.streamers.map(s => s.name).join(", ")}</span>
         </div>
       </div>
 
@@ -284,7 +284,12 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">스트리머 *</label>
-                    <Input className="h-8 text-sm" placeholder="스트리머" value={draft.streamerName || ""} onChange={(e) => handleUpdateDraft(draft.id, { streamerName: e.target.value })} />
+                    <StreamerSelector
+                      value={draft.streamerId}
+                      onSelect={(s) => handleUpdateDraft(draft.id, { streamerName: s?.name || "", streamerId: s?.id || null })}
+                      initialLabel={draft.streamerName || ""}
+                      placeholder="스트리머 검색"
+                    />
                   </div>
 
                   <div className="space-y-1.5">

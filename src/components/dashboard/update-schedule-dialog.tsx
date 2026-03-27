@@ -14,7 +14,8 @@ import { findOrCreateStreamer } from "@/app/actions/streamers";
 import { format, parseISO } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { StreamerAutocompleteInput } from "./streamer-autocomplete-input";
+import { StreamerSelector } from "./streamer-selector";
+import { StreamerShortInfo } from "@/types/streamer";
 
 interface UpdateScheduleDialogProps {
   schedule: Schedule;
@@ -30,8 +31,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
   const [selectedCats, setSelectedCats] = React.useState<string[]>([]);
   const [isAllDay, setIsAllDay] = React.useState<boolean>(false);
   const [startTime, setStartTime] = React.useState("");
-  const [streamerName, setStreamerName] = React.useState("");
-  const [streamerId, setStreamerId] = React.useState<string | null>(null);
+  const [streamer, setStreamer] = React.useState<StreamerShortInfo | null>(null);
 
   React.useEffect(() => {
     if (open) {
@@ -42,8 +42,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
       } else {
         setStartTime(schedule.start_time ? format(parseISO(schedule.start_time), "yyyy-MM-dd'T'HH:mm") : "");
       }
-      setStreamerName(schedule.streamer || "");
-      setStreamerId(schedule.streamer_id || null);
+      setStreamer(schedule.streamer_id ? { id: schedule.streamer_id, name: schedule.streamer || "" } : null);
       setErrorMsg(null);
     }
   }, [open, schedule]);
@@ -64,7 +63,6 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
     
     const formData = new FormData(e.currentTarget);
     const title = formData.get("title") as string;
-    const streamer = formData.get("streamer") as string;
     const link = formData.get("link") as string;
     
     // 공지 링크 미입력 시 확인 알림
@@ -84,8 +82,8 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
       return;
     }
 
-    if (!streamerId) {
-      setErrorMsg("검색 목록에서 등록된 스트리머를 눌러 선택해주세요.");
+    if (!streamer?.id) {
+      setErrorMsg("등록된 스트리머를 선택해야 저장할 수 있습니다.");
       setIsLoading(false);
       return;
     }
@@ -96,8 +94,8 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
       schedule.id, 
       {
         title,
-        streamer: streamerName,
-        streamer_id: streamerId,
+        streamer: streamer.name,
+        streamer_id: streamer.id,
         categories: selectedCats,
         link,
         status,
@@ -143,18 +141,11 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
           </div>
           <div className="space-y-2">
              <label className="text-sm font-medium">스트리머 *</label>
-             <StreamerAutocompleteInput
-               name="streamer_input_text"
-               value={streamerName}
-               onTextChange={(val) => {
-                 setStreamerName(val);
-                 setStreamerId(null);
-               }}
-               onSelectStreamer={(id, name) => {
-                 setStreamerName(name);
-                 setStreamerId(id);
-               }}
-               required={true}
+             <StreamerSelector
+               value={streamer?.id || null}
+               onSelect={setStreamer}
+               initialLabel={schedule.streamer || ""}
+               placeholder="스트리머 검색"
              />
           </div>
           <div className="space-y-4">
@@ -213,8 +204,8 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
           </div>
           <DialogFooter className="pt-4">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isLoading}>취소</Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "저장 중..." : "변경사항 저장"}
+            <Button type="submit" disabled={isLoading || !streamer?.id}>
+              {isLoading ? "저장 중..." : !streamer?.id ? "스트리머를 선택해주세요" : "변경사항 저장"}
             </Button>
           </DialogFooter>
         </form>

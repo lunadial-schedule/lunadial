@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer";
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog";
 import { CATEGORY_LIST } from "@/config/categories";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { Schedule } from "@/app/actions/schedules";
@@ -249,10 +250,11 @@ export function TodayScheduleCard({
                                    {event.is_all_day ? "하루 종일" : format(eventTime, "HH:mm")}
                                 </div>
                                 <div className={cn(
-                                  "flex-1 text-sm font-semibold truncate group-hover:text-primary transition-colors leading-snug",
+                                  "flex-1 text-sm font-semibold truncate group-hover:text-primary transition-colors leading-snug flex items-center gap-1",
                                   isUpNext && "text-foreground"
                                 )}>
                                   {event.streamer}
+                                  {event.streamers?.verified_mark && <VerifiedBadge size={14} />}
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 shrink-0">
                                   {isUpNext && (

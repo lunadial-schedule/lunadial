@@ -291,6 +291,7 @@ F. 이미지에 요일만 있고 일자 숫자도 없고 주간 범위도 없으
         categories: finalCategories,
         memo: "", // 항상 비워둠 (강제 처리)
         noticeUrl: link, // 공지 링크 공통값 사용
+        streamerId: null, // 초기값 null, 이후 폼에서 매칭 시도
         status: status,
       }
     })

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { searchStreamers } from "@/app/actions/streamers"
 import { getMyFavorites } from "@/app/actions/favorites"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { FavoriteButton } from "./favorite-button"
 import { Button } from "@/components/ui/button"
 
@@ -143,7 +144,7 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold text-sm">{streamer.name}</span>
                       {streamer.verified_mark && (
-                        <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded-sm dark:bg-green-900/30 dark:text-green-400 font-medium shrink-0">파트너</span>
+                        <VerifiedBadge size={14} />
                       )}
                     </div>
                     {streamer.follower_count !== null && (

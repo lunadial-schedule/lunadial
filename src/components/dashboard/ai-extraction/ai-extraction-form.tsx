@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { StreamerMultiInput } from "./streamer-multi-input"
+import { StreamerMultiInput, StreamerShortInfo } from "./streamer-multi-input"
 import { extractScheduleFromImage } from "@/app/actions/ai-extract"
 import { UploadCloud, Image as ImageIcon, Loader2 } from "lucide-react"
 import { STREAMER_PLACEHOLDERS } from "@/config/placeholders"
@@ -17,6 +17,7 @@ export interface ExtractedScheduleDraft {
   isAllDay: boolean
   title: string
   streamerName: string | null
+  streamerId: string | null
   categories: string[]
   memo: string | null
   noticeUrl: string
@@ -31,12 +32,12 @@ export interface ExtractedScheduleDraft {
 }
 
 interface AiExtractionFormProps {
-  onExtractionComplete: (results: ExtractedScheduleDraft[], payload: { streamers: string[], link: string }) => void
+  onExtractionComplete: (results: ExtractedScheduleDraft[], payload: { streamers: StreamerShortInfo[], link: string }) => void
   onCancel: () => void
 }
 
 export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractionFormProps) {
-  const [streamers, setStreamers] = React.useState<string[]>([])
+  const [streamers, setStreamers] = React.useState<StreamerShortInfo[]>([])
   const [streamerInput, setStreamerInput] = React.useState("")
   const [link, setLink] = React.useState("")
   const [imageFile, setImageFile] = React.useState<File | null>(null)
@@ -90,6 +91,12 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
   const handleExtract = async () => {
     if (!isFormValid) return
     
+    // 스트리머 필수 선택 유효성 검사 (직접 입력과 동일한 메시지)
+    if (streamers.length === 0) {
+      setErrorMsg("검색 목록에서 등록된 스트리머를 눌러 선택해주세요.")
+      return
+    }
+
     // 공지 링크 미입력 시 확인 알림
     if (!link.trim()) {
       if (!window.confirm("공지 링크를 입력하지 않았습니다. 계속하시겠습니까?")) {
@@ -101,17 +108,11 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
     setErrorMsg(null)
 
     try {
-      let finalStreamers = [...streamers]
-      if (streamers.length === 0 && streamerInput.trim() !== "") {
-        finalStreamers = [streamerInput.trim()]
-        // Optimistically add it to the visible tags as well
-        setStreamers(finalStreamers)
-        setStreamerInput("")
-      }
+      const finalStreamerNames = streamers.map(s => s.name)
 
       const formData = new FormData()
       formData.append("image", imageFile)
-      formData.append("streamers", JSON.stringify(finalStreamers))
+      formData.append("streamers", JSON.stringify(finalStreamerNames))
       formData.append("link", link)
 
       const result = await extractScheduleFromImage(formData)
@@ -120,7 +121,17 @@ export function AiExtractionForm({ onExtractionComplete, onCancel }: AiExtractio
         setErrorMsg(result.error)
       } else if (result.data) {
         setStatus("idle")
-        onExtractionComplete(result.data, { streamers: finalStreamers, link })
+        
+        // AI가 추출한 이름과 현재 선택된 스트리머 리스트를 매칭하여 ID를 채워줌
+        const enrichedData = result.data.map(draft => {
+          const matched = streamers.find(s => s.name === draft.streamerName)
+          return {
+            ...draft,
+            streamerId: matched ? matched.id : null
+          }
+        })
+
+        onExtractionComplete(enrichedData, { streamers, link })
       }
     } catch (err: any) {
       setStatus("error")

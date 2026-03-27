@@ -34,6 +34,7 @@ import { ko } from "date-fns/locale"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog"
 import { useAuth } from "@/components/providers/auth-provider"
+import { VerifiedBadge } from "@/components/ui/verified-badge"
 
 function CalendarContent() {
   const router = useRouter()
@@ -403,8 +404,9 @@ function CalendarContent() {
                            {/* 세부 정보 영역 */}
                            <div className="flex-1 min-w-0 flex flex-col">
                              <div className="flex items-center justify-between gap-2">
-                               <div className="text-[14px] md:text-[15px] font-bold truncate group-hover:text-primary transition-colors leading-snug">
+                               <div className="text-[14px] md:text-[15px] font-bold truncate group-hover:text-primary transition-colors leading-snug flex items-center gap-1">
                                  {event.streamer}
+                                 {event.streamers?.verified_mark && <VerifiedBadge size={14} />}
                                </div>
                                <div className="flex shrink-0">
                                  {(event.status === "changed" || event.status === "canceled") && (

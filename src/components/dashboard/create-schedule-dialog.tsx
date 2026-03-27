@@ -18,7 +18,8 @@ import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { TITLE_PLACEHOLDERS, STREAMER_PLACEHOLDERS } from "@/config/placeholders";
 import { findOrCreateStreamer } from "@/app/actions/streamers";
-import { StreamerAutocompleteInput } from "./streamer-autocomplete-input";
+import { StreamerSelector } from "./streamer-selector";
+import { StreamerShortInfo } from "@/types/streamer";
 import { useIsOverlayOpen } from "@/hooks/use-is-overlay-open";
 import { AiExtractionTab } from "./ai-extraction/ai-extraction-tab";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -40,8 +41,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
   const [startTime, setStartTime] = React.useState("");
   
   // 스트리머 입력 관리를 위한 상태
-  const [streamerName, setStreamerName] = React.useState("");
-  const [streamerId, setStreamerId] = React.useState<string | null>(null);
+  const [streamer, setStreamer] = React.useState<StreamerShortInfo | null>(null);
 
   const [titlePlaceholder, setTitlePlaceholder] = React.useState("예: 마크 대규모 합방");
   const [streamerPlaceholder, setStreamerPlaceholder] = React.useState("예: 풍월량");
@@ -54,8 +54,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
       setStartTime(format(new Date(), "yyyy-MM-dd"));
       setSelectedCats([]);
       setErrorMsg(null);
-      setStreamerName("");
-      setStreamerId(null);
+      setStreamer(null);
 
       let newTitle = TITLE_PLACEHOLDERS[Math.floor(Math.random() * TITLE_PLACEHOLDERS.length)];
       while (TITLE_PLACEHOLDERS.length > 1 && newTitle === prevTitleRef.current) {
@@ -103,8 +102,8 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
       }
     }
     
-    if (!streamerId) {
-      setErrorMsg("검색 목록에서 등록된 스트리머를 눌러 선택해주세요.");
+    if (!streamer?.id) {
+      setErrorMsg("등록된 스트리머를 선택해야 저장할 수 있습니다.");
       setIsLoading(false);
       return;
     }
@@ -115,8 +114,8 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
     // 2. 일정 생성 (streamer_id 연결)
     const { data, error } = await createSchedule({
       title,
-      streamer: streamerName,
-      streamer_id: streamerId,
+      streamer: streamer.name,
+      streamer_id: streamer.id,
       categories: selectedCats,
       link,
       start_time: new Date(startTimeStr).toISOString(),
@@ -208,19 +207,10 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
 
               <div className="space-y-2">
                  <label className="text-sm font-medium">스트리머 *</label>
-                 <StreamerAutocompleteInput
-                   name="streamer_input_text"
-                   value={streamerName}
-                   onTextChange={(val) => {
-                     setStreamerName(val);
-                     setStreamerId(null); // 사용자가 직접 타이핑하면 선택 해제
-                   }}
-                   onSelectStreamer={(id, name) => {
-                     setStreamerName(name);
-                     setStreamerId(id);
-                   }}
+                 <StreamerSelector
+                   value={streamer?.id || null}
+                   onSelect={setStreamer}
                    placeholder={streamerPlaceholder}
-                   required={true}
                  />
               </div>
 
@@ -279,8 +269,8 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
               <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={isLoading} className="flex-1 sm:flex-none">
                 취소
               </Button>
-              <Button type="submit" disabled={isLoading} className="flex-1 sm:flex-none">
-                {isLoading ? "등록 중..." : "등록하기"}
+              <Button type="submit" disabled={isLoading || !streamer?.id} className="flex-1 sm:flex-none">
+                {isLoading ? "등록 중..." : !streamer?.id ? "스트리머를 선택해주세요" : "등록하기"}
               </Button>
             </DialogFooter>
           </form>

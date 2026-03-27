@@ -18,6 +18,7 @@ import Link from "next/link";
 import type { HomeSchedule } from "@/app/actions/schedules";
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer";
 import { CATEGORY_LIST } from "@/config/categories";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import type { Schedule } from "@/app/actions/schedules";
 
@@ -110,9 +111,12 @@ export function UpNextCard({ initialEvents = [] }: UpNextCardProps) {
                     <div className="flex-1 min-w-0 flex flex-col justify-center gap-[2px] pl-3">
                       <div className="flex items-center gap-2">
                         <span className={cn(
-                          "font-bold text-sm truncate group-hover:text-primary transition-colors",
+                          "font-bold text-sm truncate group-hover:text-primary transition-colors flex items-center gap-1",
                           isWithinOneHour && "text-foreground"
-                        )}>{event.streamer}</span>
+                        )}>
+                          {event.streamer}
+                          {event.streamers?.verified_mark && <VerifiedBadge size={14} />}
+                        </span>
                         {event.status === "canceled" && <span className="bg-muted text-muted-foreground shrink-0 text-[10px] px-1.5 py-0.5 rounded-sm font-medium">취소됨</span>}
                         {event.status === "changed" && <span className="bg-primary/10 text-primary shrink-0 text-[10px] px-1.5 py-0.5 rounded-sm font-medium">변경됨</span>}
                         {isWithinOneHour && <span className="text-[10px] px-1.5 py-0.5 rounded-sm font-semibold tracking-tight bg-amber-100/50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">곧 시작</span>}

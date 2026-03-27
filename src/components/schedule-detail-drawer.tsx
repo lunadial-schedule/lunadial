@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UpdateScheduleDialog } from "@/components/dashboard/update-schedule-dialog"
+import { VerifiedBadge } from "@/components/ui/verified-badge"
 
 import { Schedule, deleteSchedule, getScheduleById } from "@/app/actions/schedules"
 import { CATEGORY_LIST } from "@/config/categories"
@@ -191,7 +192,10 @@ export function ScheduleDetailDrawer({
                 <AvatarImage src={(internalSchedule as any).streamers?.image_url || ""} />
                 <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">{internalSchedule.streamer.slice(0, 1)}</AvatarFallback>
               </Avatar>
-              <span className="font-bold text-[15px] text-foreground/90">{internalSchedule.streamer}</span>
+              <div className="flex items-center gap-1">
+                <span className="font-bold text-[15px] text-foreground/90">{internalSchedule.streamer}</span>
+                {(internalSchedule as any).streamers?.verified_mark && <VerifiedBadge size={14} />}
+              </div>
             </div>
           </SheetHeader>
 
