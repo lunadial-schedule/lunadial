@@ -388,18 +388,28 @@ function CalendarContent() {
                      const firstCat = event.categories?.[0];
                      const styleCat = CATEGORY_LIST.find(c => c.id === firstCat) || CATEGORY_LIST[0];
                      
+                     const eventTime = parseISO(event.start_time);
+                     const diffMinutes = (eventTime.getTime() - new Date().getTime()) / 60000;
+                     const isUpNext = diffMinutes > 0 && diffMinutes <= 60 && !event.is_all_day;
+
                      return (
                        <div 
                          key={event.id}
-                         className="group flex flex-col gap-1 p-3 rounded-lg border border-border/60 bg-card hover:border-primary/50 hover:shadow-sm transition-all cursor-pointer relative shrink-0"
+                         className={cn(
+                           "group flex flex-col gap-1 p-3 rounded-lg border border-border/60 bg-card hover:border-primary/50 hover:shadow-sm transition-all cursor-pointer relative shrink-0",
+                           isUpNext && "bg-amber-500/5 dark:bg-amber-500/10"
+                         )}
                          onClick={() => handleEventClick(event)}
                        >
                          <div className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full ${styleCat.color}`} />
                          
                          <div className="flex items-start gap-3 pl-2 w-full min-w-0">
                            {/* 시간 영역 고정 */}
-                           <div className="flex items-start text-[13px] md:text-sm font-semibold shrink-0 pt-[1px] text-foreground/80 w-[48px] md:w-[56px] whitespace-nowrap">
-                               {event.is_all_day ? "종일" : format(parseISO(event.start_time), "HH:mm")}
+                           <div className={cn(
+                             "flex items-start text-[13px] md:text-sm font-semibold shrink-0 pt-[1px] w-[48px] md:w-[56px] whitespace-nowrap",
+                             isUpNext ? "text-primary font-bold" : "text-foreground/80"
+                           )}>
+                               {event.is_all_day ? "종일" : format(eventTime, "HH:mm")}
                             </div>
 
                             {/* 프로필 이미지 */}
@@ -413,11 +423,19 @@ function CalendarContent() {
                            {/* 세부 정보 영역 */}
                            <div className="flex-1 min-w-0 flex flex-col">
                              <div className="flex items-center justify-between gap-2">
-                               <div className="text-[14px] md:text-[15px] font-bold truncate group-hover:text-primary transition-colors leading-snug flex items-center gap-1">
+                               <div className={cn(
+                                 "text-[14px] md:text-[15px] font-bold truncate group-hover:text-primary transition-colors leading-snug flex items-center gap-1",
+                                 isUpNext && "text-foreground"
+                               )}>
                                  {event.streamer}
                                  {event.streamers?.verified_mark && <VerifiedBadge size={14} />}
                                </div>
-                               <div className="flex shrink-0">
+                               <div className="flex items-center gap-1 shrink-0">
+                                 {isUpNext && (
+                                   <span className="text-[10px] px-1.5 py-0.5 rounded-sm font-semibold tracking-tight bg-amber-100/50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                                     곧 시작
+                                   </span>
+                                 )}
                                  {(event.status === "changed" || event.status === "canceled") && (
                                    <span className={cn(
                                      "text-[10px] px-1.5 py-0.5 rounded-sm font-medium shrink-0",
