@@ -145,9 +145,6 @@ export function TrendingCategoriesCard() {
                   <span className="text-[13px] font-semibold truncate leading-tight">
                     {category.categoryName}
                   </span>
-                  <span className="text-[11px] text-muted-foreground mt-0.5 truncate flex items-center gap-1">
-                    라이브 <span className="font-semibold text-foreground/80">{category.liveCount.toLocaleString()}</span>
-                  </span>
                 </div>
               </div>
             ))}
