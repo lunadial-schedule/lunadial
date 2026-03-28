@@ -17,6 +17,8 @@ export const CHZZK_CLIENT_ID = process.env.CHZZK_CLIENT_ID || ''
 export const CHZZK_CLIENT_SECRET = process.env.CHZZK_CLIENT_SECRET || ''
 /** 치지직 Open API 베이스 URL (기본값: https://openapi.chzzk.naver.com) */
 export const CHZZK_OPENAPI_BASE_URL = process.env.CHZZK_OPENAPI_BASE_URL || 'https://openapi.chzzk.naver.com'
+/** 치지직 계정 연동 기능 활성화 여부 (공개) */
+export const ENABLE_CHZZK_CONNECT = process.env.NEXT_PUBLIC_ENABLE_CHZZK_CONNECT === 'true'
 
 /** 포트원 결제 API 시크릿 (서버 전용) */
 export const PORTONE_API_SECRET = process.env.PORTONE_API_SECRET || ''

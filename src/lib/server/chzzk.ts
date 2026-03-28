@@ -99,6 +99,53 @@ export async function getChzzkProfile(accessToken: string): Promise<ChzzkProfile
 }
 
 /**
+ * 리프레시 토큰(refresh token)을 사용하여 액세스 토큰을 갱신한다.
+ * @param refreshToken - 치지직에서 발급한 리프레시 토큰
+ * @returns 갱신된 액세스/리프레시 토큰 정보
+ */
+export async function refreshChzzkToken(refreshToken: string): Promise<ChzzkTokenResponse> {
+  const clientId = process.env.CHZZK_CLIENT_ID
+  const clientSecret = process.env.CHZZK_CLIENT_SECRET
+
+  if (!clientId || !clientSecret) {
+    throw new Error("Missing Chzzk environment variables")
+  }
+
+  const tokenUrl = "https://openapi.chzzk.naver.com/auth/v1/token"
+  
+  const body = JSON.stringify({
+    grantType: "refresh_token",
+    clientId,
+    clientSecret,
+    refreshToken
+  })
+
+  const response = await fetch(tokenUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body
+  })
+
+  const responseText = await response.text()
+
+  if (!response.ok) {
+    console.error("치지직 토큰 갱신 실패. Status:", response.status)
+    console.error("치지직 토큰 갱신 응답:", responseText)
+    throw new Error(`토큰 갱신 실패 (${response.status}): ${responseText}`)
+  }
+
+  const data = JSON.parse(responseText)
+  return {
+    accessToken: data.content.accessToken,
+    refreshToken: data.content.refreshToken || refreshToken, // 새 리프레시 토큰이 없으면 기존 것 유지
+    expiresIn: data.content.expiresIn,
+    tokenType: data.content.tokenType
+  }
+}
+
+/**
  * 치지직 액세스 토큰을 철회한다 (계정 연동 해제 시 호출).
  * 실패해도 에러를 throw하지 않고 로그만 남긴다.
  * @param accessToken - 철회할 액세스 토큰

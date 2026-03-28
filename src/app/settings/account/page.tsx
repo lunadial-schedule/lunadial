@@ -21,6 +21,7 @@ import Link from "next/link"
 import { getMyFavorites } from "@/app/actions/favorites"
 import { ChzzkConnectCard } from "@/components/mypage/chzzk-connect-card"
 import { useAuth } from "@/components/providers/auth-provider"
+import { ENABLE_CHZZK_CONNECT } from "@/config/env"
 
 export default function AccountSettingsPage() {
   const { user, profile, refreshProfile, isLoading: isAuthLoading } = useAuth()
@@ -350,7 +351,7 @@ export default function AccountSettingsPage() {
           </CardContent>
         </Card>
 
-        {user && (
+        {ENABLE_CHZZK_CONNECT && user && (
           <ChzzkConnectCard 
             initialAccount={chzzkAccount} 
             onAccountChange={() => {
