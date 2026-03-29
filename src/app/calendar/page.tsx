@@ -87,7 +87,14 @@ function CalendarContent() {
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null)
   const [events, setEvents] = React.useState<HomeSchedule[]>([])
   const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
+
+  const [isInitialLoading, setIsInitialLoading] = React.useState(true)
+  const [isBackgroundUpdating, setIsBackgroundUpdating] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(true) // Legacy support / Internal consistency
+  
+  const lastRequestIdRef = React.useRef(0);
+  const loadSchedulesRef = React.useRef<any>(null);
+  const loadFavoritesRef = React.useRef<any>(null);
 
   const handleEventClick = (event: HomeSchedule) => {
     setSelectedEvent(event as unknown as Schedule)
@@ -113,18 +120,34 @@ function CalendarContent() {
     return { start: startOfDay(date), end: endOfDay(date) }
   }, [])
 
-  const loadSchedules = React.useCallback(async () => {
-    setIsLoading(true)
+  const loadSchedules = React.useCallback(async (reason: string = 'initial') => {
+    const requestId = ++lastRequestIdRef.current;
+    const isBackground = events.length > 0;
+    
+    if (isBackground) setIsBackgroundUpdating(true);
+    else setIsLoading(true);
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Calendar] Load Start | Reason: ${reason} | ID: ${requestId} | Background: ${isBackground}`);
+    }
+
     try {
       const { start, end } = getDateRange(currentDate, view)
       const { data } = await getHomeSchedules(start, end)
+      
+      if (requestId !== lastRequestIdRef.current) return;
+      
       if (data) setEvents(data)
     } catch (e) {
-      console.error("[Calendar] Load Error:", e)
+      console.error(`[Calendar] Load Error (ID: ${requestId}):`, e)
     } finally {
-      setIsLoading(false)
+      if (requestId === lastRequestIdRef.current) {
+        setIsLoading(false)
+        setIsInitialLoading(false)
+        setIsBackgroundUpdating(false)
+      }
     }
-  }, [currentDate, view, getDateRange])
+  }, [currentDate, view, getDateRange, events.length])
 
   const loadFavorites = React.useCallback(async () => {
     try {
@@ -135,16 +158,26 @@ function CalendarContent() {
     }
   }, [])
 
+  // Ref sync
+  React.useEffect(() => {
+    loadSchedulesRef.current = loadSchedules;
+    loadFavoritesRef.current = loadFavorites;
+  }, [loadSchedules, loadFavorites]);
+
   // 데이터 초기 로드 및 파라미터 변경 대응
   React.useEffect(() => {
-    loadSchedules()
+    loadSchedules('param-change')
     loadFavorites()
   }, [loadSchedules, loadFavorites])
 
-  // 전역 이벤트 리스너 (수정/생성 시 갱신) - loadSchedules 최신 참조 유지
+  // 전역 이벤트 리스너 (수정/생성 시 갱신) - 안정적인 단일 등록
   React.useEffect(() => {
-    const handleUpdate = () => loadSchedules();
-    const handleFavUpdate = () => loadFavorites();
+    const handleUpdate = () => {
+      if (loadSchedulesRef.current) loadSchedulesRef.current('event-triggered');
+    };
+    const handleFavUpdate = () => {
+      if (loadFavoritesRef.current) loadFavoritesRef.current();
+    };
 
     window.addEventListener("schedulesUpdated", handleUpdate)
     window.addEventListener("favoritesUpdated", handleFavUpdate)
@@ -152,12 +185,12 @@ function CalendarContent() {
       window.removeEventListener("schedulesUpdated", handleUpdate)
       window.removeEventListener("favoritesUpdated", handleFavUpdate)
     }
-  }, [loadSchedules, loadFavorites])
+  }, []) // 한번만 등록 (내부에서 ref 사용)
 
   const getDayEvents = (targetDate: Date) => {
-    return events.filter(e => {
+    return events.filter((e: HomeSchedule) => {
       if (!isSameDay(parseISO(e.start_time), targetDate)) return false;
-      if (!e.categories || !e.categories.some(cat => selectedCats.includes(cat))) return false;
+      if (!e.categories || !e.categories.some((cat: string) => selectedCats.includes(cat))) return false;
       
       // 검색어 필터링
       if (q && !e.title.toLowerCase().includes(q.toLowerCase()) && !e.streamer.toLowerCase().includes(q.toLowerCase())) return false;
@@ -251,6 +284,12 @@ function CalendarContent() {
             <h2 className="text-[26px] md:text-[30px] font-bold tracking-tight shrink-0 whitespace-nowrap">
               {view === 'month' ? format(currentDate, "yyyy년 M월") : format(currentDate, "M월 d일")}
             </h2>
+            {isBackgroundUpdating && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/5 rounded-full border border-primary/10 animate-in fade-in duration-300">
+                <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                <span className="text-[10px] md:text-[11px] font-bold text-primary/80 tracking-tight">수정사항 반영 중...</span>
+              </div>
+            )}
             <div className="flex items-center bg-muted/50 rounded-full p-0.5 ml-auto sm:ml-0">
               <Button variant="ghost" size="icon" className="h-6.5 w-6.5 md:h-7 md:w-7 rounded-full" onClick={goPrev}><ChevronLeft className="h-4 w-4 md:h-5 md:w-5" /></Button>
               <Button variant="ghost" size="sm" className="h-6.5 md:h-7 ... px-2.5 md:px-3 text-[11px] md:text-xs" onClick={goToday}>오늘</Button>
@@ -271,8 +310,8 @@ function CalendarContent() {
 
         {/* Calendar Grid */}
         <CardContent className="flex-1 p-0 flex flex-col relative h-[500px] lg:h-auto min-h-[500px]">
-          {isLoading && (
-            <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-3">
+          {(isLoading && events.length === 0) && (
+            <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-3 animate-in fade-in duration-300">
               <div className="flex items-center justify-center bg-card p-4 rounded-full shadow-sm border border-border/50">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>

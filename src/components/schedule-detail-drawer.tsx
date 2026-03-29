@@ -143,7 +143,6 @@ export function ScheduleDetailDrawer({
     } else {
       handleOpenChange(false);
       window.dispatchEvent(new Event("schedulesUpdated"));
-      router.refresh(); 
     }
   };
 
@@ -310,7 +309,6 @@ export function ScheduleDetailDrawer({
           setIsUpdateOpen(false);
           handleOpenChange(false);
           window.dispatchEvent(new Event("schedulesUpdated"));
-          router.refresh(); 
         }} 
       />
     </Sheet>
