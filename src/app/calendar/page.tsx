@@ -327,12 +327,14 @@ function CalendarContent() {
             <h2 className="text-[26px] md:text-[30px] font-bold tracking-tight shrink-0 whitespace-nowrap">
               {view === 'month' ? format(currentDate, "yyyy년 M월") : format(currentDate, "M월 d일")}
             </h2>
+{/* 수정 완료 후 무한 로딩 현상이 있어 주석 처리 
             {isRefreshing && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/5 rounded-full border border-primary/10 animate-in fade-in duration-300">
                 <Loader2 className="w-3 h-3 animate-spin text-primary" />
                 <span className="text-[10px] md:text-[11px] font-bold text-primary/80 tracking-tight">수정사항 반영 중...</span>
               </div>
             )}
+*/}
             <div className="flex items-center bg-muted/50 rounded-full p-0.5 ml-auto sm:ml-0">
               <Button variant="ghost" size="icon" className="h-6.5 w-6.5 md:h-7 md:w-7 rounded-full" onClick={goPrev}><ChevronLeft className="h-4 w-4 md:h-5 md:w-5" /></Button>
               <Button variant="ghost" size="sm" className="h-6.5 md:h-7 ... px-2.5 md:px-3 text-[11px] md:text-xs" onClick={goToday}>오늘</Button>
