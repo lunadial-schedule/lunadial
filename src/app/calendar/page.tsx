@@ -69,6 +69,18 @@ function CalendarContent() {
     }
     return new Date();
   }) 
+
+  // URL date 파라미터 변경 시 상태 동기화
+  React.useEffect(() => {
+    if (dateParam) {
+      const parsed = parseISO(dateParam);
+      if (!isNaN(parsed.getTime())) {
+        // 현재 상태와 다를 때만 업데이트하여 불필요한 리렌더 방지
+        setCurrentDate(prev => isSameDay(prev, parsed) ? prev : parsed);
+      }
+    }
+  }, [dateParam]);
+
   const [selectedCats, setSelectedCats] = React.useState<string[]>(CATEGORY_LIST.map(c => c.id))
 
   const [isDetailOpen, setIsDetailOpen] = React.useState(false)
@@ -108,7 +120,7 @@ function CalendarContent() {
       const { data } = await getHomeSchedules(start, end)
       if (data) setEvents(data)
     } catch (e) {
-      console.error(e)
+      console.error("[Calendar] Load Error:", e)
     } finally {
       setIsLoading(false)
     }
@@ -123,16 +135,22 @@ function CalendarContent() {
     }
   }, [])
 
+  // 데이터 초기 로드 및 파라미터 변경 대응
   React.useEffect(() => {
-    // 일정과 즐겨찾기를 병렬로 로드 — favorites가 schedules 렌더를 차단하지 않음
     loadSchedules()
     loadFavorites()
-    
-    window.addEventListener("schedulesUpdated", loadSchedules)
-    window.addEventListener("favoritesUpdated", loadFavorites)
+  }, [loadSchedules, loadFavorites])
+
+  // 전역 이벤트 리스너 (수정/생성 시 갱신) - loadSchedules 최신 참조 유지
+  React.useEffect(() => {
+    const handleUpdate = () => loadSchedules();
+    const handleFavUpdate = () => loadFavorites();
+
+    window.addEventListener("schedulesUpdated", handleUpdate)
+    window.addEventListener("favoritesUpdated", handleFavUpdate)
     return () => {
-      window.removeEventListener("schedulesUpdated", loadSchedules)
-      window.removeEventListener("favoritesUpdated", loadFavorites)
+      window.removeEventListener("schedulesUpdated", handleUpdate)
+      window.removeEventListener("favoritesUpdated", handleFavUpdate)
     }
   }, [loadSchedules, loadFavorites])
 
@@ -360,7 +378,7 @@ function CalendarContent() {
                                   setCurrentDate(date);
                                   updateUrlParam('view', 'day');
                                 }}>
-                                  <span className="text-[9px] font-bold bg-muted/80 text-muted-foreground px-1.5 py-0.5 rounded-md mt-0.5">총 {dayEvents.length}개</span>
+                                  <span className="text-[9px] font-bold bg-muted/80 text-muted-foreground px-1.5 py-0.5 rounded-md mt-0.5">{dayEvents.length}개</span>
                                 </div>
                               )}
                             </>
