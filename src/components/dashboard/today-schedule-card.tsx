@@ -43,6 +43,7 @@ export function TodayScheduleCard({
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [events, setEvents] = React.useState<HomeSchedule[]>(initialEvents);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = React.useState(false); // Background revalidation
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null);
   const [isFavoritesOnly, setIsFavoritesOnly] = React.useState(false);
@@ -68,35 +69,87 @@ export function TodayScheduleCard({
     setIsDetailOpen(true);
   };
 
-  const loadData = React.useCallback(async () => {
+  const lastRequestIdRef = React.useRef(0);
+
+  const loadData = React.useCallback(async (isBackground = false) => {
     // 초기 로드 시에는 서버에서 받은 데이터 사용
-    if (initialDateRef.current) {
+    if (!isBackground && initialDateRef.current) {
       initialDateRef.current = false;
       return;
     }
     
-    setIsLoading(true);
+    const requestId = ++lastRequestIdRef.current;
+    if (isBackground) setIsRefreshing(true);
+    else setIsLoading(true);
+    
     const startDate = addDays(currentDate, -2);
     const endDate = addDays(currentDate, 2);
     
-    // 일정과 즐겨찾기를 병렬로 가져온다
-    const [schedulesRes, favNames] = await Promise.all([
-      getHomeSchedules(startDate, endDate),
-      getMyFavoriteStreamerNames()
-    ]);
-    
-    if (schedulesRes.data) {
-      setEvents(schedulesRes.data);
+    try {
+      // 일정과 즐겨찾기를 병렬로 가져온다
+      const [schedulesRes, favNames] = await Promise.all([
+        getHomeSchedules(startDate, endDate),
+        getMyFavoriteStreamerNames()
+      ]);
+      
+      if (requestId !== lastRequestIdRef.current) return;
+      
+      if (schedulesRes.data) {
+        setEvents(schedulesRes.data);
+      }
+      setFavoriteStreamerNames(favNames);
+    } catch (e) {
+      console.error("[TodayScheduleCard] Load Error:", e);
+    } finally {
+      if (requestId === lastRequestIdRef.current) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
-    setFavoriteStreamerNames(favNames);
-    
-    setIsLoading(false);
   }, [currentDate]);
 
   React.useEffect(() => {
-    loadData();
-    window.addEventListener("schedulesUpdated", loadData);
-    return () => window.removeEventListener("schedulesUpdated", loadData);
+    loadData(false);
+  }, [loadData]);
+
+  React.useEffect(() => {
+    const handleUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const detail = customEvent.detail;
+
+      if (detail && detail.action) {
+        setEvents(prev => {
+          let newEvents = [...prev];
+          if (detail.action === 'update' && detail.schedule) {
+            const idx = newEvents.findIndex(ev => ev.id === detail.schedule.id);
+            if (idx >= 0) {
+              const u = detail.schedule;
+              newEvents[idx] = {
+                ...newEvents[idx],
+                title: u.title,
+                streamer: u.streamer,
+                streamer_id: u.streamer_id,
+                categories: u.categories,
+                link: u.link,
+                status: u.status,
+                is_all_day: u.is_all_day,
+                start_time: u.start_time,
+                streamers: u.streamers || newEvents[idx].streamers
+              } as HomeSchedule;
+            }
+          } else if (detail.action === 'delete' && detail.scheduleId) {
+            newEvents = newEvents.filter(ev => ev.id !== detail.scheduleId);
+          }
+          return newEvents;
+        });
+        loadData(true);
+      } else {
+        loadData(true);
+      }
+    };
+
+    window.addEventListener("schedulesUpdated", handleUpdate);
+    return () => window.removeEventListener("schedulesUpdated", handleUpdate);
   }, [loadData]);
 
   const getEventsForDay = (day: Date) => {
@@ -130,7 +183,7 @@ export function TodayScheduleCard({
       <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden h-[700px] lg:h-[1420px]">
         {/* Header & Controls */}
         <CardHeader className="h-9 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
-          <CardTitle className="text-[18px] font-bold flex items-center gap-1.5 m-0 p-0">
+          <CardTitle className="text-[18px] font-bold flex items-center gap-1.5 m-0 p-0 relative">
             <CalendarIcon className="h-4 w-4 text-primary" />
             오늘의 일정
           </CardTitle>
