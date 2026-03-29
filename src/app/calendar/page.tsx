@@ -88,12 +88,11 @@ function CalendarContent() {
   const [events, setEvents] = React.useState<HomeSchedule[]>([])
   const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>([])
 
-  const [isInitialLoading, setIsInitialLoading] = React.useState(true)
-  const [isBackgroundUpdating, setIsBackgroundUpdating] = React.useState(false)
-  const [isLoading, setIsLoading] = React.useState(true) // Legacy support / Internal consistency
+  const hasLoadedOnceRef = React.useRef(false);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true); // Initial/forced load
   
   const lastRequestIdRef = React.useRef(0);
-  const loadSchedulesRef = React.useRef<any>(null);
   const loadFavoritesRef = React.useRef<any>(null);
 
   const handleEventClick = (event: HomeSchedule) => {
@@ -120,15 +119,14 @@ function CalendarContent() {
     return { start: startOfDay(date), end: endOfDay(date) }
   }, [])
 
-  const loadSchedules = React.useCallback(async (reason: string = 'initial') => {
+  const loadSchedules = React.useCallback(async (reason: string = 'initial', isBackground = false) => {
     const requestId = ++lastRequestIdRef.current;
-    const isBackground = events.length > 0;
     
-    if (isBackground) setIsBackgroundUpdating(true);
+    if (isBackground && hasLoadedOnceRef.current) setIsRefreshing(true);
     else setIsLoading(true);
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Calendar] Load Start | Reason: ${reason} | ID: ${requestId} | Background: ${isBackground}`);
+      console.log(`[Calendar Refactor] Load Start | Reason: ${reason} | ID: ${requestId} | Background: ${isBackground}`);
     }
 
     try {
@@ -137,17 +135,19 @@ function CalendarContent() {
       
       if (requestId !== lastRequestIdRef.current) return;
       
-      if (data) setEvents(data)
+      if (data) {
+        setEvents(data);
+        hasLoadedOnceRef.current = true;
+      }
     } catch (e) {
-      console.error(`[Calendar] Load Error (ID: ${requestId}):`, e)
+      console.error(`[Calendar Refactor] Load Error (ID: ${requestId}):`, e)
     } finally {
       if (requestId === lastRequestIdRef.current) {
-        setIsLoading(false)
-        setIsInitialLoading(false)
-        setIsBackgroundUpdating(false)
+        setIsLoading(false);
+        setIsRefreshing(false);
       }
     }
-  }, [currentDate, view, getDateRange, events.length])
+  }, [currentDate, view, getDateRange])
 
   const loadFavorites = React.useCallback(async () => {
     try {
@@ -160,21 +160,64 @@ function CalendarContent() {
 
   // Ref sync
   React.useEffect(() => {
-    loadSchedulesRef.current = loadSchedules;
     loadFavoritesRef.current = loadFavorites;
-  }, [loadSchedules, loadFavorites]);
+  }, [loadFavorites]);
 
-  // 데이터 초기 로드 및 파라미터 변경 대응
+  // 데이터 초기 로드 및 파라미터 변경 대응 (date, view 변경 시)
   React.useEffect(() => {
-    loadSchedules('param-change')
+    loadSchedules('param-change', false)
+  }, [loadSchedules])
+
+  // 즐겨찾기 연동 로드
+  React.useEffect(() => {
     loadFavorites()
-  }, [loadSchedules, loadFavorites])
+  }, [loadFavorites])
 
-  // 전역 이벤트 리스너 (수정/생성 시 갱신) - 안정적인 단일 등록
+  // 전역 이벤트 리스너 (수정/생성/삭제 시 낙관적 업데이트 후 갱신)
   React.useEffect(() => {
-    const handleUpdate = () => {
-      if (loadSchedulesRef.current) loadSchedulesRef.current('event-triggered');
+    const handleUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const detail = customEvent.detail;
+      
+      if (detail && detail.action) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[Calendar Refactor] Event Received: ${detail.action}`, detail);
+        }
+        
+        // Optimistic Patch
+        setEvents(prev => {
+          let newEvents = [...prev];
+          if (detail.action === 'update' && detail.schedule) {
+            const idx = newEvents.findIndex(ev => ev.id === detail.schedule.id);
+            if (idx >= 0) {
+              const u = detail.schedule;
+              newEvents[idx] = {
+                ...newEvents[idx],
+                title: u.title,
+                streamer: u.streamer,
+                streamer_id: u.streamer_id,
+                categories: u.categories,
+                link: u.link,
+                status: u.status,
+                is_all_day: u.is_all_day,
+                start_time: u.start_time,
+                streamers: u.streamers || newEvents[idx].streamers
+              } as HomeSchedule;
+            }
+          } else if (detail.action === 'delete' && detail.scheduleId) {
+            newEvents = newEvents.filter(ev => ev.id !== detail.scheduleId);
+          }
+          return newEvents;
+        });
+
+        // 즉시 백그라운드 재검증 1회
+        loadSchedules('revalidate', true);
+      } else {
+        // Fallback
+        loadSchedules('event-triggered', true);
+      }
     };
+
     const handleFavUpdate = () => {
       if (loadFavoritesRef.current) loadFavoritesRef.current();
     };
@@ -185,7 +228,7 @@ function CalendarContent() {
       window.removeEventListener("schedulesUpdated", handleUpdate)
       window.removeEventListener("favoritesUpdated", handleFavUpdate)
     }
-  }, []) // 한번만 등록 (내부에서 ref 사용)
+  }, [loadSchedules]) // loadSchedules 참조가 바뀌면 리스너도 최신화됨 (useCallback으로 안정화됨)
 
   const getDayEvents = (targetDate: Date) => {
     return events.filter((e: HomeSchedule) => {
@@ -284,7 +327,7 @@ function CalendarContent() {
             <h2 className="text-[26px] md:text-[30px] font-bold tracking-tight shrink-0 whitespace-nowrap">
               {view === 'month' ? format(currentDate, "yyyy년 M월") : format(currentDate, "M월 d일")}
             </h2>
-            {isBackgroundUpdating && (
+            {isRefreshing && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/5 rounded-full border border-primary/10 animate-in fade-in duration-300">
                 <Loader2 className="w-3 h-3 animate-spin text-primary" />
                 <span className="text-[10px] md:text-[11px] font-bold text-primary/80 tracking-tight">수정사항 반영 중...</span>

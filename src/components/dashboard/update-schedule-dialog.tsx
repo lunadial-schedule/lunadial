@@ -21,7 +21,7 @@ interface UpdateScheduleDialogProps {
   schedule: Schedule;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onSuccess?: (updatedSchedule: Schedule) => void;
 }
 
 export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }: UpdateScheduleDialogProps) {
@@ -115,7 +115,11 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
         setErrorMsg("일정 수정 실패: " + error);
       }
     } else {
-      onSuccess?.();
+      if (data) {
+        onSuccess?.(data);
+      } else {
+        onSuccess?.(schedule); // fail-safe if data is missing, which shouldn't happen
+      }
       onOpenChange(false);
     }
   }

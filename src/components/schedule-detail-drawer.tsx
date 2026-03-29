@@ -142,7 +142,9 @@ export function ScheduleDetailDrawer({
       alert("삭제 실패: " + error);
     } else {
       handleOpenChange(false);
-      window.dispatchEvent(new Event("schedulesUpdated"));
+      window.dispatchEvent(new CustomEvent("schedulesUpdated", { 
+        detail: { action: 'delete', scheduleId: internalSchedule.id } 
+      }));
     }
   };
 
@@ -305,10 +307,13 @@ export function ScheduleDetailDrawer({
         open={isUpdateOpen} 
         onOpenChange={setIsUpdateOpen} 
         schedule={internalSchedule}
-        onSuccess={() => {
+        onSuccess={(updatedSchedule) => {
+          setInternalSchedule(updatedSchedule);
           setIsUpdateOpen(false);
           handleOpenChange(false);
-          window.dispatchEvent(new Event("schedulesUpdated"));
+          window.dispatchEvent(new CustomEvent("schedulesUpdated", { 
+            detail: { action: 'update', schedule: updatedSchedule } 
+          }));
         }} 
       />
     </Sheet>
