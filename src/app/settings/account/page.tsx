@@ -20,6 +20,7 @@ import { Crown, Star, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { getMyFavorites } from "@/app/actions/favorites"
 import { ChzzkConnectCard } from "@/components/mypage/chzzk-connect-card"
+import { DeleteAccountSection } from "@/components/mypage/delete-account-section"
 import { useAuth } from "@/components/providers/auth-provider"
 import { ENABLE_CHZZK_CONNECT } from "@/config/env"
 
@@ -32,6 +33,7 @@ export default function AccountSettingsPage() {
   const [favorites, setFavorites] = useState<any[]>([])
   const [favoritesCount, setFavoritesCount] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [userTier, setUserTier] = useState<string>("free")
   const [chzzkAccount, setChzzkAccount] = useState<any | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -73,6 +75,16 @@ export default function AccountSettingsPage() {
           .maybeSingle()
         if (roleData?.role === 'admin') {
           setIsAdmin(true)
+        }
+
+        // users.tier 조회 (Pro 구독 판별용)
+        const { data: tierData } = await supabase
+          .from("users")
+          .select("tier")
+          .eq("id", user.id)
+          .maybeSingle()
+        if (tierData?.tier) {
+          setUserTier(tierData.tier)
         }
       } catch (error) {
         console.error("Failed to load account info:", error)
@@ -195,7 +207,8 @@ export default function AccountSettingsPage() {
     }
   }
 
-  const isPro = isAdmin || false
+  const isPro = isAdmin || userTier === 'pro'
+  const isProOrAdmin = isPro || isAdmin
   const maxFavorites = isPro ? "무제한" : 10
 
   return (
@@ -364,6 +377,10 @@ export default function AccountSettingsPage() {
                 .then(({ data }) => setChzzkAccount(data || null))
             }}
           />
+        )}
+
+        {user && (
+          <DeleteAccountSection isProOrAdmin={isProOrAdmin} />
         )}
       </div>
     </PageContainer>
