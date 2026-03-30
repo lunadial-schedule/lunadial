@@ -8,8 +8,10 @@
 --   3. 운영 로그용 account_deletion_logs 테이블 생성
 -- ===========================================================
 
--- 1. schedules.user_id FK → ON DELETE SET NULL
+-- 1. schedules.user_id → nullable로 변경 + FK ON DELETE SET NULL
 --    일정은 공용 데이터이므로 사용자 삭제 시에도 보존하되 작성자만 익명화
+ALTER TABLE public.schedules
+  ALTER COLUMN user_id DROP NOT NULL;
 ALTER TABLE public.schedules
   DROP CONSTRAINT IF EXISTS schedules_user_id_fkey;
 ALTER TABLE public.schedules

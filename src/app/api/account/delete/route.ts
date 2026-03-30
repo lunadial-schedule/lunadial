@@ -162,9 +162,6 @@ export async function POST() {
     // ──────────────────────────────────────────
 
     const tablesToDelete = [
-      "notification_deliveries",
-      "notification_preferences",
-      "push_subscriptions",
       "connected_accounts",
       "favorites",
       "profiles",
