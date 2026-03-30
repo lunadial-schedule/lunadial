@@ -12,7 +12,7 @@ export const CATEGORIES = {
   TOURNAMENT: { id: "tournament", label: "대회", color: "bg-yellow-500", text: "text-yellow-500", border: "border-yellow-500" },
   MUSIC: { id: "music", label: "음악/노래", color: "bg-pink-500", text: "text-pink-500", border: "border-pink-500" },
   AD: { id: "ad", label: "광고", color: "bg-gray-500", text: "text-gray-500", border: "border-gray-500" },
-  WATCH: { id: "watch", label: "같이보기", color: "bg-cyan-500", text: "text-cyan-500", border: "border-cyan-500" },
+  WATCH: { id: "watch", label: "같이보기", color: "bg-amber-700", text: "text-amber-700", border: "border-amber-700" },
 } as const;
 
 /** 카테고리 키 타입 (예: 'TALK' | 'GAME' | ...) */
