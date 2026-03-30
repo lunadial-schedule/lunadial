@@ -25,9 +25,14 @@ export async function deleteAccount(): Promise<DeleteAccountResponse> {
       headers: { "Content-Type": "application/json" },
     })
 
-    const data: DeleteAccountResponse = await response.json()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any = await response.json()
 
     if (!response.ok) {
+      // TODO(배포 전 제거) 디버깅용 상세 에러 출력
+      if (data.debug) {
+        console.error("[계정 삭제] 서버 디버그 정보:", JSON.stringify(data.debug, null, 2))
+      }
       return { error: data.error || "계정 삭제 중 문제가 발생했습니다." }
     }
 

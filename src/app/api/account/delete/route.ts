@@ -275,7 +275,14 @@ export async function POST() {
       }
 
       return NextResponse.json(
-        { error: "계정 삭제 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요." },
+        {
+          error: "계정 삭제 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+          debug: {
+            stage: "auth_delete",
+            authError: deleteAuthError.message,
+            previousErrors: errors,
+          },
+        },
         { status: 500 }
       )
     }
@@ -290,7 +297,14 @@ export async function POST() {
   } catch (error: any) {
     console.error("[계정 삭제] 예상하지 못한 오류:", error)
     return NextResponse.json(
-      { error: "계정 삭제 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요." },
+      {
+        error: "계정 삭제 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+        debug: {
+          stage: "unexpected",
+          message: error?.message,
+          stack: error?.stack?.slice(0, 500),
+        },
+      },
       { status: 500 }
     )
   }
