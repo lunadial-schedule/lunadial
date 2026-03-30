@@ -60,15 +60,9 @@ export async function POST() {
 
     // ──────────────────────────────────────────
     // 2. Pro / admin 구독 상태 재검증
+    //    public.users 테이블은 사용하지 않으므로 user_roles.role만 확인한다.
     // ──────────────────────────────────────────
     const adminSupabase = createAdminClient()
-
-    // users.tier 확인
-    const { data: userData } = await adminSupabase
-      .from("users")
-      .select("tier")
-      .eq("id", userId)
-      .maybeSingle()
 
     // user_roles.role 확인
     const { data: roleData } = await adminSupabase
@@ -77,12 +71,10 @@ export async function POST() {
       .eq("user_id", userId)
       .maybeSingle()
 
-    const tier = userData?.tier || "free"
     const role = roleData?.role || "user"
-    const subscriptionStatus = `tier:${tier},role:${role}`
+    const subscriptionStatus = `role:${role}`
 
-    const isProOrAdmin =
-      tier === "pro" || role === "pro" || role === "admin"
+    const isProOrAdmin = role === "pro" || role === "admin"
 
     if (isProOrAdmin) {
       return NextResponse.json(
@@ -142,27 +134,7 @@ export async function POST() {
       errors.push(`schedule_update_logs 익명화 예외: ${e.message}`)
     }
 
-    // 3-3. schedule_revisions — edited_by null
-    try {
-      const { data, error } = await adminSupabase
-        .from("schedule_revisions")
-        .update({ edited_by: null as unknown as string })
-        .eq("edited_by", userId)
-        .select("id")
-
-      anonymizedTables.push({
-        table: "schedule_revisions",
-        count: data?.length || 0,
-        status: error ? "error" : "success",
-        error: error?.message,
-      })
-      if (error) errors.push(`schedule_revisions 익명화 실패: ${error.message}`)
-    } catch (e: any) {
-      anonymizedTables.push({ table: "schedule_revisions", count: 0, status: "error", error: e.message })
-      errors.push(`schedule_revisions 익명화 예외: ${e.message}`)
-    }
-
-    // 3-4. notices — author_user_id null, author_nickname 변경
+    // 3-3. notices — author_user_id null, author_nickname 변경
     try {
       const { data, error } = await adminSupabase
         .from("notices")

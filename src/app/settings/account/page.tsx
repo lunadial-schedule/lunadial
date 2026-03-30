@@ -33,7 +33,7 @@ export default function AccountSettingsPage() {
   const [favorites, setFavorites] = useState<any[]>([])
   const [favoritesCount, setFavoritesCount] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [userTier, setUserTier] = useState<string>("free")
+  const [userRole, setUserRole] = useState<string>("user")
   const [chzzkAccount, setChzzkAccount] = useState<any | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -76,15 +76,8 @@ export default function AccountSettingsPage() {
         if (roleData?.role === 'admin') {
           setIsAdmin(true)
         }
-
-        // users.tier 조회 (Pro 구독 판별용)
-        const { data: tierData } = await supabase
-          .from("users")
-          .select("tier")
-          .eq("id", user.id)
-          .maybeSingle()
-        if (tierData?.tier) {
-          setUserTier(tierData.tier)
+        if (roleData?.role) {
+          setUserRole(roleData.role)
         }
       } catch (error) {
         console.error("Failed to load account info:", error)
@@ -207,7 +200,7 @@ export default function AccountSettingsPage() {
     }
   }
 
-  const isPro = isAdmin || userTier === 'pro'
+  const isPro = isAdmin || userRole === 'pro'
   const isProOrAdmin = isPro || isAdmin
   const maxFavorites = isPro ? "무제한" : 10
 
