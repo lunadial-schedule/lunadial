@@ -30,13 +30,13 @@ export function StreamerMultiInput({ value, onChange, placeholder, inputValue: e
   const [internalInputValue, setInternalInputValue] = React.useState("")
   const inputValue = externalInputValue !== undefined ? externalInputValue : internalInputValue
   
-  const setInputValue = (val: string) => {
+  const setInputValue = React.useCallback((val: string) => {
     if (externalOnInputChange) {
       externalOnInputChange(val)
     } else {
       setInternalInputValue(val)
     }
-  }
+  }, [externalOnInputChange])
 
   const debouncedValue = useDebounce(inputValue, 300)
   const [results, setResults] = React.useState<any[]>([])
@@ -46,6 +46,12 @@ export function StreamerMultiInput({ value, onChange, placeholder, inputValue: e
   const containerRef = React.useRef<HTMLDivElement>(null)
 
   const searchIdRef = React.useRef(0)
+
+  // Stale closure 방지를 위한 최신 상태 레퍼런스
+  const latestProps = React.useRef({ value, onChange, setInputValue })
+  React.useEffect(() => {
+    latestProps.current = { value, onChange, setInputValue }
+  }, [value, onChange, setInputValue])
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -79,10 +85,12 @@ export function StreamerMultiInput({ value, onChange, placeholder, inputValue: e
         
         if (exactMatches.length === 1) {
           const streamer = exactMatches[0]
-          if (!value.find(s => s.id === streamer.id)) {
-            onChange([...value, { id: streamer.id, name: streamer.name }])
+          const { value: currentValue, onChange: currentOnChange, setInputValue: currentSetInputValue } = latestProps.current
+          
+          if (!currentValue.find(s => s.id === streamer.id)) {
+            currentOnChange([...currentValue, { id: streamer.id, name: streamer.name }])
           }
-          setInputValue("")
+          currentSetInputValue("")
           setIsOpen(false)
           setResults([])
         }
