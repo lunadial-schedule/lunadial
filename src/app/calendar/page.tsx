@@ -408,8 +408,6 @@ function CalendarContent() {
                             <>
                               <div className="hidden sm:flex flex-col gap-[2px]">
                                 {displayEvents.map(event => {
-                                  const firstCat = event.categories?.[0];
-                                  const styleCat = CATEGORY_LIST.find(c => c.id === firstCat) || CATEGORY_LIST[0];
                                   return (
                                     <div 
                                       key={event.id}
@@ -419,7 +417,22 @@ function CalendarContent() {
                                         handleEventClick(event);
                                       }}
                                     >
-                                      <span className={cn("w-1.5 h-1.5 flex-shrink-0 rounded-full", styleCat.color)} />
+                                      <div className="w-1.5 h-1.5 flex flex-row overflow-hidden rounded-full flex-shrink-0">
+                                        {event.categories && event.categories.length > 0 ? (
+                                          [...event.categories]
+                                            .sort((a, b) => {
+                                              const idxA = CATEGORY_LIST.findIndex(c => c.id === a);
+                                              const idxB = CATEGORY_LIST.findIndex(c => c.id === b);
+                                              return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+                                            })
+                                            .map((cat, idx) => {
+                                              const styleCat = CATEGORY_LIST.find(c => c.id === cat) || CATEGORY_LIST[0];
+                                              return <div key={idx} className={cn("flex-1", styleCat.color)} />;
+                                            })
+                                        ) : (
+                                          <div className={cn("flex-1", CATEGORY_LIST[0].color)} />
+                                        )}
+                                      </div>
                                       <span className="font-semibold text-[10px] sm:text-[11px] text-foreground/80 leading-tight truncate group-hover:text-primary transition-colors">
                                         {event.streamer}
                                       </span>
