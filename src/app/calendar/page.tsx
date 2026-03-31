@@ -53,6 +53,7 @@ function CalendarContent() {
   const view = rawView === 'week' ? 'day' : (rawView || defaultView)
   const q = searchParams.get('q') || ''
   
+  // week -> day로 강제 변경
   React.useEffect(() => {
     if (rawView === 'week') {
       const params = new URLSearchParams(searchParams.toString())
@@ -61,6 +62,7 @@ function CalendarContent() {
     }
   }, [rawView, pathname, router, searchParams])
 
+  // URL date 파라미터에서 현재 날짜 가져오기
   const dateParam = searchParams.get('date')
   const [currentDate, setCurrentDate] = React.useState(() => {
     if (dateParam) {
@@ -108,12 +110,15 @@ function CalendarContent() {
   const getDateRange = React.useCallback((date: Date, currentView: string) => {
     if (currentView === 'month') {
       const monthStart = startOfMonth(date)
-      const monthEnd = endOfMonth(date)
-      // 캘린더 그리드는 항상 일요일부터 시작
       const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 })
-      // 35칸(5주)이므로 gridStart + 34일
-      const gridEnd = addDays(gridStart, 34)
-      return { start: gridStart, end: gridEnd }
+      
+      // 5주 또는 6주를 표시하기 위한 계산
+      const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+      const totalCells = monthStart.getDay() + lastDayOfMonth.getDate()
+      const numRows = Math.max(5, Math.ceil(totalCells / 7))
+      
+      const gridEnd = addDays(gridStart, (numRows * 7) - 1)
+      return { start: gridStart, end: endOfDay(gridEnd) }
     }
     // 일 뷰: 해당 날짜의 시작~끝
     return { start: startOfDay(date), end: endOfDay(date) }
@@ -377,10 +382,22 @@ function CalendarContent() {
           {/* Calendar Cells */}
           <div className={cn(
             "px-2 sm:px-4 flex-1",
-            view === 'month' ? "grid grid-cols-7 grid-rows-5" : "flex flex-col overflow-y-auto"
+            view === 'month' ? (
+              (() => {
+                const fd = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                const ld = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                const total = fd.getDay() + ld.getDate();
+                return total > 35 ? "grid grid-cols-7 grid-rows-6" : "grid grid-cols-7 grid-rows-5";
+              })()
+            ) : "flex flex-col overflow-y-auto"
           )}>
              {view === 'month' ? (
-               Array.from({ length: 35 }).map((_, i) => {
+               Array.from({ length: (() => {
+                 const fd = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                 const ld = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                 const total = fd.getDay() + ld.getDate();
+                 return total > 35 ? 42 : 35;
+               })() }).map((_, i) => {
                  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
                  const startPadding = firstDayOfMonth.getDay()
                  const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i - startPadding + 1)
