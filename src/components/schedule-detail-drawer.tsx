@@ -150,8 +150,14 @@ export function ScheduleDetailDrawer({
 
   if (!internalSchedule) return null;
 
+  // 카테고리 정렬
   const currentCategories = internalSchedule.categories || [];
-  const categoryInfos = currentCategories.map(id => CATEGORY_LIST.find(c => c.id === id)).filter(Boolean) as typeof CATEGORY_LIST;
+  const sortedCategories = [...currentCategories].sort((a, b) => {
+    const idxA = CATEGORY_LIST.findIndex(c => c.id === a);
+    const idxB = CATEGORY_LIST.findIndex(c => c.id === b);
+    return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+  });
+  const categoryInfos = sortedCategories.map(id => CATEGORY_LIST.find(c => c.id === id)).filter(Boolean) as typeof CATEGORY_LIST;
   if (categoryInfos.length === 0) categoryInfos.push(CATEGORY_LIST[0]);
 
   let linkDomain = internalSchedule.link;
