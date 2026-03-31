@@ -186,11 +186,6 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
                     {duplicateInfo.is_all_day ? "하루 종일" : format(new Date(duplicateInfo.start_time), "yyyy-MM-dd HH:mm")}
                   </div>
                 </div>
-                <Button asChild variant="secondary" size="sm" className="h-7 text-[10px] px-2 shrink-0" onClick={() => onOpenChange(false)}>
-                  <Link href={`/?date=${format(new Date(duplicateInfo.start_time), "yyyy-MM-dd")}`}>
-                    기존 일정 보기
-                  </Link>
-                </Button>
               </div>
             </div>
             {user?.role === 'admin' && (
