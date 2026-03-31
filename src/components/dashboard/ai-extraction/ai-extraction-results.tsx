@@ -12,6 +12,7 @@ import { findOrCreateStreamer } from "@/app/actions/streamers"
 import { Loader2, ArrowLeft, Plus, AlertCircle, CheckCircle2, Copy } from "lucide-react"
 import { StreamerSelector } from "../streamer-selector"
 import { StreamerShortInfo } from "@/types/streamer"
+import { useAuth } from "@/components/providers/auth-provider"
 
 // Types to match DB format roughly
 interface MinSchedule {
@@ -33,10 +34,12 @@ interface AiExtractionResultsProps {
 }
 
 export function AiExtractionResults({ results, payload, onBack, onComplete }: AiExtractionResultsProps) {
+  const { user } = useAuth()
   const [drafts, setDrafts] = React.useState<ExtractedScheduleDraft[]>(results)
   const [existingSchedules, setExistingSchedules] = React.useState<MinSchedule[]>([])
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isCheckingDups, setIsCheckingDups] = React.useState(true)
+  const [allowDuplicate, setAllowDuplicate] = React.useState(false)
 
   // Fetch recent schedules to check for duplicates
   React.useEffect(() => {
@@ -61,16 +64,19 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
       // If user has already handled it or manually checked, we could skip, but let's always warn
       if (!draft.title || !draft.date) return draft
 
-      // Match logic: Same Streamer AND Same Date AND Same Title
-      // For MVP, comparing Date string and Streamer and Title
+      // Match logic: Same Streamer AND Same Date AND Same Time/isAllDay
       const isDup = existingSchedules.some(s => {
         if (s.streamer !== draft.streamerName) return false
         
-        const sDate = s.start_time.split("T")[0]
-        if (sDate !== draft.date) return false
-
-        // Exact or strong title match
-        if (s.title === draft.title) return true
+        const sDateLocal = new Date(s.start_time);
+        const sDateStr = sDateLocal.getFullYear() + "-" + String(sDateLocal.getMonth()+1).padStart(2, '0') + "-" + String(sDateLocal.getDate()).padStart(2, '0');
+        
+        if (sDateStr !== draft.date) return false;
+        
+        if (s.is_all_day === true && draft.isAllDay === true) return true;
+        
+        const sTimeStr = String(sDateLocal.getHours()).padStart(2, '0') + ":" + String(sDateLocal.getMinutes()).padStart(2, '0');
+        if (s.is_all_day === false && draft.isAllDay === false && sTimeStr === draft.startTime) return true;
 
         return false
       })
@@ -81,7 +87,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
           isSelected: false, // Auto-uncheck
           duplicate: {
             isDuplicate: true,
-            reason: "이미 등록된 일정과 유사합니다."
+            reason: "동일한 시간에 일정이 있어 자동 선택 해제되었습니다."
           }
         }
       } else if (!isDup && draft.duplicate?.isDuplicate) {
@@ -103,12 +109,20 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
     if (!draft.title || !draft.date) return { isDuplicate: false }
     const isDup = schedules.some(s => {
       if (s.streamer !== draft.streamerName) return false
-      const sDate = s.start_time.split("T")[0]
-      if (sDate !== draft.date) return false
-      if (s.title === draft.title) return true
-      return false
+      
+      const sDateLocal = new Date(s.start_time);
+      const sDateStr = sDateLocal.getFullYear() + "-" + String(sDateLocal.getMonth()+1).padStart(2, '0') + "-" + String(sDateLocal.getDate()).padStart(2, '0');
+      
+      if (sDateStr !== draft.date) return false;
+      
+      if (s.is_all_day === true && draft.isAllDay === true) return true;
+      
+      const sTimeStr = String(sDateLocal.getHours()).padStart(2, '0') + ":" + String(sDateLocal.getMinutes()).padStart(2, '0');
+      if (s.is_all_day === false && draft.isAllDay === false && sTimeStr === draft.startTime) return true;
+
+      return false;
     })
-    return { isDuplicate: isDup, reason: isDup ? "이미 등록된 일정과 중복될 수 있어 자동 선택 해제되었습니다." : null }
+    return { isDuplicate: isDup, reason: isDup ? "동일한 시간에 일정이 있어 자동 선택 해제되었습니다." : null }
   }
 
   const handleUpdateDraft = (id: string, updates: Partial<ExtractedScheduleDraft>) => {
@@ -250,6 +264,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
                 id={`chk-${draft.id}`} 
                 checked={draft.isSelected} 
                 onCheckedChange={(val) => handleUpdateDraft(draft.id, { isSelected: val === true })}
+                disabled={draft.duplicate?.isDuplicate && !allowDuplicate}
                 className="mt-1"
               />
               <div className="flex-1 space-y-3">
@@ -357,14 +372,24 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
       </div>
 
       {/* Footer */}
-      <div className="shrink-0 px-6 py-4 border-t shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] bg-background flex flex-row items-center justify-between" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
-        <Button variant="ghost" size="sm" onClick={onBack} disabled={isSubmitting} className="text-muted-foreground">
-          <ArrowLeft className="w-4 h-4 mr-1" /> 다시 추출
-        </Button>
-        <Button onClick={handleSubmit} disabled={isSubmitting || selectedCount === 0 || isCheckingDups}>
-          {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          {selectedCount}개 선택된 일정 등록
-        </Button>
+      <div className="shrink-0 px-6 py-4 border-t shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] bg-background flex flex-col gap-3">
+        {user?.role === 'admin' && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-destructive/10 border border-destructive/20 rounded-md">
+            <Checkbox id="bulkAllowDup" checked={allowDuplicate} onCheckedChange={(c) => setAllowDuplicate(c === true)} />
+            <label htmlFor="bulkAllowDup" className="text-xs font-semibold cursor-pointer text-destructive">
+              [관리자] 중복 일괄 무시 (중복 항목 체크 및 강제 등록 허용)
+            </label>
+          </div>
+        )}
+        <div className="flex flex-row items-center justify-between" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
+          <Button variant="ghost" size="sm" onClick={onBack} disabled={isSubmitting} className="text-muted-foreground">
+            <ArrowLeft className="w-4 h-4 mr-1" /> 다시 추출
+          </Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting || selectedCount === 0 || isCheckingDups}>
+            {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {selectedCount}개 선택된 일정 등록
+          </Button>
+        </div>
       </div>
     </div>
   )

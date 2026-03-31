@@ -235,6 +235,7 @@ export type Database = {
           id: string
           is_all_day: boolean | null
           is_deleted: boolean
+          is_duplicate_ignored: boolean
           link: string
           memo: string | null
           start_time: string
@@ -253,6 +254,7 @@ export type Database = {
           id?: string
           is_all_day?: boolean | null
           is_deleted?: boolean
+          is_duplicate_ignored?: boolean
           link: string
           memo?: string | null
           start_time: string
@@ -271,6 +273,7 @@ export type Database = {
           id?: string
           is_all_day?: boolean | null
           is_deleted?: boolean
+          is_duplicate_ignored?: boolean
           link?: string
           memo?: string | null
           start_time?: string

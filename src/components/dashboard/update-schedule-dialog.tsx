@@ -9,8 +9,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CATEGORY_LIST } from "@/config/categories";
-import { updateSchedule, type Schedule } from "@/app/actions/schedules";
+import { updateSchedule, checkDuplicateSchedule, type Schedule } from "@/app/actions/schedules";
 import { findOrCreateStreamer } from "@/app/actions/streamers";
+import Link from "next/link";
+import { AlertCircle, Info } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
 import { format, parseISO } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -25,8 +28,12 @@ interface UpdateScheduleDialogProps {
 }
 
 export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }: UpdateScheduleDialogProps) {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+  const [duplicateInfo, setDuplicateInfo] = React.useState<any>(null);
+  const [hasSameDateInfo, setHasSameDateInfo] = React.useState<any>(null);
+  const [allowDuplicate, setAllowDuplicate] = React.useState(false);
 
   const [selectedCats, setSelectedCats] = React.useState<string[]>([]);
   const [isAllDay, setIsAllDay] = React.useState<boolean>(false);
@@ -44,6 +51,9 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
       }
       setStreamer(schedule.streamer_id ? { id: schedule.streamer_id, name: schedule.streamer || "" } : null);
       setErrorMsg(null);
+      setDuplicateInfo(null);
+      setHasSameDateInfo(null);
+      setAllowDuplicate(false);
     }
   }, [open, schedule]);
 
@@ -90,6 +100,26 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
     
     // server action updateSchedule(id, updates, currentUpdatedAt)
     const startTimeStr = isAllDay ? `${startTime}T00:00:00` : startTime;
+    const isoString = new Date(startTimeStr).toISOString();
+
+    if (!allowDuplicate) {
+      const { isDuplicate, duplicateInfo: dupInfo, hasSameDateInfo: sameDateInfo } = await checkDuplicateSchedule(
+        streamer.id,
+        isoString,
+        isAllDay,
+        schedule.id
+      );
+
+      if (isDuplicate && dupInfo) {
+        setDuplicateInfo(dupInfo);
+        setHasSameDateInfo(null);
+        setIsLoading(false);
+        return; // 차단
+      } else if (sameDateInfo) {
+        setHasSameDateInfo(sameDateInfo);
+      }
+    }
+
     const { data, error, conflict } = await updateSchedule(
       schedule.id, 
       {
@@ -101,9 +131,10 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
         status,
         memo: memo || "",
         is_all_day: isAllDay,
-        start_time: new Date(startTimeStr).toISOString(),
+        start_time: isoString,
       },
-      schedule.updated_at
+      schedule.updated_at,
+      allowDuplicate
     );
     
     setIsLoading(false);
@@ -138,6 +169,50 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
             {errorMsg}
           </div>
         )}
+
+        {duplicateInfo && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 space-y-3 mt-4">
+            <div className="flex items-start gap-2 text-destructive">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <div className="text-sm font-medium">동일한 시간에 등록된 일정이 존재하여 변경할 수 없습니다.</div>
+            </div>
+            <div className="bg-background/60 rounded px-2.5 py-2 text-xs text-muted-foreground ml-6 shadow-sm border border-border/50">
+              <div className="flex justify-between items-center gap-2">
+                <div className="font-medium">
+                  <span className="text-foreground">{duplicateInfo.streamer}</span> - {duplicateInfo.title}
+                  <div className="mt-0.5">
+                    {duplicateInfo.is_all_day ? "하루 종일" : format(new Date(duplicateInfo.start_time), "yyyy-MM-dd HH:mm")}
+                  </div>
+                </div>
+                <Button asChild variant="secondary" size="sm" className="h-7 text-[10px] px-2 shrink-0">
+                  <Link href={`/?date=${format(new Date(duplicateInfo.start_time), "yyyy-MM-dd")}`} target="_blank">
+                    기존 일정 보기
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            {user?.role === 'admin' && (
+              <div className="ml-6 pt-1 flex items-center gap-2">
+                <Checkbox id="updateAllowDup" checked={allowDuplicate} onCheckedChange={(c) => setAllowDuplicate(c === true)} />
+                <label htmlFor="updateAllowDup" className="text-xs font-semibold cursor-pointer text-destructive">
+                  [관리자] 중복 경고를 무시하고 강제로 저장합니다.
+                </label>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!duplicateInfo && hasSameDateInfo && (
+          <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-md p-3 mt-4">
+            <div className="flex items-start gap-2 text-blue-700 dark:text-blue-400">
+              <Info className="w-4 h-4 mt-0.5 shrink-0" />
+              <div className="text-sm font-medium">
+                참고: 해당 날짜에 이미 다른 일정({hasSameDateInfo.is_all_day ? "하루 종일" : format(new Date(hasSameDateInfo.start_time), "HH:mm")})이 등록되어 있습니다. 변경 내용 저장은 정상적으로 가능합니다.
+              </div>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={onSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
              <label className="text-sm font-medium">제목 *</label>

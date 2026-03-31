@@ -49,13 +49,23 @@ export async function getSchedules(startDate?: Date, endDate?: Date) {
  * 새 일정을 생성한다.
  * user_id는 현재 인증된 사용자에서 자동 설정된다.
  * @param schedule - 생성할 일정 데이터 (user_id 제외)
+ * @param inputMethod - 'manual' 또는 'bulk'
+ * @param allow_duplicate - 관리자 권한으로 강제 중복 예외 허용 (기본 false)
  */
-export async function createSchedule(schedule: Omit<ScheduleInsert, "user_id">, inputMethod: 'manual' | 'bulk' = 'manual') {
+export async function createSchedule(
+  schedule: Omit<ScheduleInsert, "user_id">, 
+  inputMethod: 'manual' | 'bulk' = 'manual',
+  allow_duplicate: boolean = false
+) {
   const supabase = await createClient();
   const actor = await getActorDetails();
   
   if (!actor) {
     return { data: null, error: "로그인이 필요합니다." };
+  }
+
+  if (allow_duplicate && actor.role !== "admin") {
+    return { data: null, error: "중복 무시 강제 저장은 관리자 권한이 필요합니다." };
   }
 
   if (!schedule.streamer_id) {
@@ -66,13 +76,17 @@ export async function createSchedule(schedule: Omit<ScheduleInsert, "user_id">, 
     .from("schedules")
     .insert({
       ...schedule,
-      user_id: actor.userId
+      user_id: actor.userId,
+      is_duplicate_ignored: allow_duplicate
     })
     .select()
     .single();
     
   if (error) {
     console.error("일정 생성 에러:", error);
+    if (error.code === '23505') {
+      return { data: null, error: "동일한 시간에 이미 등록된 일정이 존재합니다. (중복 차단)" };
+    }
     return { data: null, error: error.message };
   }
   
@@ -105,13 +119,23 @@ export async function createSchedule(schedule: Omit<ScheduleInsert, "user_id">, 
  * @param id - 일정 ID
  * @param updates - 수정할 필드들
  * @param currentUpdatedAt - 클라이언트가 마지막으로 확인한 updated_at 값
+ * @param allow_duplicate - 관리자 권한으로 강제 중복 예외 허용 (기본 false)
  */
-export async function updateSchedule(id: string, updates: ScheduleUpdate, currentUpdatedAt: string) {
+export async function updateSchedule(
+  id: string, 
+  updates: ScheduleUpdate, 
+  currentUpdatedAt: string,
+  allow_duplicate: boolean = false
+) {
   const supabase = await createClient();
   const actor = await getActorDetails();
   
   if (!actor) {
     return { data: null, error: "로그인이 필요합니다." };
+  }
+
+  if (allow_duplicate && actor.role !== "admin") {
+    return { data: null, error: "중복 무시 강제 저장은 관리자 권한이 필요합니다." };
   }
 
   if (updates.streamer && !updates.streamer_id) {
@@ -135,13 +159,19 @@ export async function updateSchedule(id: string, updates: ScheduleUpdate, curren
   
   const { data, error } = await supabase
     .from("schedules")
-    .update(updates)
+    .update({
+      ...updates,
+      is_duplicate_ignored: allow_duplicate ? true : updates.is_duplicate_ignored
+    })
     .eq("id", id)
     .select()
     .single();
     
   if (error) {
     console.error("일정 수정 에러:", error);
+    if (error.code === '23505') {
+      return { data: null, error: "해당 시간으로 이미 등록된 다른 일정이 존재합니다. (중복 차단)" };
+    }
     return { data: null, error: error.message };
   }
   
@@ -321,3 +351,49 @@ export async function getMyFavoriteStreamerNames(): Promise<string[]> {
     .filter(Boolean) as string[];
 }
 
+/**
+ * 중복 일정 여부를 조회한다.
+ * @param streamerId - 스트리머 ID
+ * @param startTimeStr - UTC ISO 날짜/시간 문자열
+ * @param isAllDay - 하루 종일 여부
+ * @param excludeId - 수정 시 제외할 현재 일정 ID
+ */
+export async function checkDuplicateSchedule(
+  streamerId: string, 
+  startTimeStr: string, 
+  isAllDay: boolean, 
+  excludeId?: string
+) {
+  const supabase = await createClient();
+  
+  // 로컬 시간 기준 자정 ~ 밤 11:59:59 구하기
+  const targetDate = new Date(startTimeStr);
+  const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0);
+  const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
+  
+  let query = supabase
+    .from("schedules")
+    .select("id, title, start_time, is_all_day, streamer")
+    .eq("streamer_id", streamerId)
+    .eq("is_deleted", false)
+    .gte("start_time", startOfDay.toISOString())
+    .lte("start_time", endOfDay.toISOString());
+    
+  if (excludeId) {
+    query = query.neq("id", excludeId);
+  }
+  
+  const { data, error } = await query;
+  if (error || !data || data.length === 0) {
+    return { isDuplicate: false, duplicateInfo: null, hasSameDateInfo: null };
+  }
+  
+  // 하루 종일 여부 + 시간이 완전히 일치하는 것만 중복으로 봄
+  const duplicate = data.find(s => s.is_all_day === isAllDay && (isAllDay || s.start_time === startTimeStr));
+  
+  return { 
+    isDuplicate: !!duplicate, 
+    duplicateInfo: duplicate || null,
+    hasSameDateInfo: !duplicate ? data[0] : null
+  };
+}

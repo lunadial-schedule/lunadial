@@ -10,12 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CATEGORY_LIST } from "@/config/categories";
-import { createSchedule } from "@/app/actions/schedules";
-import { Plus } from "lucide-react";
+import { createSchedule, checkDuplicateSchedule } from "@/app/actions/schedules";
+import { Plus, AlertCircle, ExternalLink, Info } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { TITLE_PLACEHOLDERS, STREAMER_PLACEHOLDERS } from "@/config/placeholders";
 import { findOrCreateStreamer } from "@/app/actions/streamers";
 import { StreamerSelector } from "./streamer-selector";
@@ -35,6 +36,9 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+  const [duplicateInfo, setDuplicateInfo] = React.useState<any>(null);
+  const [hasSameDateInfo, setHasSameDateInfo] = React.useState<any>(null);
+  const [allowDuplicate, setAllowDuplicate] = React.useState(false);
   
   const [isAllDay, setIsAllDay] = React.useState(true);
   const [selectedCats, setSelectedCats] = React.useState<string[]>([]);
@@ -54,6 +58,9 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
       setStartTime(format(new Date(), "yyyy-MM-dd"));
       setSelectedCats([]);
       setErrorMsg(null);
+      setDuplicateInfo(null);
+      setHasSameDateInfo(null);
+      setAllowDuplicate(false);
       setStreamer(null);
 
       let newTitle = TITLE_PLACEHOLDERS[Math.floor(Math.random() * TITLE_PLACEHOLDERS.length)];
@@ -110,6 +117,25 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
 
     // 하루 종일일 경우, 시간 부분을 00:00으로 강제
     const startTimeStr = isAllDay ? `${startTime}T00:00:00` : startTime;
+    const isoString = new Date(startTimeStr).toISOString();
+
+    // 1.5. 중복 여부 확인
+    if (!allowDuplicate) {
+      const { isDuplicate, duplicateInfo: dupInfo, hasSameDateInfo: sameDateInfo } = await checkDuplicateSchedule(
+        streamer.id,
+        isoString,
+        isAllDay
+      );
+
+      if (isDuplicate && dupInfo) {
+        setDuplicateInfo(dupInfo);
+        setHasSameDateInfo(null);
+        setIsLoading(false);
+        return; // 차단
+      } else if (sameDateInfo) {
+        setHasSameDateInfo(sameDateInfo);
+      }
+    }
     
     // 2. 일정 생성 (streamer_id 연결)
     const { data, error } = await createSchedule({
@@ -118,12 +144,12 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
       streamer_id: streamer.id,
       categories: selectedCats,
       link,
-      start_time: new Date(startTimeStr).toISOString(),
+      start_time: isoString,
       end_time: null,
       memo: memo || "",
       is_all_day: isAllDay,
       status: "scheduled"
-    });
+    }, 'manual', allowDuplicate);
     
     setIsLoading(false);
     
@@ -197,6 +223,49 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
               {errorMsg && (
                 <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md font-medium">
                   {errorMsg}
+                </div>
+              )}
+
+              {duplicateInfo && (
+                <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 space-y-3">
+                  <div className="flex items-start gap-2 text-destructive">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <div className="text-sm font-medium">동일한 시간에 등록된 일정이 존재하여 등록할 수 없습니다.</div>
+                  </div>
+                  <div className="bg-background/60 rounded px-2.5 py-2 text-xs text-muted-foreground ml-6 shadow-sm border border-border/50">
+                    <div className="flex justify-between items-center gap-2">
+                      <div className="font-medium">
+                        <span className="text-foreground">{duplicateInfo.streamer}</span> - {duplicateInfo.title}
+                        <div className="mt-0.5">
+                          {duplicateInfo.is_all_day ? "하루 종일" : format(new Date(duplicateInfo.start_time), "yyyy-MM-dd HH:mm")}
+                        </div>
+                      </div>
+                      <Button asChild variant="secondary" size="sm" className="h-7 text-[10px] px-2 shrink-0">
+                        <Link href={`/?date=${format(new Date(duplicateInfo.start_time), "yyyy-MM-dd")}`} target="_blank">
+                          기존 일정 보기
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                  {user?.role === 'admin' && (
+                    <div className="ml-6 pt-1 flex items-center gap-2">
+                      <Checkbox id="allowDup" checked={allowDuplicate} onCheckedChange={(c) => setAllowDuplicate(c === true)} />
+                      <label htmlFor="allowDup" className="text-xs font-semibold cursor-pointer text-destructive">
+                        [관리자] 중복 경고를 무시하고 강제로 저장합니다.
+                      </label>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!duplicateInfo && hasSameDateInfo && (
+                <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-md p-3">
+                  <div className="flex items-start gap-2 text-blue-700 dark:text-blue-400">
+                    <Info className="w-4 h-4 mt-0.5 shrink-0" />
+                    <div className="text-sm font-medium">
+                      참고: 해당 날짜에 이미 다른 일정({hasSameDateInfo.is_all_day ? "하루 종일" : format(new Date(hasSameDateInfo.start_time), "HH:mm")})이 등록되어 있습니다. 서로 다른 시간대이므로 등록은 정상적으로 가능합니다.
+                    </div>
+                  </div>
                 </div>
               )}
 
