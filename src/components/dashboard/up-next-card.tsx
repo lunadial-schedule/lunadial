@@ -83,9 +83,6 @@ export function UpNextCard({ initialEvents = [] }: UpNextCardProps) {
               {events.map((event) => {
                 const now = new Date();
                 const isWithinOneHour = isAfter(parseISO(event.start_time), now) && isAfter(addHours(now, 1), parseISO(event.start_time));
-                const firstCat = event.categories?.[0];
-                const styleCat = CATEGORY_LIST.find(c => c.id === firstCat) || CATEGORY_LIST[0];
-                
                 return (
                   <div 
                     key={event.id} 
@@ -95,10 +92,22 @@ export function UpNextCard({ initialEvents = [] }: UpNextCardProps) {
                     )}
                     onClick={() => handleEventClick(event)}
                   >
-                    <div className={cn(
-                      "absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full",
-                      styleCat.color
-                    )} />
+                    <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full overflow-hidden flex flex-col">
+                      {event.categories && event.categories.length > 0 ? (
+                        [...event.categories]
+                          .sort((a, b) => {
+                            const idxA = CATEGORY_LIST.findIndex(c => c.id === a);
+                            const idxB = CATEGORY_LIST.findIndex(c => c.id === b);
+                            return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+                          })
+                          .map((cat, idx) => {
+                          const styleCat = CATEGORY_LIST.find(c => c.id === cat) || CATEGORY_LIST[0];
+                          return <div key={idx} className={cn("flex-1", styleCat.color)} />;
+                        })
+                      ) : (
+                        <div className={cn("flex-1", CATEGORY_LIST[0].color)} />
+                      )}
+                    </div>
                     
                     <div className="w-[56px] shrink-0 flex flex-col items-start justify-center pr-2 pl-1 border-r border-border/50">
                       <span className={cn(

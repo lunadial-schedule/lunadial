@@ -275,9 +275,6 @@ export function TodayScheduleCard({
                     ) : (
                       <>
                         {dayEvents.map((event, idx) => {
-                          const firstCat = event.categories?.[0];
-                          const styleCat = CATEGORY_LIST.find(c => c.id === firstCat) || CATEGORY_LIST[0];
-                          
                           const eventTime = parseISO(event.start_time);
                           const diffMinutes = (eventTime.getTime() - new Date().getTime()) / 60000;
                           const isUpNext = diffMinutes > 0 && diffMinutes <= 60 && !event.is_all_day;
@@ -297,10 +294,22 @@ export function TodayScheduleCard({
                               )}
                               onClick={() => handleEventClick(event)}
                             >
-                              <div className={cn(
-                                "absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full",
-                                styleCat.color
-                              )} />
+                              <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full overflow-hidden flex flex-col">
+                                {event.categories && event.categories.length > 0 ? (
+                                  [...event.categories]
+                                    .sort((a, b) => {
+                                      const idxA = CATEGORY_LIST.findIndex(c => c.id === a);
+                                      const idxB = CATEGORY_LIST.findIndex(c => c.id === b);
+                                      return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+                                    })
+                                    .map((cat, idx) => {
+                                    const styleCat = CATEGORY_LIST.find(c => c.id === cat) || CATEGORY_LIST[0];
+                                    return <div key={idx} className={cn("flex-1", styleCat.color)} />;
+                                  })
+                                ) : (
+                                  <div className={cn("flex-1", CATEGORY_LIST[0].color)} />
+                                )}
+                              </div>
                               
                               <div className="flex items-start justify-between gap-2 pl-2">
                                 <div className={cn(
