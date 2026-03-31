@@ -95,6 +95,9 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
       return;
     }
     setIsLoading(true);
+    setErrorMsg(null);
+    setDuplicateInfo(null);
+    setHasSameDateInfo(null);
     
     const formData = new FormData(e.currentTarget);
     const title = formData.get("title") as string;

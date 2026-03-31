@@ -70,6 +70,8 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
     e.preventDefault();
     setIsLoading(true);
     setErrorMsg(null);
+    setDuplicateInfo(null);
+    setHasSameDateInfo(null);
     
     const formData = new FormData(e.currentTarget);
     const title = formData.get("title") as string;

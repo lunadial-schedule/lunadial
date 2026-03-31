@@ -388,8 +388,22 @@ export async function checkDuplicateSchedule(
     return { isDuplicate: false, duplicateInfo: null, hasSameDateInfo: null };
   }
   
-  // 하루 종일 여부 + 시간이 완전히 일치하는 것만 중복으로 봄
-  const duplicate = data.find(s => s.is_all_day === isAllDay && (isAllDay || s.start_time === startTimeStr));
+  // 하루 종일 여부 + 시간이 일치하는 것만 중복으로 봄
+  const targetTime = targetDate.getTime();
+  const targetDateStr = targetDate.getFullYear() + "-" + targetDate.getMonth() + "-" + targetDate.getDate();
+
+  const duplicate = data.find(s => {
+    if (s.is_all_day !== isAllDay) return false;
+    
+    const sDate = new Date(s.start_time);
+    
+    if (isAllDay) {
+      const sDateStr = sDate.getFullYear() + "-" + sDate.getMonth() + "-" + sDate.getDate();
+      return sDateStr === targetDateStr;
+    } else {
+      return sDate.getTime() === targetTime;
+    }
+  });
   
   return { 
     isDuplicate: !!duplicate, 
