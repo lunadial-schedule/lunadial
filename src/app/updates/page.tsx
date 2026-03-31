@@ -1,5 +1,13 @@
+/**
+ * 업데이트 로그 페이지
+ * 
+ * @param searchParams 검색 파라미터
+ * @returns 업데이트 로그 페이지
+ */
+
 import { getScheduleUpdateLogs } from "@/app/actions/logs";
 import { UpdateLogList } from "@/components/updates/log-list";
+import { PaginationControls } from "@/components/updates/pagination-controls";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,8 +17,30 @@ export const metadata: Metadata = {
 
 export const revalidate = 60; // 1 min ISR for updates
 
-export default async function UpdatesPage() {
-  const { data: logs, error } = await getScheduleUpdateLogs(100);
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default async function UpdatesPage({ searchParams }: Props) {
+  const resolvedParams = await searchParams;
+  const pageParam = resolvedParams.page;
+
+  let page = 1;
+  if (typeof pageParam === "string") {
+    const parsed = parseInt(pageParam, 10);
+    if (!isNaN(parsed) && parsed > 0) page = parsed;
+  }
+
+  const action = typeof resolvedParams.action === "string" ? resolvedParams.action : "all";
+  const method = typeof resolvedParams.method === "string" ? resolvedParams.method : "all";
+
+  const { data: logs, totalPages, error } = await getScheduleUpdateLogs({
+    page,
+    limit: 20,
+    actionType: action,
+    inputMethod: method,
+    fetchAdminData: false,
+  });
 
   return (
     <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 lg:px-8 min-h-[calc(100vh-4rem)]">
@@ -23,7 +53,12 @@ export default async function UpdatesPage() {
           로그를 불러오는 중 오류가 발생했습니다.
         </div>
       ) : (
-        <UpdateLogList initialLogs={logs || []} />
+        <>
+          <UpdateLogList initialLogs={logs || []} />
+          {totalPages > 1 && (
+            <PaginationControls currentPage={page} totalPages={totalPages} />
+          )}
+        </>
       )}
     </main>
   );

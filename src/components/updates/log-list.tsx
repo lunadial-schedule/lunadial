@@ -1,6 +1,14 @@
 "use client";
 
-import { useState } from "react";
+/**
+ * 스케쥴 업데이트 로그 리스트
+ * 
+ * @param initialLogs 스케쥴 업데이트 로그
+ * @param isAdminView 관리자 보기 여부
+ * @returns 스케쥴 업데이트 로그 리스트
+ */
+
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -13,14 +21,23 @@ interface Props {
 }
 
 export function UpdateLogList({ initialLogs, isAdminView = false }: Props) {
-  const [filterAction, setFilterAction] = useState<string>("all");
-  const [filterMethod, setFilterMethod] = useState<string>("all");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
-  const filteredLogs = initialLogs.filter((log) => {
-    if (filterAction !== "all" && log.action_type !== filterAction) return false;
-    if (filterMethod !== "all" && log.input_method !== filterMethod) return false;
-    return true;
-  });
+  const filterAction = searchParams.get("action") || "all";
+  const filterMethod = searchParams.get("method") || "all";
+
+  const updateFilters = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (value === "all") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    params.set("page", "1"); // Reset to page 1 on filter change
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   const getActionBadge = (type: string) => {
     switch (type) {
@@ -47,7 +64,7 @@ export function UpdateLogList({ initialLogs, isAdminView = false }: Props) {
           <label className="text-xs font-semibold text-muted-foreground whitespace-nowrap">액션</label>
           <select 
             value={filterAction} 
-            onChange={(e) => setFilterAction(e.target.value)}
+            onChange={(e) => updateFilters("action", e.target.value)}
             className="text-sm border rounded bg-background p-1.5 focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="all">전체</option>
@@ -60,7 +77,7 @@ export function UpdateLogList({ initialLogs, isAdminView = false }: Props) {
           <label className="text-xs font-semibold text-muted-foreground whitespace-nowrap">방식</label>
           <select 
             value={filterMethod} 
-            onChange={(e) => setFilterMethod(e.target.value)}
+            onChange={(e) => updateFilters("method", e.target.value)}
             className="text-sm border rounded bg-background p-1.5 focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="all">전체</option>
@@ -72,12 +89,12 @@ export function UpdateLogList({ initialLogs, isAdminView = false }: Props) {
 
       {/* List */}
       <div className="space-y-4">
-        {filteredLogs.length === 0 ? (
-          <div className="flex items-center justify-center p-12 text-muted-foreground border rounded-lg border-dashed">
-            {initialLogs.length === 0 ? "아직 기록된 업데이트 로그가 없어요." : "조건에 맞는 로그가 없어요."}
+        {initialLogs.length === 0 ? (
+          <div className="flex items-center justify-center p-12 text-muted-foreground border rounded-lg border-dashed text-sm">
+            표시할 업데이트 로그가 없습니다.
           </div>
         ) : (
-          filteredLogs.map((log) => (
+          initialLogs.map((log) => (
             <div key={log.id} className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm space-y-3 relative overflow-hidden">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-border/50 pb-3">
                 <div className="flex items-start gap-2 flex-wrap flex-1 min-w-0">
