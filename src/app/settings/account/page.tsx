@@ -37,6 +37,7 @@ export default function AccountSettingsPage() {
   const [chzzkAccount, setChzzkAccount] = useState<any | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [isRoleLoaded, setIsRoleLoaded] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -81,6 +82,8 @@ export default function AccountSettingsPage() {
         }
       } catch (error) {
         console.error("Failed to load account info:", error)
+      } finally {
+        setIsRoleLoaded(true)
       }
     }
 
@@ -202,7 +205,7 @@ export default function AccountSettingsPage() {
 
   const isPro = isAdmin || userRole === 'pro'
   const isProOrAdmin = isPro || isAdmin
-  const maxFavorites = isPro ? "무제한" : 10
+  const maxFavorites = !isRoleLoaded ? "-" : (isPro ? "무제한" : 10)
 
   return (
     <PageContainer className="py-8 max-w-2xl mx-auto">
@@ -288,17 +291,31 @@ export default function AccountSettingsPage() {
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/20">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${isPro ? 'bg-amber-100 text-amber-600' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'}`}>
-                  <Crown className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-semibold">{isPro ? "Pro 플랜" : "Free 플랜"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {isPro ? "Luna Dial의 모든 기능 사용 중" : "기본 기능 사용 중"}
-                  </p>
-                </div>
+                {isRoleLoaded ? (
+                  <>
+                    <div className={`p-2 rounded-full ${isPro ? 'bg-amber-100 text-amber-600' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'}`}>
+                      <Crown className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">{isPro ? "Pro 플랜" : "Free 플랜"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {isPro ? "Luna Dial의 모든 기능 사용 중" : "기본 기능 사용 중"}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="p-2 rounded-full bg-muted animate-pulse">
+                      <Crown className="h-5 w-5 text-muted-foreground/30" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+                      <div className="h-3 w-32 bg-muted rounded animate-pulse" />
+                    </div>
+                  </>
+                )}
               </div>
-              {!isPro && (
+              {isRoleLoaded && !isPro && (
                 <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white" asChild>
                   <Link href="/pro">업그레이드</Link>
                 </Button>
@@ -318,8 +335,8 @@ export default function AccountSettingsPage() {
               </div>
               <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                 <div 
-                  className={`h-full ${isPro ? 'bg-amber-500' : 'bg-primary'}`} 
-                  style={{ width: `${isPro ? 100 : Math.min((favoritesCount / 10) * 100, 100)}%` }} 
+                  className={`h-full ${!isRoleLoaded ? 'bg-muted-foreground/20' : isPro ? 'bg-amber-500' : 'bg-primary'}`} 
+                  style={{ width: `${!isRoleLoaded ? 0 : isPro ? 100 : Math.min((favoritesCount / 10) * 100, 100)}%` }} 
                 />
               </div>
               
@@ -373,7 +390,7 @@ export default function AccountSettingsPage() {
         )}
 
         {user && (
-          <DeleteAccountSection isProOrAdmin={isProOrAdmin} />
+          <DeleteAccountSection isProOrAdmin={isProOrAdmin} isRoleLoaded={isRoleLoaded} />
         )}
       </div>
     </PageContainer>

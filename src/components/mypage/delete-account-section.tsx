@@ -16,9 +16,11 @@ import { DeleteAccountDialog } from "./delete-account-dialog"
 interface DeleteAccountSectionProps {
   /** Pro 또는 admin 구독 활성 여부 */
   isProOrAdmin: boolean
+  /** 사용자 권한 정보가 로드되었는지 여부 */
+  isRoleLoaded: boolean
 }
 
-export function DeleteAccountSection({ isProOrAdmin }: DeleteAccountSectionProps) {
+export function DeleteAccountSection({ isProOrAdmin, isRoleLoaded }: DeleteAccountSectionProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
 
   return (
@@ -42,18 +44,24 @@ export function DeleteAccountSection({ isProOrAdmin }: DeleteAccountSectionProps
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isProOrAdmin && (
+          {!isRoleLoaded ? (
+            <div className="flex items-center text-sm text-muted-foreground mb-3">
+              <span className="flex h-5 items-center">
+                권한 정보를 확인 중입니다...
+              </span>
+            </div>
+          ) : isProOrAdmin ? (
             <p className="text-sm text-amber-600 dark:text-amber-400 mb-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
               현재 Pro 구독이 활성화되어 있어 먼저 구독 해지가 필요합니다.
             </p>
-          )}
+          ) : null}
           <Button
             variant="destructive"
-            disabled={isProOrAdmin}
+            disabled={!isRoleLoaded || isProOrAdmin}
             onClick={() => setDialogOpen(true)}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            계정 삭제
+            {isRoleLoaded ? "계정 삭제" : "확인 중"}
           </Button>
         </CardContent>
       </Card>
