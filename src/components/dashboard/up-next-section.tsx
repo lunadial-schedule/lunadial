@@ -1,13 +1,15 @@
-import { getCachedDashboardData } from "@/lib/dashboard-data";
+import { getCachedSchedules } from "@/lib/dashboard-data";
 import { UpNextCard } from "./up-next-card";
 import { isAfter, parseISO, addHours } from "date-fns";
 
 /**
  * 곧 시작 섹션 (Server Component)
- * 데이터 패칭을 수행하고 24시간 이내 일정을 필터링해 UpNextCard에 초기 데이터를 주입한다.
+ *
+ * getCachedSchedules()를 공유하여 TodayScheduleSection과 동일 캐시를 사용한다.
+ * DB 쿼리 추가 호출 없이 24시간 이내 일정을 필터링해 UpNextCard에 전달한다.
  */
 export async function UpNextSection() {
-  const { schedules, now } = await getCachedDashboardData();
+  const { schedules, now } = await getCachedSchedules();
   
   const upNextEnd = addHours(now, 24);
   const upNextEvents = schedules

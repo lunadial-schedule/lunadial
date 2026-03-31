@@ -31,12 +31,10 @@ import type { Schedule } from "@/app/actions/schedules";
 
 interface TodayScheduleCardProps {
   initialEvents?: HomeSchedule[];
-  initialFavoriteNames?: string[];
 }
 
 export function TodayScheduleCard({
   initialEvents = [],
-  initialFavoriteNames = [],
 }: TodayScheduleCardProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -47,7 +45,7 @@ export function TodayScheduleCard({
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null);
   const [isFavoritesOnly, setIsFavoritesOnly] = React.useState(false);
-  const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>(initialFavoriteNames);
+  const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>([]);
 
   // 초기 날짜(오늘) 기준인지 추적 — 서버 데이터를 그대로 사용할지 판단
   const initialDateRef = React.useRef(true);
@@ -111,6 +109,15 @@ export function TodayScheduleCard({
   React.useEffect(() => {
     loadData(false);
   }, [loadData]);
+
+  // 즐겨찾기: 클라이언트 마운트 후 비동기 로드 (SSR 차단 방지)
+  React.useEffect(() => {
+    if (!user) {
+      setFavoriteStreamerNames([]);
+      return;
+    }
+    getMyFavoriteStreamerNames().then(setFavoriteStreamerNames).catch(() => {});
+  }, [user]);
 
   React.useEffect(() => {
     const handleUpdate = (e: Event) => {

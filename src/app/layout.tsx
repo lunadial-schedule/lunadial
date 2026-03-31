@@ -35,33 +35,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Google tag (gtag.js) */}
-        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-1MEXXLESCG" />
-        <Script
-          id="google-analytics"
-          dangerouslySetInnerHTML={{
-            __html: `
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-1MEXXLESCG');
-`,
-          }}
-        />
         {process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID && (
-          <>
-            <meta
-              name="google-adsense-account"
-              content={process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID}
-            />
-            <Script
-              id="google-adsense"
-              async
-              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID}`}
-              crossOrigin="anonymous"
-            />
-          </>
+          <meta
+            name="google-adsense-account"
+            content={process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID}
+          />
         )}
       </head>
       <body
@@ -75,6 +53,32 @@ export default function RootLayout({
           <SiteFooter />
           <Toaster />
         </AuthProvider>
+
+        {/* 광고·분석 스크립트: 핵심 콘텐츠 렌더 이후 유휴 시점에 로드 */}
+        <Script
+          strategy="lazyOnload"
+          src="https://www.googletagmanager.com/gtag/js?id=G-1MEXXLESCG"
+        />
+        <Script
+          id="google-analytics"
+          strategy="lazyOnload"
+          dangerouslySetInnerHTML={{
+            __html: `
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-1MEXXLESCG');
+`,
+          }}
+        />
+        {process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID && (
+          <Script
+            id="google-adsense"
+            strategy="lazyOnload"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID}`}
+            crossOrigin="anonymous"
+          />
+        )}
       </body>
     </html>
   );

@@ -108,14 +108,18 @@ export async function POST(request: NextRequest) {
         logData.status = "success"
 
         // 7. 로그 저장 (성공)
-        await supabase.from("chzzk_keep_alive_logs").insert(logData)
+        const { error: logInsertError } = await supabase.from("chzzk_keep_alive_logs").insert(logData)
+        if (logInsertError) {
+          console.error("Keep-alive 성공 로그 INSERT 실패 (RLS 정책 누락 가능성):", logInsertError)
+        }
 
         return NextResponse.json({
           success: true,
           message: "Chzzk keep-alive executed successfully",
           data: {
             channelName: profile.channelName,
-            executedAt: new Date().toISOString()
+            executedAt: new Date().toISOString(),
+            logSaved: !logInsertError
           }
         })
       } catch (profileErr: any) {
@@ -128,7 +132,10 @@ export async function POST(request: NextRequest) {
       logData.error_message = err.message || "Unknown error"
       
       // 로그 저장 (실패 시에도)
-      await supabase.from("chzzk_keep_alive_logs").insert(logData)
+      const { error: logInsertError } = await supabase.from("chzzk_keep_alive_logs").insert(logData)
+      if (logInsertError) {
+        console.error("Keep-alive 실패 로그 INSERT 실패 (RLS 정책 누락 가능성):", logInsertError)
+      }
 
       // 명시적인 재연동 필요 여부 판단
       const needsReconnect = 
