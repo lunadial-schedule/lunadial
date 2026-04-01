@@ -3,9 +3,9 @@
 /**
  * 오늘의 일정 카드 — 날짜별 일정 목록, 즐겨찾기 필터 지원
  *
- * 서버에서 전달받은 초기 데이터(initialEvents, initialFavoriteNames)를
- * 사용하여 초기 로드 시 추가 fetch 없이 즉시 렌더한다.
- * 날짜 변경 시에만 클라이언트에서 추가 조회한다.
+ * 서버에서 전달받은 초기 일정 데이터를 즉시 렌더한다.
+ * 즐겨찾기 데이터는 AuthProvider 컨텍스트에서 공유받는다 (별도 fetch 없음).
+ * 날짜 변경 시에만 클라이언트에서 일정을 추가 조회한다.
  */;
 
 import * as React from "react";
@@ -13,7 +13,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucid
 import { addDays, format, isSameDay, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
 
-import { getHomeSchedules, getMyFavoriteStreamerNames } from "@/app/actions/schedules";
+import { getHomeSchedules } from "@/app/actions/schedules";
 import type { HomeSchedule } from "@/app/actions/schedules";
 
 import { cn } from "@/lib/utils";
@@ -37,15 +37,14 @@ export function TodayScheduleCard({
   initialEvents = [],
 }: TodayScheduleCardProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, favoriteStreamerNames } = useAuth();
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [events, setEvents] = React.useState<HomeSchedule[]>(initialEvents);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [isRefreshing, setIsRefreshing] = React.useState(false); // Background revalidation
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null);
   const [isFavoritesOnly, setIsFavoritesOnly] = React.useState(false);
-  const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>([]);
 
   // 초기 날짜(오늘) 기준인지 추적 — 서버 데이터를 그대로 사용할지 판단
   const initialDateRef = React.useRef(true);
@@ -69,7 +68,8 @@ export function TodayScheduleCard({
 
   const lastRequestIdRef = React.useRef(0);
 
-  const loadData = React.useCallback(async (isBackground = false) => {
+  // 일정만 조회 (favorites는 AuthProvider 컨텍스트에서 공유)
+  const loadSchedules = React.useCallback(async (isBackground = false) => {
     // 초기 로드 시에는 서버에서 받은 데이터 사용
     if (!isBackground && initialDateRef.current) {
       initialDateRef.current = false;
@@ -84,18 +84,13 @@ export function TodayScheduleCard({
     const endDate = addDays(currentDate, 2);
     
     try {
-      // 일정과 즐겨찾기를 병렬로 가져온다
-      const [schedulesRes, favNames] = await Promise.all([
-        getHomeSchedules(startDate, endDate),
-        getMyFavoriteStreamerNames()
-      ]);
+      const schedulesRes = await getHomeSchedules(startDate, endDate);
       
       if (requestId !== lastRequestIdRef.current) return;
       
       if (schedulesRes.data) {
         setEvents(schedulesRes.data);
       }
-      setFavoriteStreamerNames(favNames);
     } catch (e) {
       console.error("[TodayScheduleCard] Load Error:", e);
     } finally {
@@ -107,17 +102,15 @@ export function TodayScheduleCard({
   }, [currentDate]);
 
   React.useEffect(() => {
-    loadData(false);
-  }, [loadData]);
+    loadSchedules(false);
+  }, [loadSchedules]);
 
-  // 즐겨찾기: 클라이언트 마운트 후 비동기 로드 (SSR 차단 방지)
+  // 성능 계측: 일정 데이터 표시 시점
   React.useEffect(() => {
-    if (!user) {
-      setFavoriteStreamerNames([]);
-      return;
+    if (events.length > 0) {
+      performance?.mark?.('lunadial:schedule-data-rendered');
     }
-    getMyFavoriteStreamerNames().then(setFavoriteStreamerNames).catch(() => {});
-  }, [user]);
+  }, [events]);
 
   React.useEffect(() => {
     const handleUpdate = (e: Event) => {
@@ -149,15 +142,15 @@ export function TodayScheduleCard({
           }
           return newEvents;
         });
-        loadData(true);
+        loadSchedules(true);
       } else {
-        loadData(true);
+        loadSchedules(true);
       }
     };
 
     window.addEventListener("schedulesUpdated", handleUpdate);
     return () => window.removeEventListener("schedulesUpdated", handleUpdate);
-  }, [loadData]);
+  }, [loadSchedules]);
 
   const getEventsForDay = (day: Date) => {
     return events.filter(e => {
