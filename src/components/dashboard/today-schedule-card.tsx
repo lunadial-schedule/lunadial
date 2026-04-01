@@ -13,7 +13,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucid
 import { addDays, format, isSameDay, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
 
-import { getHomeSchedules, getMyFavoriteStreamerNames } from "@/app/actions/schedules";
+import { getHomeSchedules, getFavoriteStreamerNamesByUserId } from "@/app/actions/schedules";
 import type { HomeSchedule } from "@/app/actions/schedules";
 
 import { cn } from "@/lib/utils";
@@ -84,18 +84,14 @@ export function TodayScheduleCard({
     const endDate = addDays(currentDate, 2);
     
     try {
-      // 일정과 즐겨찾기를 병렬로 가져온다
-      const [schedulesRes, favNames] = await Promise.all([
-        getHomeSchedules(startDate, endDate),
-        getMyFavoriteStreamerNames()
-      ]);
+      // 일정만 조회 (favorites는 별도 useEffect에서 user 변경 시에만 1회 로드)
+      const schedulesRes = await getHomeSchedules(startDate, endDate);
       
       if (requestId !== lastRequestIdRef.current) return;
       
       if (schedulesRes.data) {
         setEvents(schedulesRes.data);
       }
-      setFavoriteStreamerNames(favNames);
     } catch (e) {
       console.error("[TodayScheduleCard] Load Error:", e);
     } finally {
@@ -110,14 +106,15 @@ export function TodayScheduleCard({
     loadData(false);
   }, [loadData]);
 
-  // 즐겨찾기: 클라이언트 마운트 후 비동기 로드 (SSR 차단 방지)
+  // 즐겨찾기: user.id 변경 시에만 1회 조회 (auth 중복 호출 방지)
+  const userId = user?.id;
   React.useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setFavoriteStreamerNames([]);
       return;
     }
-    getMyFavoriteStreamerNames().then(setFavoriteStreamerNames).catch(() => {});
-  }, [user]);
+    getFavoriteStreamerNamesByUserId(userId).then(setFavoriteStreamerNames).catch(() => {});
+  }, [userId]);
 
   React.useEffect(() => {
     const handleUpdate = (e: Event) => {

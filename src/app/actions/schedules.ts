@@ -352,6 +352,26 @@ export async function getMyFavoriteStreamerNames(): Promise<string[]> {
 }
 
 /**
+ * userId를 직접 받아 즐겨찾기 스트리머 이름 목록을 반환.
+ * auth.getUser() 호출 없이 favorites만 조회하므로 auth 중복 호출을 방지한다.
+ * @param userId - 조회 대상 사용자 ID
+ */
+export async function getFavoriteStreamerNamesByUserId(userId: string): Promise<string[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("favorites")
+    .select("streamers ( name )")
+    .eq("user_id", userId);
+
+  if (error || !data) return [];
+
+  return data
+    .map((f: any) => (f.streamers as any)?.name)
+    .filter(Boolean) as string[];
+}
+
+/**
  * 중복 일정 여부를 조회한다.
  * @param streamerId - 스트리머 ID
  * @param startTimeStr - UTC ISO 날짜/시간 문자열

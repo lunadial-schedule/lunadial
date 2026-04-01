@@ -27,7 +27,7 @@ import { ChevronLeft, ChevronRight, Loader2, List, Grid } from "lucide-react"
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer"
 import { PageContainer } from "@/components/layout/page-container"
 import { CATEGORY_LIST } from "@/config/categories"
-import { getHomeSchedules, getMyFavoriteStreamerNames } from "@/app/actions/schedules"
+import { getHomeSchedules, getFavoriteStreamerNamesByUserId } from "@/app/actions/schedules"
 import type { HomeSchedule, Schedule } from "@/app/actions/schedules"
 import { isSameDay, parseISO, format, addMonths, subMonths, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfDay, endOfDay } from "date-fns"
 import { ko } from "date-fns/locale"
@@ -154,14 +154,20 @@ function CalendarContent() {
     }
   }, [currentDate, view, getDateRange])
 
+  const userId = user?.id;
+
   const loadFavorites = React.useCallback(async () => {
+    if (!userId) {
+      setFavoriteStreamerNames([]);
+      return;
+    }
     try {
-      const names = await getMyFavoriteStreamerNames()
+      const names = await getFavoriteStreamerNamesByUserId(userId)
       setFavoriteStreamerNames(names)
     } catch (e) {
       console.error(e)
     }
-  }, [])
+  }, [userId])
 
   // Ref sync
   React.useEffect(() => {
@@ -173,7 +179,7 @@ function CalendarContent() {
     loadSchedules('param-change', false)
   }, [loadSchedules])
 
-  // 즐겨찾기 연동 로드
+  // 즐겨찾기: user.id 변경 시에만 1회 조회
   React.useEffect(() => {
     loadFavorites()
   }, [loadFavorites])

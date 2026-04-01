@@ -35,7 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = React.useState(true)
   const supabase = React.useMemo(() => createClient(), [])
 
+  // 마지막으로 profile fetch한 user id를 추적하여 중복 호출 방지
+  const lastProfileUserIdRef = React.useRef<string | null>(null)
+
   const fetchProfile = React.useCallback(async (userId: string) => {
+    lastProfileUserIdRef.current = userId
     const { data } = await supabase
       .from("profiles")
       .select("nickname, avatar_url")
@@ -56,10 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     // 초기 사용자 정보 1회 조회
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-      if (user) {
-        fetchProfile(user.id).finally(() => setIsLoading(false))
+    supabase.auth.getUser().then(({ data: { user: initialUser } }) => {
+      setUser(initialUser)
+      if (initialUser) {
+        fetchProfile(initialUser.id).finally(() => setIsLoading(false))
       } else {
         setIsLoading(false)
       }
@@ -71,8 +75,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const currentUser = session?.user ?? null
         setUser(currentUser)
         if (currentUser) {
-          fetchProfile(currentUser.id)
+          // 동일 유저에 대한 중복 profile fetch 방지
+          if (lastProfileUserIdRef.current !== currentUser.id) {
+            fetchProfile(currentUser.id)
+          }
         } else {
+          lastProfileUserIdRef.current = null
           setProfile(null)
         }
       }
