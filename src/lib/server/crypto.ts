@@ -45,22 +45,46 @@ export function encryptString(text: string): string {
  * @returns 복호화된 평문 문자열
  */
 export function decryptString(encryptedData: string): string {
-  const key = getEncryptionKey()
-  
+  const keyStr = process.env.ENCRYPTION_KEY;
+  if (!keyStr) throw new Error("Missing ENCRYPTION_KEY");
+
   const parts = encryptedData.split(":")
   if (parts.length !== 3) {
-    throw new Error("Invalid encrypted text format")
+    throw new Error("FORMAT_ERROR: 암호문 포맷이 올바르지 않습니다.");
   }
   
   const iv = Buffer.from(parts[0], "base64")
   const authTag = Buffer.from(parts[1], "base64")
   const encryptedText = parts[2]
   
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv)
-  decipher.setAuthTag(authTag)
-  
-  let decrypted = decipher.update(encryptedText, "base64", "utf8")
-  decrypted += decipher.final("utf8")
-  
-  return decrypted
+  // 다양한 로컬/운영 환경 차이(Env 파서가 $B를 삭제하는 등)와 레거시 방식을 모두 포괄하기 위한 후보 키 목록
+  const candidateKeys = [
+    // 1. 현재 표준 방식 (Next.js 환경에서 파싱된 keyStr 기준 해시)
+    crypto.createHash('sha256').update(keyStr).digest(),
+    // 2. 만약 현재 로컬 Dev가 '$B'를 증발시켰다면, 원래의 32글자 Vercel Production 환경 변수로 복구한 해시 (강력한 유력 후보)
+    crypto.createHash('sha256').update(keyStr.replace('v9y&E', 'v9y$B&E')).digest(),
+    // 3. 레거시 1: 단순 버퍼 할당
+    Buffer.alloc(32, keyStr),
+    // 4. 레거시 2: 자르기 또는 패딩
+    Buffer.from(keyStr.padEnd(32, '0')).subarray(0, 32),
+    // 5. 레거시 3: 해시 없이 직접 파싱 시도 (길이가 32인 경우만)
+    keyStr.length === 32 ? Buffer.from(keyStr, 'utf8') : crypto.createHash('sha256').update(keyStr).digest()
+  ];
+
+  let lastError: any;
+  for (const key of candidateKeys) {
+    try {
+      const decipher = crypto.createDecipheriv(ALGORITHM, key, iv)
+      decipher.setAuthTag(authTag)
+      let decrypted = decipher.update(encryptedText, "base64", "utf8")
+      decrypted += decipher.final("utf8")
+      return decrypted
+    } catch (e: any) {
+      lastError = e;
+      // 실패 시 다음 후보로 계속 진행
+    }
+  }
+
+  // 모든 후보 실패 시 (마지막 에러 반환)
+  throw new Error("KEY_MISMATCH: 암호화 키가 일치하지 않거나 데이터가 손상되었습니다. (Legacy Fallbacks Failed)");
 }

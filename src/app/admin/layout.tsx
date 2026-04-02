@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             공지사항 관리
           </Link>
           <Link href="/admin/system/chzzk-session" className="px-4 py-2 rounded-md hover:bg-muted font-medium transition-colors text-sm text-foreground">
-            치지직 연동 관리
+            치지직 시스템 관리
           </Link>
           <Link href="/admin/logs" className="px-4 py-2 rounded-md hover:bg-muted font-medium transition-colors text-sm text-foreground">
             업데이트 로그 열람

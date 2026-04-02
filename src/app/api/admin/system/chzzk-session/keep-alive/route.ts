@@ -56,7 +56,9 @@ export async function POST(request: NextRequest) {
     try {
       // 3. 리프레시 토큰 복호화
       if (!account.refresh_token_encrypted) {
-        throw new Error("No refresh token found for this account")
+        const err = new Error("No refresh token found for this account");
+        (err as any).error_type = "FORMAT_ERROR";
+        throw err;
       }
       
       let refreshToken = ""
@@ -64,7 +66,13 @@ export async function POST(request: NextRequest) {
         refreshToken = decryptString(account.refresh_token_encrypted)
       } catch (decryptErr: any) {
         console.error("복호화 실패:", decryptErr)
-        throw new Error("복호화 실패: 기존 키 생성 규칙과 불일치할 수 있습니다. 치지직 계정 재연동이 필요합니다.")
+        let errType = "CRYPTO_ERROR";
+        if (decryptErr.message.includes("FORMAT_ERROR")) errType = "FORMAT_ERROR";
+        else if (decryptErr.message.includes("KEY_MISMATCH")) errType = "KEY_MISMATCH";
+        
+        const err = new Error(`복호화 실패: ${decryptErr.message.split(":")[0]}`);
+        (err as any).error_type = errType;
+        throw err;
       }
 
       // 4. 토큰 갱신
@@ -74,7 +82,9 @@ export async function POST(request: NextRequest) {
         logData.token_refreshed = true
       } catch (refreshErr: any) {
         console.error("토큰 갱신 실패:", refreshErr)
-        throw new Error(`토큰 갱신 실패: ${refreshErr.message || "Refresh Token이 만료되었을 수 있습니다."}`)
+        const err = new Error(`토큰 갱신 실패: API로부터 거부되었습니다. (${refreshErr.message})`);
+        (err as any).error_type = "API_UNAUTHORIZED";
+        throw err;
       }
 
       // 5. 서버 측 업데이트를 위한 토큰 암호화
@@ -124,31 +134,32 @@ export async function POST(request: NextRequest) {
         })
       } catch (profileErr: any) {
         console.error("프로필 조회 실패:", profileErr)
-        throw new Error(`프로필 조회 실패: API 호출 권한 또는 서비스 상태를 확인하세요. (${profileErr.message})`)
+        const err = new Error(`프로필 조회 실패: (${profileErr.message})`);
+        (err as any).error_type = "API_UNAUTHORIZED";
+        throw err;
       }
 
     } catch (err: any) {
       console.error("Keep-alive detail error:", err.message)
       logData.error_message = err.message || "Unknown error"
       
+      const errorType = err.error_type || "UNKNOWN_ERROR"
+
       // 로그 저장 (실패 시에도)
       const { error: logInsertError } = await supabase.from("chzzk_keep_alive_logs").insert(logData)
       if (logInsertError) {
         console.error("Keep-alive 실패 로그 INSERT 실패 (RLS 정책 누락 가능성):", logInsertError)
       }
 
-      // 명시적인 재연동 필요 여부 판단
-      const needsReconnect = 
-        err.message.includes("복호화 실패") || 
-        err.message.includes("refresh_token") || 
-        err.message.includes("invalid_grant") ||
-        err.message.includes("401")
+      // 재연동 여부 판단
+      const needsReconnect = ["FORMAT_ERROR", "KEY_MISMATCH", "API_UNAUTHORIZED"].includes(errorType)
 
       return NextResponse.json({
         success: false,
+        error_type: errorType,
         error: logData.error_message,
         needs_reconnect: needsReconnect
-      }, { status: 500 })
+      }, { status: 400 })
     }
 
   } catch (error: any) {

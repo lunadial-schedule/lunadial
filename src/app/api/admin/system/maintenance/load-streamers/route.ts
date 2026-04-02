@@ -9,7 +9,7 @@ const INVALID_NAMES = ['방송 예정', '미정', '추후 공지', '업데이트
 
 export async function POST(req: Request) {
   // 1. 공통 보호 로직 검사
-  const authErrorResponse = assertAdminOpsAuthorized(req);
+  const authErrorResponse = await assertAdminOpsAuthorized(req);
   if (authErrorResponse) return authErrorResponse;
 
   const url = new URL(req.url);

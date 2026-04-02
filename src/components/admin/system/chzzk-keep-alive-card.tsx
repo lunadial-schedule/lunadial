@@ -63,7 +63,12 @@ export function ChzzkKeepAliveCard() {
       } else {
         // 재연동이 필요한 특수 에러 케이스 처리
         if (result.needs_reconnect) {
-          toast.error("복호화 또는 토큰 갱신 실패: 치지직 계정 재연동이 필요합니다.", {
+          let reasonMsg = "치지직 계정 재연동이 필요합니다.";
+          if (result.error_type === "FORMAT_ERROR") reasonMsg = "데이터 형식 깨짐: 치지직 계정 재연동이 필요합니다.";
+          if (result.error_type === "KEY_MISMATCH") reasonMsg = "암호화 규칙 불일치: 치지직 계정 재연동이 필요합니다.";
+          if (result.error_type === "API_UNAUTHORIZED") reasonMsg = "접근 권한 만료: 치지직 계정 재연동이 필요합니다.";
+
+          toast.error(`실행 실패 (${reasonMsg})`, {
             duration: 5000,
           })
         } else {
@@ -150,9 +155,28 @@ export function ChzzkKeepAliveCard() {
                       <AlertCircle className="w-3 h-3" /> 실행 중 오류 발생
                     </p>
                     <p className="font-medium whitespace-pre-wrap">{lastLog.error_message || "알 수 없는 이유로 토큰 갱신 또는 조회에 실패했습니다."}</p>
-                    <p className="mt-2 text-[11px] opacity-80 border-t border-rose-200 dark:border-rose-900 pt-1.5">
-                      💡 리프레시 토큰이 만료되었거나 연동이 해제된 경우 <b>치지직 계정 재연동</b>이 필요할 수 있습니다.
-                    </p>
+                    
+                    {/* 에러 원인에 따른 맞춤형 안내 */}
+                    {lastLog.error_message?.includes("FORMAT_ERROR") && (
+                      <p className="mt-2 text-[11px] opacity-80 border-t border-rose-200 dark:border-rose-900 pt-1.5">
+                        ⚠️ <b>데이터 형식 오류</b>: 저장된 토큰의 형식이 깨져있습니다. 치지직 계정을 다시 연동해주세요.
+                      </p>
+                    )}
+                    {lastLog.error_message?.includes("KEY_MISMATCH") && (
+                      <p className="mt-2 text-[11px] opacity-80 border-t border-rose-200 dark:border-rose-900 pt-1.5">
+                        ⚠️ <b>암호화 체계 불일치</b>: 서버의 암호화 키가 변경되었거나 과거 방식으로 저장되었습니다. 안전을 위해 <b>계정을 재연동</b>해주세요.
+                      </p>
+                    )}
+                    {lastLog.error_message?.includes("API_UNAUTHORIZED") && (
+                      <p className="mt-2 text-[11px] opacity-80 border-t border-rose-200 dark:border-rose-900 pt-1.5">
+                        ⚠️ <b>접근 권한 만료</b>: 토큰이 만료되었거나 치지직에서 연동이 해제되었습니다. <b>계정을 재연동</b>해주세요.
+                      </p>
+                    )}
+                    {!lastLog.error_message?.includes("FORMAT_ERROR") && !lastLog.error_message?.includes("KEY_MISMATCH") && !lastLog.error_message?.includes("API_UNAUTHORIZED") && (
+                      <p className="mt-2 text-[11px] opacity-80 border-t border-rose-200 dark:border-rose-900 pt-1.5">
+                        💡 일시적인 네트워크 오류가 아니라면 <b>치지직 계정 재연동</b>이 필요할 수 있습니다.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

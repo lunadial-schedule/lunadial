@@ -18,7 +18,7 @@ const INVALID_NAMES = [
 
 export async function POST(req: Request) {
   // 1. 공통 보호 로직 검사
-  const authErrorResponse = assertAdminOpsAuthorized(req);
+  const authErrorResponse = await assertAdminOpsAuthorized(req);
   if (authErrorResponse) return authErrorResponse;
 
   // 2. 파라미터 파싱

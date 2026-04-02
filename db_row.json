@@ -1,0 +1,14 @@
+[
+  {
+    "id": "fbbd4153-88c7-4ac2-aca1-fb74c4f486a9",
+    "user_id": "2c743c17-4688-4204-b2d9-6e7fb3df60bd",
+    "provider": "chzzk",
+    "provider_user_id": "7ddac20051907f2d6938f3082cc054d0",
+    "provider_username": "잠이오는 사과 5575122",
+    "access_token_encrypted": "yGTif7DVmgz8XU79:R7WOGC8M9vuuNx2vkT0fyA==:BMWCN5n1/HDBhnluRY4T/44lcpxMe3HpAa3mEa2tqzsy+yOIVWMzC4elEQNkmYsVor01jvheyTEUq9Zk3Crl6QtCly69+CUHw4PgEt9rj5NxX1pKHCU=",
+    "refresh_token_encrypted": "nSo4BawADngoFObF:P5/ckdxSwg3vG9Ni5Esc0w==:zSfmMb4QAgqvj0EgYjuIcmLSqFN9193JOUTup3CSVvMxThOCxjlx9Matt7q4r4TTXAP7fxFa7MCW78V4xUKCy/YQ6dwLnpA0AusEDVKFxsRxrkk0MX8=",
+    "token_expires_at": "2026-04-03T11:43:50.333+00:00",
+    "created_at": "2026-04-02T11:43:50.466545+00:00",
+    "updated_at": "2026-04-02T11:43:50.333+00:00"
+  }
+]
