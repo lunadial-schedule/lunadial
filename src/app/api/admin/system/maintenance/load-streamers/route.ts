@@ -21,8 +21,8 @@ export async function POST(req: Request) {
   let limit = limitParam ? parseInt(limitParam, 10) : 50;
   if (isNaN(limit) || limit <= 0) limit = 50;
   
-  let minFollowers = minFollowersParam ? parseInt(minFollowersParam, 10) : 1000;
-  if (isNaN(minFollowers) || minFollowers < 0) minFollowers = 1000;
+  let minFollowers = minFollowersParam ? parseInt(minFollowersParam, 10) : 5000;
+  if (isNaN(minFollowers) || minFollowers < 0) minFollowers = 5000;
 
   try {
     const body = await req.json().catch(() => ({}));

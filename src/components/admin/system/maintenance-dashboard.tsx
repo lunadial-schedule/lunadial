@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { Loader2, Zap, ShieldAlert, Users, Database, Link as LinkIcon, Info, Play, FileJson } from "lucide-react"
+import { Loader2, Zap, ShieldAlert, Users, Database, Link as LinkIcon, Info, Play, FileJson, Copy } from "lucide-react"
 import { format } from "date-fns"
 import { ko } from "date-fns/locale"
 import { getMaintenanceStats, revalidateAdminSystemPath } from "@/app/actions/admin-maintenance-stats"
@@ -17,6 +17,43 @@ type MaintenanceTask = {
   icon: any
   endpoint: string
   color: string
+}
+
+const SUMMARY_KEY_MAP: Record<string, string> = {
+  // load-streamers
+  provider_mode: "수집 모드",
+  seed_count: "검색 시드 수",
+  profile_hydrated_count: "프로필 조회 수",
+  unknown_follower_count: "팔로워 확인불가",
+  fetched_count: "전체 수집 개수",
+  filtered_low_followers: "팔로워 미달(제외)",
+  filtered_unknown_followers: "팔로워 불명(제외)",
+  upserted_count: "DB 갱신/추가",
+  unchanged_count: "변경 없음",
+  
+  // backfill-streamer-channel-ids
+  total_candidates: "검색 대상 수",
+  search_success: "검색 성공",
+  auto_matchable: "자동 매칭 가능",
+  needs_review: "수동 확인 필요",
+  no_match: "검색 결과 없음",
+  updated: "업데이트 완료",
+  
+  // clean-streamers
+  total_processed: "전체 검사 수",
+  renamed: "본명 자동 변경됨",
+  aliases_updated: "별칭 정리됨",
+  profile_refreshed: "프로필 갱신됨",
+  deactivated: "비활성화/휴방 처리",
+  
+  // common
+  errors: "오류 발생",
+  processed_count: "처리 건수",
+  updated_count: "업데이트 됨",
+  skipped_count: "생략/스킵 건수",
+  skipped: "생략/스킵됨",
+  missing_after: "누락된 개수",
+  disabled_count: "비활성화 됨"
 }
 
 const MAINTENANCE_TASKS: MaintenanceTask[] = [
@@ -56,6 +93,7 @@ export function MaintenanceDashboard() {
     isLoading: boolean
     isDryRunActive: boolean
     lastResult: any
+    lastPreview?: any
     lastRunAt: string | null
     lastRunMode: "dry-run" | "execution" | null
   }>>({})
@@ -80,7 +118,7 @@ export function MaintenanceDashboard() {
       // 빈 껍데기 포맷 초기화
       const init: any = {}
       MAINTENANCE_TASKS.forEach(t => {
-        init[t.id] = { isLoading: false, isDryRunActive: false, lastResult: null, lastRunAt: null, lastRunMode: null }
+        init[t.id] = { isLoading: false, isDryRunActive: false, lastResult: null, lastPreview: null, lastRunAt: null, lastRunMode: null }
       })
       setTaskState(init)
     }
@@ -130,10 +168,20 @@ export function MaintenanceDashboard() {
       const result = await res.json()
       
       if (res.ok && result.success) {
-        toast.success(isDryRun ? "점검 완료" : "실행 완료")
+        const summaryText = result.summary 
+          ? Object.entries(result.summary)
+              .filter(([k, v]) => typeof v === 'number' && v > 0)
+              .map(([k, v]) => `${SUMMARY_KEY_MAP[k] || k}: ${v}`)
+              .join(", ")
+          : "";
+
+        toast.success(isDryRun ? `[${task.title}] 점검 완료` : `[${task.title}] 실행 완료`, {
+          description: summaryText || result.message || "작업이 성공적으로 처리되었습니다."
+        })
         
         updateTaskState(task.id, {
           lastResult: result.summary,
+          lastPreview: result.preview,
           lastRunAt: new Date().toISOString(),
           lastRunMode: isDryRun ? "dry-run" : "execution"
         })
@@ -202,14 +250,14 @@ export function MaintenanceDashboard() {
       <div className="space-y-4">
         <h2 className="text-xl font-bold px-1">유지보수 액션</h2>
         {MAINTENANCE_TASKS.map(task => {
-          const state = taskState[task.id] || { isLoading: false, isDryRunActive: false, lastResult: null, lastRunAt: null, lastRunMode: null }
+          const state = taskState[task.id] || { isLoading: false, isDryRunActive: false, lastResult: null, lastPreview: null, lastRunAt: null, lastRunMode: null }
           const Icon = task.icon
 
           return (
             <Card key={task.id} className="shadow-sm">
               <div className="flex flex-col md:flex-row shrink-0">
                 {/* 좌측 정보 영역 */}
-                <div className="p-5 md:w-[65%] border-b md:border-b-0 md:border-r flex flex-col justify-between">
+                <div className="p-5 md:w-[55%] border-b md:border-b-0 md:border-r flex flex-col justify-between">
                   <div className="space-y-2">
                     <h3 className="font-bold text-lg flex items-center gap-2">
                       <Icon className={`w-5 h-5 ${task.color}`} />
@@ -253,10 +301,26 @@ export function MaintenanceDashboard() {
                 {/* 우측 결과 상태 뷰 */}
                 <div className="flex-1 p-5 bg-muted/10 flex flex-col">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold flex items-center gap-1.5 opacity-80">
-                      <FileJson className="w-4 h-4" />
-                      최근 요약
-                    </h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-semibold flex items-center gap-1.5 opacity-80">
+                        <FileJson className="w-4 h-4" />
+                        최근 요약
+                      </h4>
+                      {state.lastPreview && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 text-muted-foreground hover:text-foreground" 
+                          onClick={() => {
+                            navigator.clipboard.writeText(JSON.stringify(state.lastPreview, null, 2))
+                            toast.success("상세 결과(JSON)가 클립보드에 복사되었습니다.")
+                          }}
+                          title="상세 결과(JSON) 복사"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
                     {state.lastRunAt && (
                       <Badge variant={state.lastRunMode === "dry-run" ? "secondary" : "default"} className="text-[10px] px-1.5 py-0">
                         {state.lastRunMode === "dry-run" ? "점검 (Dry-run)" : "실제 업데이트"}
@@ -270,7 +334,9 @@ export function MaintenanceDashboard() {
                         <div className="grid grid-cols-2 gap-2">
                           {Object.entries(state.lastResult).map(([k, v]) => (
                             <div key={k} className="bg-background border rounded px-2 py-1 flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground truncate max-w-[80px]">{k}</span>
+                              <span className="text-muted-foreground truncate max-w-[130px]" title={k}>
+                                {SUMMARY_KEY_MAP[k] || k}
+                              </span>
                               <span className="font-bold font-mono ml-2">{(v as any).toString()}</span>
                             </div>
                           ))}
