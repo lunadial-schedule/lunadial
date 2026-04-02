@@ -85,12 +85,19 @@ export function ScheduleDetailDrawer({
   React.useEffect(() => {
     const handlePopState = () => {
       if (open) {
+        // 만약 모달/다이얼로그 같은 자식 오버레이가 popstate를 유발한 거라면
+        // 드로어를 열기 위해 추가한 ?event 쿼리가 여전히 URL에 남아있습니다.
+        // 이 경우 드로어를 닫으면 안 됩니다.
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('event') === internalSchedule?.id) {
+          return;
+        }
         onOpenChange(false);
       }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [open, onOpenChange]);
+  }, [open, onOpenChange, internalSchedule?.id]);
 
   // 3. 열릴 때 history push
   React.useEffect(() => {

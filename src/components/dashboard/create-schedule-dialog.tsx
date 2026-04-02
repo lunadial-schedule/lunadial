@@ -24,6 +24,7 @@ import { StreamerShortInfo } from "@/types/streamer";
 import { useIsOverlayOpen } from "@/hooks/use-is-overlay-open";
 import { AiExtractionTab } from "./ai-extraction/ai-extraction-tab";
 import { useAuth } from "@/components/providers/auth-provider";
+import { useHistoryDialog } from "@/hooks/use-history-dialog";
 
 interface CreateScheduleDialogProps {
   isMobileTrigger?: boolean;
@@ -34,6 +35,9 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
   const router = useRouter();
   const { user } = useAuth();
   const [open, setOpen] = React.useState(false);
+  
+  useHistoryDialog(open, setOpen, "create-schedule");
+  
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [duplicateInfo, setDuplicateInfo] = React.useState<any>(null);

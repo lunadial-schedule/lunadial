@@ -8,6 +8,7 @@ import * as React from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { StreamerSearchSection } from "./streamer-search"
 import { Plus } from "lucide-react"
+import { useHistoryDialog } from "@/hooks/use-history-dialog"
 
 interface FavoriteSearchSheetProps {
   children?: React.ReactNode
@@ -27,6 +28,8 @@ export function FavoriteSearchSheet({ children, open, onOpenChange }: FavoriteSe
     }
     onOpenChange?.(newOpen)
   }
+
+  useHistoryDialog(isOpen, handleOpenChange, "favorite-search");
 
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>

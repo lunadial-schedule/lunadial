@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { StreamerSelector } from "./streamer-selector";
 import { StreamerShortInfo } from "@/types/streamer";
+import { useHistoryDialog } from "@/hooks/use-history-dialog";
 
 interface UpdateScheduleDialogProps {
   schedule: Schedule;
@@ -29,6 +30,9 @@ interface UpdateScheduleDialogProps {
 
 export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }: UpdateScheduleDialogProps) {
   const { user } = useAuth();
+  
+  useHistoryDialog(open, onOpenChange, `update-schedule-${schedule?.id || ''}`);
+  
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [duplicateInfo, setDuplicateInfo] = React.useState<any>(null);
