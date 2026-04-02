@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin/notices" className="px-4 py-2 rounded-md hover:bg-muted font-medium transition-colors text-sm text-foreground">
             공지사항 관리
           </Link>
-          <Link href="/admin/chzzk" className="px-4 py-2 rounded-md hover:bg-muted font-medium transition-colors text-sm text-foreground">
+          <Link href="/admin/system/chzzk-session" className="px-4 py-2 rounded-md hover:bg-muted font-medium transition-colors text-sm text-foreground">
             치지직 연동 관리
           </Link>
           <Link href="/admin/logs" className="px-4 py-2 rounded-md hover:bg-muted font-medium transition-colors text-sm text-foreground">

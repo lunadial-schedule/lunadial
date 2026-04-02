@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 import { normalizeStreamerName } from '@/lib/utils';
 import { assertAdminOpsAuthorized } from '@/lib/admin-auth';
-import { fetchTopChzzkChannels } from '@/services/chzzk-search';
+import { fetchTopChzzkChannels } from '@/services/admin/chzzk-search';
 
 // 비정상적인 스트리머 이름 패턴
 const INVALID_NAMES = ['방송 예정', '미정', '추후 공지', '업데이트 예정', '제목없음', '-', '.', '방송예정'];

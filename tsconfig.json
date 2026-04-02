@@ -5,6 +5,11 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": false, // TODO: 너무 많은 오류를 유발할 수 있어 점진적 리팩터링 후 true 로 전환 권장
+    "exactOptionalPropertyTypes": false, // TODO: 기존 타입 정의를 모두 깨뜨릴 수 있어 도입 보류
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",

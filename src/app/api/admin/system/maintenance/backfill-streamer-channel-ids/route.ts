@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 import { normalizeStreamerName } from '@/lib/utils';
 import { assertAdminOpsAuthorized } from '@/lib/admin-auth';
-import { searchStreamerChannels, ChzzkSearchChannelResult } from '@/services/chzzk-search';
+import { searchStreamerChannels, ChzzkSearchChannelResult } from '@/services/admin/chzzk-search';
 
 // 명백한 오염 이름 후보 (기존 닉네임을 aliases로 옮길 때 배제하기 위함)
 const INVALID_NAMES = ['방송 예정', '미정', '추후 공지', '업데이트 예정', '제목없음', '-', '.', '방송예정'];

@@ -1,0 +1,6 @@
+﻿.next/types/validator.ts(53,39): error TS2307: Cannot find module '../../src/app/admin/chzzk/page.js' or its corresponding type declarations.
+.next/types/validator.ts(224,39): error TS2307: Cannot find module '../../src/app/api/admin/chzzk/keep-alive/route.js' or its corresponding type declarations.
+.next/types/validator.ts(269,39): error TS2307: Cannot find module '../../src/app/api/dev/backfill-streamer-channel-ids/route.js' or its corresponding type declarations.
+.next/types/validator.ts(278,39): error TS2307: Cannot find module '../../src/app/api/dev/backfill-streamer-ids/route.js' or its corresponding type declarations.
+.next/types/validator.ts(287,39): error TS2307: Cannot find module '../../src/app/api/dev/clean-streamers/route.js' or its corresponding type declarations.
+.next/types/validator.ts(296,39): error TS2307: Cannot find module '../../src/app/api/dev/load-streamers/route.js' or its corresponding type declarations.

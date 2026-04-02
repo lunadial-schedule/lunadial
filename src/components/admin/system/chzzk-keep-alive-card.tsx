@@ -51,7 +51,7 @@ export function ChzzkKeepAliveCard() {
   const handleKeepAlive = async () => {
     try {
       setIsLoading(true)
-      const res = await fetch("/api/admin/chzzk/keep-alive", {
+      const res = await fetch("/api/admin/system/chzzk-session/keep-alive", {
         method: "POST"
       })
 

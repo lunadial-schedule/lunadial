@@ -1,5 +1,5 @@
 import { PageContainer } from "@/components/layout/page-container"
-import { ChzzkKeepAliveCard } from "@/components/admin/chzzk-keep-alive-card"
+import { ChzzkKeepAliveCard } from "@/components/admin/system/chzzk-keep-alive-card"
 import { ShieldAlert, Info } from "lucide-react"
 
 export default function AdminChzzkPage() {

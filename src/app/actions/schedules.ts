@@ -1,10 +1,18 @@
 "use server";
 
 /**
- * 일정(Schedule) Server Actions
+ * 📅 일정(Schedule) 코어 Server Actions
  *
- * Supabase schedules 테이블에 대한 CRUD 작업을 Server Action으로 제공한다.
- * 수정 시 동시성 제어(Optimistic Locking)를 적용하여 충돌을 방지한다.
+ * [역할]
+ * Supabase `schedules` 테이블에 대한 C/R/U/D 모든 쓰기/조회 로직을 통제하는 중앙 관제소입니다.
+ * UI 컴포넌트들은 DB를 직접 조작하지 않고 반드시 이 액션들을 호출해야 권한, 로깅, 예외처리가 보장됩니다.
+ *
+ * [주요 특징 및 수정 시 주의사항]
+ * 1. 보안/권한: 모든 쓰기 액션은 `getActorDetails()`를 통해 호출한 사용자(Actor)의 신원과 권한(admin 등)을 먼저 검증합니다.
+ * 2. 동시성 제어: 일정 수정(`updateSchedule`)은 Optimistic Locking(낙관적 락) 기법을 사용하여, 내가 보고 있던 사이에 남이 수정했다면 에러를 뱉습니다. (`updated_at` 비교)
+ * 3. 로깅: 모든 C/U/D 작업은 `schedule_update_logs` 테이블에 증거(snapshot)를 남깁니다.
+ *
+ * ⚠️ 수정 위치 알림: 일정 중복 정책, 권한 검사 조건 변경 시 이 파일의 로직을 가장 먼저 확인해야 합니다.
  */
 import { createClient } from "@/lib/supabase/server";
 import { Database } from "@/types/supabase";
@@ -46,11 +54,18 @@ export async function getSchedules(startDate?: Date, endDate?: Date) {
 }
 
 /**
- * 새 일정을 생성한다.
- * user_id는 현재 인증된 사용자에서 자동 설정된다.
- * @param schedule - 생성할 일정 데이터 (user_id 제외)
- * @param inputMethod - 'manual' 또는 'bulk'
- * @param allow_duplicate - 관리자 권한으로 강제 중복 예외 허용 (기본 false)
+ * ✨ 새 일정 생성 처리
+ * 
+ * [왜 필요한가?]
+ * - 사용자가 수동 작성 폼이나 AI 자동 추출을 통해 일정을 추가할 때 최종 등록을 담당합니다.
+ * - 본문 작성자(`user_id`)는 클라이언트에서 위조하지 못하도록 서버 세션(`actor`) 기반으로 자동 주입됩니다.
+ *
+ * [중요 분기: 중복 차단 방벽]
+ * - `allow_duplicate`: 이 플래그가 켜져 있어도 `admin` 권한이 없다면 무시되고 에러를 반환합니다. (관리자 전용 예외 처리)
+ * 
+ * @param schedule - 생성할 데이터 (명시적으로 user_id 파라미터는 제외시킴)
+ * @param inputMethod - 'manual' (수동입력) 또는 'bulk' (AI/대량입력)
+ * @param allow_duplicate - 관리자에 한해, 기존에 등록된 중복 일정을 무시하고 강제 저장할지 여부
  */
 export async function createSchedule(
   schedule: Omit<ScheduleInsert, "user_id">, 
@@ -114,12 +129,19 @@ export async function createSchedule(
 }
 
 /**
- * 기존 일정을 수정한다.
- * Optimistic Locking: 수정 전 updated_at을 비교하여 동시 수정 충돌을 방지한다.
- * @param id - 일정 ID
- * @param updates - 수정할 필드들
- * @param currentUpdatedAt - 클라이언트가 마지막으로 확인한 updated_at 값
- * @param allow_duplicate - 관리자 권한으로 강제 중복 예외 허용 (기본 false)
+ * 📝 기존 일정 수정 처리
+ *
+ * [핵심 메커니즘: 낙관적 락 (Optimistic Locking)]
+ * - `currentUpdatedAt`을 파라미터로 받아, 현재 DB의 `updated_at`과 일치하는지 대조합니다.
+ * - 일치하지 않으면 "누군가 이미 수정함"이라는 경고와 함께 `conflict: true`를 반환하여 데이터가 덮어씌워지는 대참사를 막습니다.
+ *
+ * [수정 로그 남기기]
+ * - 어느 필드가 바뀌었는지 하나하나 대조(diff)하여 `schedule_update_logs`의 `change_summary`에 알기 쉽게 기록합니다. (예: "제목 외 1개 수정")
+ *
+ * @param id - 수정할 타겟 일정 ID
+ * @param updates - 덮어씌울 파편화된 수정 데이터
+ * @param currentUpdatedAt - 클라이언트가 수정을 시작했을 당시의 기준 타임스탬프
+ * @param allow_duplicate - 관리자 권한으로 중복을 무시하고 강제로 시간을 밀어넣을 때 사용 (기본 false)
  */
 export async function updateSchedule(
   id: string, 
@@ -372,11 +394,16 @@ export async function getFavoriteStreamerNamesByUserId(userId: string): Promise<
 }
 
 /**
- * 중복 일정 여부를 조회한다.
- * @param streamerId - 스트리머 ID
- * @param startTimeStr - UTC ISO 날짜/시간 문자열
- * @param isAllDay - 하루 종일 여부
- * @param excludeId - 수정 시 제외할 현재 일정 ID
+ * 🔍 동일 스트리머 중복 일정 검사 (Pre-flight)
+ *
+ * [왜 필요한가?]
+ * - 새 일정을 등록하거나 시간을 수정할 때, "해당 스트리머가 동일한 날짜/시간에 이미 일정이 있는지" UI 단에서 사전 경고하기 위해 사용합니다.
+ * - 종일(All Day) 일정인 경우 '날짜(Date)' 수준에서 겹치면 중복으로 판정하고, 시간 지정 일정인 경우 '분 단위 시간'이 일치할 때만 중복으로 판정합니다.
+ *
+ * @param streamerId - 대상 스트리머의 고유 ID
+ * @param startTimeStr - 비교할 타겟 UTC ISO 날짜/시간 문자열
+ * @param isAllDay - 종일 일정 여부
+ * @param excludeId - (선택사항) 일정 '수정' 중일 경우, 자기 자신과 검사하여 중복으로 뜨는 붕괴를 막기 위해 자기 자신의 ID를 기입
  */
 export async function checkDuplicateSchedule(
   streamerId: string, 
