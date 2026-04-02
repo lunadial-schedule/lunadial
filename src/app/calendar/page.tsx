@@ -387,7 +387,8 @@ function CalendarContent() {
           
           {/* Calendar Cells */}
           <div className={cn(
-            "px-2 sm:px-4 flex-1",
+            "px-2 sm:px-4 flex-1 transition-opacity duration-200",
+            (isLoading && events.length > 0) && "opacity-50 pointer-events-none",
             view === 'month' ? (
               (() => {
                 const fd = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);

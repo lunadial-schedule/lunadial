@@ -184,7 +184,7 @@ export function TodayScheduleCard({
 
   return (
     <>
-      <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden h-[700px] lg:h-[1420px]">
+      <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden h-[700px] lg:h-[1418px]">
         {/* Header & Controls */}
         <CardHeader className="h-9 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
           <CardTitle className="text-[18px] font-bold flex items-center gap-1.5 m-0 p-0 relative">
@@ -256,7 +256,10 @@ export function TodayScheduleCard({
                     </span>
                   </div>
                   
-                  <div className="flex-1 flex flex-col gap-1.5 overflow-y-auto pr-1 relative min-h-0 pt-1.5 pb-4 z-10">
+                  <div className={cn(
+                    "flex-1 flex flex-col gap-1.5 overflow-y-auto pr-1 relative min-h-0 pt-1.5 pb-4 z-10 transition-opacity duration-200",
+                    (isLoading && events.length > 0) && "opacity-50 pointer-events-none"
+                  )}>
                     {isLoading ? (
                        <div className="flex-1 flex items-center justify-center min-h-[150px]">
                          <span className="text-xs text-muted-foreground animate-pulse">로딩 중...</span>
