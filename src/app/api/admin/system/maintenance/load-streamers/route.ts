@@ -18,8 +18,8 @@ export async function POST(req: Request) {
   const minFollowersParam = url.searchParams.get('minFollowers');
   
   let dryRun = dryRunParam === 'true';
-  let limit = limitParam ? parseInt(limitParam, 10) : 50;
-  if (isNaN(limit) || limit <= 0) limit = 50;
+  let limit = limitParam ? parseInt(limitParam, 10) : 1000;
+  if (isNaN(limit) || limit <= 0) limit = 1000;
   
   let minFollowers = minFollowersParam ? parseInt(minFollowersParam, 10) : 5000;
   if (isNaN(minFollowers) || minFollowers < 0) minFollowers = 5000;
