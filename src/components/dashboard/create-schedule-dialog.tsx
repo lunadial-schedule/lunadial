@@ -256,17 +256,6 @@ export function CreateScheduleDialog({ isMobileTrigger = false }: CreateSchedule
                 </div>
               )}
 
-              {!duplicateInfo && hasSameDateInfo && (
-                <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-md p-3">
-                  <div className="flex items-start gap-2 text-blue-700 dark:text-blue-400">
-                    <Info className="w-4 h-4 mt-0.5 shrink-0" />
-                    <div className="text-sm font-medium">
-                      참고: 해당 날짜에 이미 다른 일정({hasSameDateInfo.is_all_day ? "하루 종일" : format(new Date(hasSameDateInfo.start_time), "HH:mm")})이 등록되어 있습니다. 서로 다른 시간대이므로 등록은 정상적으로 가능합니다.
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className="space-y-2">
                  <label className="text-sm font-medium">제목 *</label>
                  <Input name="title" required placeholder={`${titlePlaceholder}`} />

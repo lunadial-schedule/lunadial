@@ -32,7 +32,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [duplicateInfo, setDuplicateInfo] = React.useState<any>(null);
-  const [hasSameDateInfo, setHasSameDateInfo] = React.useState<any>(null);
+
   const [allowDuplicate, setAllowDuplicate] = React.useState(false);
 
   const [selectedCats, setSelectedCats] = React.useState<string[]>([]);
@@ -52,7 +52,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
       setStreamer(schedule.streamer_id ? { id: schedule.streamer_id, name: schedule.streamer || "" } : null);
       setErrorMsg(null);
       setDuplicateInfo(null);
-      setHasSameDateInfo(null);
+
       setAllowDuplicate(false);
     }
   }, [open, schedule]);
@@ -71,7 +71,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
     setIsLoading(true);
     setErrorMsg(null);
     setDuplicateInfo(null);
-    setHasSameDateInfo(null);
+
     
     const formData = new FormData(e.currentTarget);
     const title = formData.get("title") as string;
@@ -105,7 +105,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
     const isoString = new Date(startTimeStr).toISOString();
 
     if (!allowDuplicate) {
-      const { isDuplicate, duplicateInfo: dupInfo, hasSameDateInfo: sameDateInfo } = await checkDuplicateSchedule(
+      const { isDuplicate, duplicateInfo: dupInfo } = await checkDuplicateSchedule(
         streamer.id,
         isoString,
         isAllDay,
@@ -114,11 +114,8 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
 
       if (isDuplicate && dupInfo) {
         setDuplicateInfo(dupInfo);
-        setHasSameDateInfo(null);
         setIsLoading(false);
         return; // 차단
-      } else if (sameDateInfo) {
-        setHasSameDateInfo(sameDateInfo);
       }
     }
 
@@ -199,16 +196,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
           </div>
         )}
 
-        {!duplicateInfo && hasSameDateInfo && (
-          <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-md p-3 mt-4">
-            <div className="flex items-start gap-2 text-blue-700 dark:text-blue-400">
-              <Info className="w-4 h-4 mt-0.5 shrink-0" />
-              <div className="text-sm font-medium">
-                참고: 해당 날짜에 이미 다른 일정({hasSameDateInfo.is_all_day ? "하루 종일" : format(new Date(hasSameDateInfo.start_time), "HH:mm")})이 등록되어 있습니다. 변경 내용 저장은 정상적으로 가능합니다.
-              </div>
-            </div>
-          </div>
-        )}
+
 
         <form onSubmit={onSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
