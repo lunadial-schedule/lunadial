@@ -251,124 +251,135 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
 
       {/* List */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-        {drafts.length === 0 && (
-          <div className="text-center text-sm text-muted-foreground py-8">
-            후보 일정이 없습니다.
+        {drafts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 border border-dashed rounded-xl shadow-sm h-[300px]">
+            <AlertCircle className="w-10 h-10 text-muted-foreground/50 mb-3" />
+            <h3 className="text-sm font-bold mb-1">일정을 추출하지 못했어요</h3>
+            <p className="text-xs text-muted-foreground mb-6 max-w-[250px]">
+              이미지에 날짜/시간 정보가 없거나 복잡한 형태일 수 있습니다. 이어서 직접 입력할 수 있습니다.
+            </p>
+            <Button size="sm" onClick={handleAddManual}>
+              <Plus className="w-4 h-4 mr-1" /> 직접 일정 입력하기
+            </Button>
           </div>
-        )}
-
-        {drafts.map((draft, idx) => (
-          <div key={draft.id} className={`p-4 border rounded-xl shadow-sm transition-colors ${draft.isSelected ? 'border-primary ring-1 ring-primary/20' : 'bg-muted/30 border-dashed opacity-80'}`}>
-            <div className="flex items-start gap-3">
-              <Checkbox 
-                id={`chk-${draft.id}`} 
-                checked={draft.isSelected} 
-                onCheckedChange={(val) => handleUpdateDraft(draft.id, { isSelected: val === true })}
-                disabled={draft.duplicate?.isDuplicate && !allowDuplicate}
-                className="mt-1"
-              />
-              <div className="flex-1 space-y-3">
-                {/* Badges */}
-                <div className="flex flex-wrap items-center gap-1.5 min-h-6">
-                  {draft.duplicate?.isDuplicate && (
-                    <Badge variant="destructive" className="flex items-center gap-1 text-[10px] px-1.5"><Copy className="w-3 h-3" /> 중복 일정</Badge>
-                  )}
-                  {!draft.duplicate?.isDuplicate && draft.status === "ready" && (
-                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 flex items-center gap-1 text-[10px] px-1.5"><CheckCircle2 className="w-3 h-3" /> 추출 완료</Badge>
-                  )}
-                  {draft.status === "needs_review" && (
-                     <Badge variant="secondary" className="flex items-center gap-1 text-orange-600 bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 text-[10px] px-1.5"><AlertCircle className="w-3 h-3" /> 확인 필요</Badge>
-                  )}
-                  {draft.status === "incomplete" && (
-                     <Badge variant="outline" className="flex items-center gap-1 text-red-600 border-red-200 bg-red-50 text-[10px] px-1.5"><AlertCircle className="w-3 h-3" /> 정보 부족</Badge>
-                  )}
-                  {draft.status === "manual" && (
-                     <Badge variant="outline" className="flex items-center gap-1 text-primary border-primary/30 bg-primary/10 text-[10px] px-1.5"><Plus className="w-3 h-3" /> 직접 추가</Badge>
-                  )}
-                  {draft.duplicate?.isDuplicate && (
-                    <span className="text-[10px] text-destructive ml-1">{draft.duplicate.reason}</span>
-                  )}
-                </div>
-
-                {/* Inline Editing Form */}
-                <div className="space-y-4 mt-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground">제목 *</label>
-                    <Input className="h-8 text-sm font-medium" placeholder="일정 제목" value={draft.title} onChange={(e) => handleUpdateDraft(draft.id, { title: e.target.value })} />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground">스트리머 *</label>
-                    <StreamerSelector
-                      value={draft.streamerId}
-                      onSelect={(s) => handleUpdateDraft(draft.id, { streamerName: s?.name || "", streamerId: s?.id || null })}
-                      initialLabel={draft.streamerName || ""}
-                      placeholder="스트리머 검색"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground">카테고리 *</label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {CATEGORY_LIST.map(cat => {
-                        const isSelected = (draft.categories || []).includes(cat.id);
-                        return (
-                          <Badge
-                            key={cat.id}
-                            variant="outline"
-                            className={`cursor-pointer border-dashed text-[11px] px-2.5 py-0.5 transition-colors hover:bg-muted ${isSelected ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary' : ''}`}
-                            onClick={() => {
-                              const curr = draft.categories || [];
-                              handleUpdateDraft(draft.id, {
-                                categories: isSelected ? curr.filter(c => c !== cat.id) : [...curr, cat.id]
-                              })
-                            }}
-                          >
-                            {cat.label}
-                          </Badge>
-                        )
-                      })}
+        ) : (
+          <>
+            {drafts.map((draft, idx) => (
+              <div key={draft.id} className={`p-4 border rounded-xl shadow-sm transition-colors ${draft.isSelected ? 'border-primary ring-1 ring-primary/20' : 'bg-muted/30 border-dashed opacity-80'}`}>
+                <div className="flex items-start gap-3">
+                  <Checkbox 
+                    id={`chk-${draft.id}`} 
+                    checked={draft.isSelected} 
+                    onCheckedChange={(val) => handleUpdateDraft(draft.id, { isSelected: val === true })}
+                    disabled={draft.duplicate?.isDuplicate && !allowDuplicate}
+                    className="mt-1"
+                  />
+                  <div className="flex-1 space-y-3">
+                    {/* Badges */}
+                    <div className="flex flex-wrap items-center gap-1.5 min-h-6">
+                      {draft.duplicate?.isDuplicate && (
+                        <Badge variant="destructive" className="flex items-center gap-1 text-[10px] px-1.5"><Copy className="w-3 h-3" /> 중복 일정</Badge>
+                      )}
+                      {!draft.duplicate?.isDuplicate && draft.status === "ready" && (
+                        <Badge variant="default" className="bg-green-600 hover:bg-green-700 flex items-center gap-1 text-[10px] px-1.5"><CheckCircle2 className="w-3 h-3" /> 추출 완료</Badge>
+                      )}
+                      {draft.status === "needs_review" && (
+                         <Badge variant="secondary" className="flex items-center gap-1 text-orange-600 bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 text-[10px] px-1.5"><AlertCircle className="w-3 h-3" /> 확인 필요</Badge>
+                      )}
+                      {draft.status === "incomplete" && (
+                         <Badge variant="outline" className="flex items-center gap-1 text-red-600 border-red-200 bg-red-50 text-[10px] px-1.5"><AlertCircle className="w-3 h-3" /> 정보 부족</Badge>
+                      )}
+                      {draft.status === "manual" && (
+                         <Badge variant="outline" className="flex items-center gap-1 text-primary border-primary/30 bg-primary/10 text-[10px] px-1.5"><Plus className="w-3 h-3" /> 직접 추가</Badge>
+                      )}
+                      {draft.duplicate?.isDuplicate && (
+                        <span className="text-[10px] text-destructive ml-1">{draft.duplicate.reason}</span>
+                      )}
                     </div>
-                  </div>
 
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-muted-foreground">시작 시간 *</label>
-                      <div className="flex items-center space-x-1.5">
-                        <Checkbox id={`allday-${draft.id}`} checked={draft.isAllDay} onCheckedChange={(c) => handleUpdateDraft(draft.id, { isAllDay: c === true, startTime: c === true ? null : draft.startTime })} />
-                        <label htmlFor={`allday-${draft.id}`} className="text-[11px] font-medium text-muted-foreground cursor-pointer pt-px">하루 종일</label>
+                    {/* Inline Editing Form */}
+                    <div className="space-y-4 mt-2">
+                      <div className="space-y-1.5">
+                        <label className={`text-xs font-semibold ${!draft.title ? 'text-destructive' : 'text-muted-foreground'}`}>제목 *</label>
+                        <Input className={`h-8 text-sm font-medium ${!draft.title ? 'border-destructive ring-destructive/20 focus-visible:ring-destructive' : ''}`} placeholder="일정 제목" value={draft.title} onChange={(e) => handleUpdateDraft(draft.id, { title: e.target.value })} />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className={`text-xs font-semibold ${!draft.streamerId ? 'text-destructive' : 'text-muted-foreground'}`}>스트리머 *</label>
+                        <div className={!draft.streamerId ? "border border-destructive rounded-md" : ""}>
+                          <StreamerSelector
+                            value={draft.streamerId}
+                            onSelect={(s) => handleUpdateDraft(draft.id, { streamerName: s?.name || "", streamerId: s?.id || null })}
+                            initialLabel={draft.streamerName || ""}
+                            placeholder="스트리머 검색"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className={`text-xs font-semibold ${(!draft.categories || draft.categories.length === 0) ? 'text-destructive' : 'text-muted-foreground'}`}>카테고리 *</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {CATEGORY_LIST.map(cat => {
+                            const isSelected = (draft.categories || []).includes(cat.id);
+                            return (
+                              <Badge
+                                key={cat.id}
+                                variant="outline"
+                                className={`cursor-pointer border-dashed text-[11px] px-2.5 py-0.5 transition-colors hover:bg-muted ${isSelected ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary' : ''}`}
+                                onClick={() => {
+                                  const curr = draft.categories || [];
+                                  handleUpdateDraft(draft.id, {
+                                    categories: isSelected ? curr.filter(c => c !== cat.id) : [...curr, cat.id]
+                                  })
+                                }}
+                              >
+                                {cat.label}
+                              </Badge>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className={`text-xs font-semibold ${!draft.date ? 'text-destructive' : 'text-muted-foreground'}`}>시작 시간 *</label>
+                          <div className="flex items-center space-x-1.5">
+                            <Checkbox id={`allday-${draft.id}`} checked={draft.isAllDay} onCheckedChange={(c) => handleUpdateDraft(draft.id, { isAllDay: c === true, startTime: c === true ? null : draft.startTime })} />
+                            <label htmlFor={`allday-${draft.id}`} className="text-[11px] font-medium text-muted-foreground cursor-pointer pt-px">하루 종일</label>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <Input type="date" className={`h-8 text-sm flex-1 ${!draft.date ? 'border-destructive ring-destructive/20 focus-visible:ring-destructive' : ''}`} value={draft.date || ""} onChange={(e) => handleUpdateDraft(draft.id, { date: e.target.value })} />
+                           {!draft.isAllDay && (
+                             <Input type="time" className={`h-8 text-sm flex-1 ${!draft.startTime ? 'border-destructive ring-destructive/20 focus-visible:ring-destructive' : ''}`} value={draft.startTime || ""} onChange={(e) => handleUpdateDraft(draft.id, { startTime: e.target.value })} />
+                           )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-muted-foreground">메모</label>
+                        <textarea 
+                          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[60px] resize-none"
+                          placeholder="추가 세부사항을 기록하세요."
+                           value={draft.memo || ""} 
+                           onChange={(e) => handleUpdateDraft(draft.id, { memo: e.target.value })}
+                        />
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                       <Input type="date" className="h-8 text-sm flex-1" value={draft.date || ""} onChange={(e) => handleUpdateDraft(draft.id, { date: e.target.value })} />
-                       {!draft.isAllDay && (
-                         <Input type="time" className="h-8 text-sm flex-1" value={draft.startTime || ""} onChange={(e) => handleUpdateDraft(draft.id, { startTime: e.target.value })} />
-                       )}
-                    </div>
-                  </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground">메모</label>
-                    <textarea 
-                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[60px] resize-none"
-                      placeholder="추가 세부사항을 기록하세요."
-                       value={draft.memo || ""} 
-                       onChange={(e) => handleUpdateDraft(draft.id, { memo: e.target.value })}
-                    />
                   </div>
                 </div>
-
               </div>
+            ))}
+            
+            <div className="pt-2 flex justify-center pb-8">
+              <Button variant="outline" size="sm" onClick={handleAddManual} className="border-dashed h-9">
+                <Plus className="w-4 h-4 mr-1" />
+                일정 추가
+              </Button>
             </div>
-          </div>
-        ))}
-        
-        <div className="pt-2 flex justify-center pb-8">
-          <Button variant="outline" size="sm" onClick={handleAddManual} className="border-dashed h-9">
-            <Plus className="w-4 h-4 mr-1" />
-            일정 직접 추가
-          </Button>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Footer */}
