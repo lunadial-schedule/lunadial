@@ -164,7 +164,7 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
         <DialogHeader>
           <DialogTitle>일정 수정</DialogTitle>
           <DialogDescription>
-            등록된 일정의 상세 정보를 수정합니다. 누구나 수정 가능하므로 동시 편집 시 주의해 주세요.
+            누구나 수정 가능하므로 동시 편집 시 주의해 주세요.
           </DialogDescription>
         </DialogHeader>
         {errorMsg && (

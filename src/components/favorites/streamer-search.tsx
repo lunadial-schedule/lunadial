@@ -172,7 +172,7 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
               <Search className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground">
-              관심있는 스트리머를 검색하고<br/>즐겨찾기로 추가해보세요.
+              관심있는 스트리머를 검색하고<br/>즐겨찾기로 추가해보세요.<br/><br/>(검색 결과는 최대 20개까지 표시)
             </p>
           </div>
         )}
