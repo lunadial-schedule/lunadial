@@ -124,7 +124,7 @@ export default function ProPage() {
               </li>
               <li className="flex items-center gap-3">
                 <Check className="h-4 w-4 text-amber-500" />
-                <span>개인 캘린더 앱(Google, Apple) 연동 (내보내기)</span>
+                <span>개인 캘린더 앱(Google, Apple) 연동 (예정)</span>
               </li>
             </ul>
             {isLoading ? (
