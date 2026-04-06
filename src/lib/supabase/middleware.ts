@@ -12,6 +12,20 @@ import { NextResponse, type NextRequest } from 'next/server'
  * middleware.ts에서 직접 호출한다.
  */
 export async function updateSession(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  const isPublicPath =
+    pathname === '/' ||
+    pathname.startsWith('/calendar') ||
+    pathname.startsWith('/updates') ||
+    pathname.startsWith('/notices') ||
+    pathname.startsWith('/api/chzzk/live/top') ||
+    pathname.startsWith('/api/trending-categories') ||
+    pathname.startsWith('/_next')
+
+  if (isPublicPath) {
+    return NextResponse.next({ request })
+  }
   let supabaseResponse = NextResponse.next({
     request,
   })

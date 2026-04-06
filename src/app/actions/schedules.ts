@@ -350,28 +350,6 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
   return { data: data as any as HomeSchedule[], error: null };
 }
 
-/**
- * 현재 사용자의 즐겨찾기 스트리머 이름 목록만 반환.
- * 비로그인 시 빈 배열 반환 (에러가 아니라 정상 흐름).
- * 홈 화면에서 즐겨찾기 필터에만 사용하므로 이름만 필요하다.
- */
-export async function getMyFavoriteStreamerNames(): Promise<string[]> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return [];
-
-  const { data, error } = await supabase
-    .from("favorites")
-    .select("streamers ( name )")
-    .eq("user_id", user.id);
-
-  if (error || !data) return [];
-
-  return data
-    .map((f: any) => (f.streamers as any)?.name)
-    .filter(Boolean) as string[];
-}
 
 /**
  * userId를 직접 받아 즐겨찾기 스트리머 이름 목록을 반환.

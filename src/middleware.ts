@@ -14,6 +14,12 @@ export async function middleware(request: NextRequest) {
 /** 미들웨어를 적용할 경로 매처 (정적 파일 제외) */
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/admin/:path*',
+    '/settings/:path*',
+    '/favorites/:path*',
+    '/api/account/:path*',
+    '/api/admin/:path*',
+    '/api/notifications/:path*',
+    '/api/payments/:path*',
   ],
 }

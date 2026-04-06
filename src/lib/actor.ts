@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
+import { getServerUser } from "@/lib/auth/server-user";
 
 export async function getActorDetails() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getServerUser();
   if (!user) return null;
+  const supabase = await createClient();
 
   const { data: roleData } = await supabase
     .from('user_roles')

@@ -9,13 +9,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+import { getServerUser } from "@/lib/auth/server-user";
+
 /**
  * 현재 사용자의 즐겨찾기 목록을 조회한다.
  * favorites 테이블과 streamers 테이블을 JOIN하여 스트리머 정보를 포함한다.
  */
 export async function getMyFavorites() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getServerUser();
 
   if (!user) {
     return { data: null, error: "로그인이 필요합니다." };
@@ -88,7 +90,7 @@ export async function getMyFavorites() {
  */
 export async function addFavorite(streamerId: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getServerUser();
 
   if (!user) {
     return { data: null, error: "로그인이 필요합니다." };
@@ -143,7 +145,7 @@ export async function addFavorite(streamerId: string) {
  */
 export async function removeFavorite(streamerId: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getServerUser();
 
   if (!user) {
     return { error: "로그인이 필요합니다." };
@@ -171,7 +173,7 @@ export async function removeFavorite(streamerId: string) {
  */
 export async function isFavorited(streamerId: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getServerUser();
 
   if (!user) {
     return { data: false, error: null };
