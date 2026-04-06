@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ChevronLeft, ChevronRight, Loader2, List, Grid } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2, List, Grid, AlertCircle, RefreshCcw } from "lucide-react"
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer"
 import { PageContainer } from "@/components/layout/page-container"
 import { CATEGORY_LIST } from "@/config/categories"
@@ -93,6 +93,7 @@ function CalendarContent() {
   const hasLoadedOnceRef = React.useRef(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true); // Initial/forced load
+  const [isError, setIsError] = React.useState(false);
   
   const lastRequestIdRef = React.useRef(0);
   const loadFavoritesRef = React.useRef<any>(null);
@@ -134,11 +135,16 @@ function CalendarContent() {
       console.log(`[Calendar Refactor] Load Start | Reason: ${reason} | ID: ${requestId} | Background: ${isBackground}`);
     }
 
+    setIsError(false);
     try {
       const { start, end } = getDateRange(currentDate, view)
-      const { data } = await getHomeSchedules(start, end)
+      const { data, error } = await getHomeSchedules(start, end)
       
       if (requestId !== lastRequestIdRef.current) return;
+      
+      if (error) {
+        throw new Error(error);
+      }
       
       if (data) {
         setEvents(data);
@@ -146,6 +152,7 @@ function CalendarContent() {
       }
     } catch (e) {
       console.error(`[Calendar Refactor] Load Error (ID: ${requestId}):`, e)
+      setIsError(true);
     } finally {
       if (requestId === lastRequestIdRef.current) {
         setIsLoading(false);
@@ -358,17 +365,33 @@ function CalendarContent() {
 
         {/* Calendar Grid */}
         <CardContent className="flex-1 p-0 flex flex-col relative h-[500px] lg:h-auto min-h-[500px]">
-          {(isLoading && events.length === 0) && (
-            <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-3 animate-in fade-in duration-300">
-              <div className="flex items-center justify-center bg-card p-4 rounded-full shadow-sm border border-border/50">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          {isError ? (
+            <div className="absolute inset-0 bg-background/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300 rounded-b-xl lg:rounded-b-xl lg:rounded-bl-none">
+              <div className="bg-destructive/10 p-3.5 rounded-full mb-4">
+                <AlertCircle className="w-8 h-8 text-destructive/80" />
               </div>
-              <p className="text-sm font-medium text-foreground/80">일정을 불러오는 중입니다...</p>
+              <h3 className="text-lg font-bold tracking-tight mb-2">캘린더 데이터를 불러오지 못했습니다</h3>
+              <p className="text-sm text-muted-foreground max-w-[280px] mb-6">
+                네트워크 문제이거나 서버 오류일 수 있습니다.<br/>잠시 후 다시 시도해주세요.
+              </p>
+              <Button onClick={() => loadSchedules('retry', false)} variant="outline" className="gap-2">
+                <RefreshCcw className="w-4 h-4" />
+                다시 시도
+              </Button>
             </div>
-          )}
-          
-          {/* Calendar Header Row */}
-          <div className={`grid ${view === 'day' ? 'grid-cols-1' : 'grid-cols-7'} border-b h-8.5 bg-muted/5 z-10 shrink-0 px-2 sm:px-4`}>
+          ) : (
+            <>
+              {(isLoading && events.length === 0) && (
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-3 animate-in fade-in duration-300">
+                  <div className="flex items-center justify-center bg-card p-4 rounded-full shadow-sm border border-border/50">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground/80">일정을 불러오는 중입니다...</p>
+                </div>
+              )}
+              
+              {/* Calendar Header Row */}
+              <div className={`grid ${view === 'day' ? 'grid-cols-1' : 'grid-cols-7'} border-b h-8.5 bg-muted/5 z-10 shrink-0 px-2 sm:px-4`}>
             {view === 'day' ? (
               <div className="flex justify-between items-center text-xs font-semibold px-2 border-r last:border-0">
                 <span className="text-muted-foreground">{format(currentDate, "MM.dd")} ({format(currentDate, "E", { locale: ko })})</span>
@@ -602,6 +625,8 @@ function CalendarContent() {
                </div>
              )}
           </div>
+            </>
+          )}
         </CardContent>
       </Card>
       

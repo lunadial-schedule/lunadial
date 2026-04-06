@@ -21,6 +21,7 @@ import { UpNextSection } from "@/components/dashboard/up-next-section";
 // Skeletons (데이터 로딩 전 즉시 그려지는 껍데기 프레임)
 import { TodayScheduleSkeleton } from "@/components/dashboard/today-schedule-skeleton";
 import { UpNextSkeleton } from "@/components/dashboard/up-next-skeleton";
+import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 
 export default function Home() {
   return (
@@ -33,20 +34,29 @@ export default function Home() {
           {/* Left Column wrapper (Desktop: 70%, Mobile: Full width) */}
           <div className="flex flex-col w-full lg:col-span-7 h-full min-w-0 order-1 lg:order-none">
             {/* 데이터 로딩 전에는 껍데기를 즉시 보여주고, 완료 시 실제 일정 리스트를 렌더 */}
-            <Suspense fallback={<TodayScheduleSkeleton />}>
-              <TodayScheduleSection />
-            </Suspense>
+            <SectionErrorBoundary fallbackMessage="오늘의 일정을 불러오지 못했습니다.">
+              <Suspense fallback={<TodayScheduleSkeleton />}>
+                <TodayScheduleSection />
+              </Suspense>
+            </SectionErrorBoundary>
           </div>
 
           {/* Right Column wrapper (Desktop: 30%, Mobile: Full width) */}
           <div className="flex flex-col w-full lg:col-span-3 gap-4 lg:gap-6 min-w-0 order-2 lg:order-none">
-            <Suspense fallback={<UpNextSkeleton />}>
-              <UpNextSection />
-            </Suspense>
+            <SectionErrorBoundary fallbackMessage="곧 시작할 일정을 불러오지 못했습니다.">
+              <Suspense fallback={<UpNextSkeleton />}>
+                <UpNextSection />
+              </Suspense>
+            </SectionErrorBoundary>
             
             {/* 이 아래는 클라이언트 마운트 후 자체 상태(fetch)로 데이터를 로드하므로 차단 없음 */}
-            <LiveNowCard />
-            <TrendingCategoriesCard />
+            <SectionErrorBoundary fallbackMessage="현재 라이브 정보를 불러오지 못했습니다.">
+              <LiveNowCard />
+            </SectionErrorBoundary>
+
+            <SectionErrorBoundary fallbackMessage="트렌딩 카테고리를 불러오지 못했습니다.">
+              <TrendingCategoriesCard />
+            </SectionErrorBoundary>
           </div>
         </div>
 
