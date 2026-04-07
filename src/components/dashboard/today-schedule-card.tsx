@@ -13,7 +13,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucid
 import { addDays, format, isSameDay, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
 
-import { getHomeSchedules, getFavoriteStreamerNamesByUserId } from "@/app/actions/schedules";
+import { getHomeSchedules, getFavoriteStreamerIdsByUserId } from "@/app/actions/schedules";
 import type { HomeSchedule } from "@/app/actions/schedules";
 
 import { cn } from "@/lib/utils";
@@ -45,7 +45,7 @@ export function TodayScheduleCard({
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null);
   const [isFavoritesOnly, setIsFavoritesOnly] = React.useState(false);
-  const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>([]);
+  const [favoriteStreamerIds, setFavoriteStreamerIds] = React.useState<string[]>([]);
 
   // 초기 날짜(오늘) 기준인지 추적 — 서버 데이터를 그대로 사용할지 판단
   const initialDateRef = React.useRef(true);
@@ -110,10 +110,14 @@ export function TodayScheduleCard({
   const userId = user?.id;
   React.useEffect(() => {
     if (!userId) {
-      setFavoriteStreamerNames([]);
+      setFavoriteStreamerIds([]);
       return;
     }
-    getFavoriteStreamerNamesByUserId(userId).then(setFavoriteStreamerNames).catch(() => {});
+    console.time("Dashboard_Favorite_IDs_Fetch");
+    getFavoriteStreamerIdsByUserId(userId).then(ids => {
+      setFavoriteStreamerIds(ids);
+      console.timeEnd("Dashboard_Favorite_IDs_Fetch");
+    }).catch(() => {});
   }, [userId]);
 
   React.useEffect(() => {
@@ -159,7 +163,7 @@ export function TodayScheduleCard({
   const getEventsForDay = (day: Date) => {
     return events.filter(e => {
       if (!isSameDay(parseISO(e.start_time), day)) return false;
-      if (isFavoritesOnly && (!e.streamer || !favoriteStreamerNames.includes(e.streamer))) return false;
+      if (isFavoritesOnly && (!e.streamer_id || !favoriteStreamerIds.includes(e.streamer_id))) return false;
       return true;
     });
   };

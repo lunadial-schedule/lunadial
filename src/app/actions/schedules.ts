@@ -14,7 +14,7 @@
  *
  * ⚠️ 수정 위치 알림: 일정 중복 정책, 권한 검사 조건 변경 시 이 파일의 로직을 가장 먼저 확인해야 합니다.
  */
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { Database } from "@/types/supabase";
 import { revalidatePath } from "next/cache";
 import { getActorDetails } from "@/lib/actor";
@@ -34,7 +34,7 @@ export type ScheduleUpdate = Database["public"]["Tables"]["schedules"]["Update"]
 export async function getSchedules(startDate?: Date, endDate?: Date) {
   const supabase = await createClient();
   
-  let query = supabase.from("schedules").select("*").eq("is_deleted", false).order("start_time", { ascending: true });
+  let query = supabase.from("schedules").select("id, title, start_time, is_all_day, streamer_id, streamer, status, categories, streamers(image_url, verified_mark)").eq("is_deleted", false).order("start_time", { ascending: true });
   
   if (startDate) {
     query = query.gte("start_time", startDate.toISOString());
@@ -332,8 +332,10 @@ export type HomeSchedule = Pick<
  * @param endDate - 조회 종료일
  */
 export async function getHomeSchedules(startDate: Date, endDate: Date) {
-  const supabase = await createClient();
+  // unstable_cache 스코프 안이므로 쿠키 조회가 불가능. PublicClient 사용.
+  const supabase = createPublicClient();
   
+  console.time("HomeSchedules_Query");
   const { data, error } = await supabase
     .from("schedules")
     .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark)")
@@ -341,6 +343,7 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())
     .order("start_time", { ascending: true });
+  console.timeEnd("HomeSchedules_Query");
   
   if (error) {
     console.error("홈 일정 조회 에러:", error);
@@ -352,23 +355,21 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
 
 
 /**
- * userId를 직접 받아 즐겨찾기 스트리머 이름 목록을 반환.
+ * userId를 직접 받아 즐겨찾기 스트리머 ID 목록을 반환.
  * auth.getUser() 호출 없이 favorites만 조회하므로 auth 중복 호출을 방지한다.
  * @param userId - 조회 대상 사용자 ID
  */
-export async function getFavoriteStreamerNamesByUserId(userId: string): Promise<string[]> {
+export async function getFavoriteStreamerIdsByUserId(userId: string): Promise<string[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("favorites")
-    .select("streamers ( name )")
+    .select("streamer_id")
     .eq("user_id", userId);
 
   if (error || !data) return [];
 
-  return data
-    .map((f: any) => (f.streamers as any)?.name)
-    .filter(Boolean) as string[];
+  return data.map((f: any) => f.streamer_id).filter(Boolean) as string[];
 }
 
 /**

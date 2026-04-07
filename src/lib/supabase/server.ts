@@ -38,3 +38,17 @@ export async function createClient() {
     }
   )
 }
+
+import { createClient as createJSClient } from '@supabase/supabase-js'
+
+/** 
+ * 쿠키(세션)를 읽지 않는 공용 서버 클라이언트 인스턴스를 생성한다. 
+ * unstable_cache() 내부와 같이 Dynamic data sources(cookies, headers) 접근이 차단된 곳에서 
+ * 완전한 공개 데이터(public)를 조회할 때 사용한다.
+ */
+export function createPublicClient() {
+  return createJSClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)!
+  )
+}

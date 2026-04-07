@@ -50,26 +50,20 @@ export async function getMyFavorites() {
     return { data: [], error: null };
   }
 
-  // 2차 쿼리: 각 스트리머별 가장 가까운 미래 일정 조회
+  console.time("Favorites_NextSchedules_Query");
+  // 2차 쿼리: View 테이블을 통해 각 스트리머별 가장 가까운 미래 일정 단 1개씩만 조회
   const streamerIds = data.map(f => (f.streamers as any)?.id).filter(Boolean);
-  const nowStr = new Date().toISOString();
   
   const { data: schedules } = await supabase
-    .from("schedules")
+    .from("streamer_next_schedules")
     .select("id, streamer_id, start_time, is_all_day")
-    .in("streamer_id", streamerIds)
-    .eq("is_deleted", false)
-    .gte("start_time", nowStr)
-    .order("start_time", { ascending: true });
+    .in("streamer_id", streamerIds);
+  console.timeEnd("Favorites_NextSchedules_Query");
 
-  const nextBroadcastsByStreamer: Record<string, any> = {};
-  if (schedules) {
-    for (const sch of schedules) {
-      if (!nextBroadcastsByStreamer[sch.streamer_id!] || new Date(sch.start_time).getTime() < new Date(nextBroadcastsByStreamer[sch.streamer_id!].start_time).getTime()) {
-        nextBroadcastsByStreamer[sch.streamer_id!] = sch;
-      }
-    }
-  }
+  const nextBroadcastsByStreamer = (schedules || []).reduce((acc: any, sch: any) => {
+    acc[sch.streamer_id] = sch;
+    return acc;
+  }, {});
 
   // 데이터 병합
   const mergedData = data.map(f => {
