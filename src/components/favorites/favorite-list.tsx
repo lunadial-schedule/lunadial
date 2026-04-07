@@ -44,11 +44,13 @@ export type SortOption = 'next_broadcast' | 'latest' | 'name';
 
 interface FavoriteListProps {
   sortOption?: SortOption;
+  initialFavorites?: any[];
 }
 
-export function FavoriteList({ sortOption = 'next_broadcast' }: FavoriteListProps) {
-  const [favorites, setFavorites] = React.useState<any[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
+export function FavoriteList({ sortOption = 'next_broadcast', initialFavorites = [] }: FavoriteListProps) {
+  const [favorites, setFavorites] = React.useState<any[]>(initialFavorites)
+  // 초기 로딩은 서버에서 데이터를 주입해주므로 이제 필요 없습니다.
+  const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [isExpanded, setIsExpanded] = React.useState(false)
 
@@ -64,9 +66,14 @@ export function FavoriteList({ sortOption = 'next_broadcast' }: FavoriteListProp
     setIsLoading(false)
   }, [])
 
+  // 서버에서 새로운 초기값이 내려올 때 상태 동기화 (revalidatePath 등)
   React.useEffect(() => {
-    loadFavorites()
-    
+    setFavorites(initialFavorites)
+  }, [initialFavorites])
+
+  // 전역 리스너는 백그라운드 새로고침(또는 서버 네비게이션)으로 대체 가능하나, 
+  // 다른 화면(예: 헤더)에서 발생한 이벤트를 잡기 위해 유지
+  React.useEffect(() => {
     const handleFavoritesUpdated = () => {
       loadFavorites()
     }
