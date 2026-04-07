@@ -437,3 +437,54 @@ export async function checkDuplicateSchedule(
     hasSameDateInfo: !duplicate ? data[0] : null
   };
 }
+
+/**
+ * 캘린더 월간 뷰 전용 일정 조회.
+ * 공개 클라이언트를 사용하여 쿠키 접근 최소화 및 전역 캐시(unstable_cache)와 시너지 확보.
+ * streamers 프로필 이미지가 필요 없으므로 최소화된 DTO 사용.
+ */
+export async function getCalendarMonthSchedules(startDate: Date, endDate: Date) {
+  const supabase = createPublicClient();
+  
+  console.time("Calendar_Month_Query_DB_Raw");
+  const { data, error } = await supabase
+    .from("schedules")
+    .select("id, title, start_time, is_all_day, streamer_id, streamer, status, categories")
+    .eq("is_deleted", false)
+    .gte("start_time", startDate.toISOString())
+    .lte("start_time", endDate.toISOString())
+    .order("start_time", { ascending: true });
+  console.timeEnd("Calendar_Month_Query_DB_Raw");
+  
+  if (error) {
+    console.error("월간 캘린더 일정 조회 에러:", error);
+    return { data: null, error: error.message };
+  }
+  
+  return { data: data as any as HomeSchedule[], error: null };
+}
+
+/**
+ * 캘린더 일간 뷰 전용 일정 조회.
+ * 조인이 포함되어 있지만 1일 치 검색으로 빠릅니다.
+ */
+export async function getCalendarDaySchedules(startDate: Date, endDate: Date) {
+  const supabase = createPublicClient();
+  
+  console.time("Calendar_Day_Query_DB_Raw");
+  const { data, error } = await supabase
+    .from("schedules")
+    .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark)")
+    .eq("is_deleted", false)
+    .gte("start_time", startDate.toISOString())
+    .lte("start_time", endDate.toISOString())
+    .order("start_time", { ascending: true });
+  console.timeEnd("Calendar_Day_Query_DB_Raw");
+  
+  if (error) {
+    console.error("일간 캘린더 일정 조회 에러:", error);
+    return { data: null, error: error.message };
+  }
+  
+  return { data: data as any as HomeSchedule[], error: null };
+}

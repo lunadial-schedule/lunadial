@@ -27,7 +27,8 @@ import { ChevronLeft, ChevronRight, Loader2, List, Grid, AlertCircle, RefreshCcw
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer"
 import { PageContainer } from "@/components/layout/page-container"
 import { CATEGORY_LIST } from "@/config/categories"
-import { getHomeSchedules, getFavoriteStreamerIdsByUserId } from "@/app/actions/schedules"
+import { getFavoriteStreamerIdsByUserId } from "@/app/actions/schedules"
+import { getCachedCalendarMonthSchedules, getCachedCalendarDaySchedules } from "@/lib/calendar-data"
 import type { HomeSchedule, Schedule } from "@/app/actions/schedules"
 import { isSameDay, parseISO, format, addMonths, subMonths, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfDay, endOfDay } from "date-fns"
 import { ko } from "date-fns/locale"
@@ -137,17 +138,36 @@ function CalendarContent() {
 
     setIsError(false);
     try {
-      const { start, end } = getDateRange(currentDate, view)
-      const { data, error } = await getHomeSchedules(start, end)
+      let queryData;
+      let queryError;
+      
+      if (view === 'month') {
+        const monthStr = format(currentDate, 'yyyy-MM');
+        const res = await getCachedCalendarMonthSchedules(monthStr);
+        queryData = res.data;
+        queryError = res.error;
+      } else {
+        const dayStr = format(currentDate, 'yyyy-MM-dd');
+        
+        // 배경 프리패치 (이전 날짜 & 다음 날짜)
+        const prevDayStr = format(addDays(currentDate, -1), 'yyyy-MM-dd');
+        const nextDayStr = format(addDays(currentDate, 1), 'yyyy-MM-dd');
+        getCachedCalendarDaySchedules(prevDayStr).catch(() => {});
+        getCachedCalendarDaySchedules(nextDayStr).catch(() => {});
+        
+        const res = await getCachedCalendarDaySchedules(dayStr);
+        queryData = res.data;
+        queryError = res.error;
+      }
       
       if (requestId !== lastRequestIdRef.current) return;
       
-      if (error) {
-        throw new Error(error);
+      if (queryError) {
+        throw new Error(queryError);
       }
       
-      if (data) {
-        setEvents(data);
+      if (queryData) {
+        setEvents(queryData);
         hasLoadedOnceRef.current = true;
       }
     } catch (e) {
@@ -342,8 +362,11 @@ function CalendarContent() {
         {/* Calendar Toolbar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b px-3 py-2.5 md:px-4 md:py-3 gap-2 bg-muted/5 shrink-0">
           <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
-            <h2 className="text-[26px] md:text-[30px] font-bold tracking-tight shrink-0 whitespace-nowrap">
+            <h2 className="text-[26px] md:text-[30px] font-bold tracking-tight shrink-0 whitespace-nowrap flex items-center gap-2">
               {view === 'month' ? format(currentDate, "yyyy년 M월") : format(currentDate, "M월 d일")}
+              {(isLoading || isRefreshing) && events.length > 0 && (
+                <Loader2 className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground animate-spin" />
+              )}
             </h2>
             <div className="flex items-center bg-muted/50 rounded-full p-0.5 ml-auto sm:ml-0">
               <Button variant="ghost" size="icon" className="h-6.5 w-6.5 md:h-7 md:w-7 rounded-full" onClick={goPrev}><ChevronLeft className="h-4 w-4 md:h-5 md:w-5" /></Button>
@@ -410,8 +433,8 @@ function CalendarContent() {
           
           {/* Calendar Cells */}
           <div className={cn(
-            "px-2 sm:px-4 flex-1 transition-opacity duration-200",
-            (isLoading && events.length > 0) && "opacity-50 pointer-events-none",
+            "px-2 sm:px-4 flex-1 transition-opacity duration-300",
+            (isLoading && events.length > 0) && "opacity-90",
             view === 'month' ? (
               (() => {
                 const fd = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);

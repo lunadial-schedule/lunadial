@@ -7,75 +7,100 @@
  * 인증된 사용자만 사용 가능하며, Free 플랜은 최대 10명으로 제한된다.
  */
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { revalidatePath, unstable_cache } from "next/cache";
 
 import { getServerUser } from "@/lib/auth/server-user";
 
 /**
+ * [주의] 캐시 내부에선 cookies() 접근이 불가능하므로, 검증된 userId를 주입받아
+ * Admin Client로 안전하게 조회한 후 결과를 캐싱합니다.
+ */
+const getCachedMyFavoritesData = unstable_cache(
+  async (userId: string) => {
+    console.time(`Favorites_List_Query_${userId}`);
+    const supabase = createAdminClient();
+
+    // favorites + streamers 조인 조회 (follower_count, channel_id 제거)
+    const { data, error } = await supabase
+      .from("favorites")
+      .select(`
+        id,
+        created_at,
+        streamers (
+          id,
+          name,
+          image_url,
+          verified_mark
+        )
+      `)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    console.timeEnd(`Favorites_List_Query_${userId}`);
+
+    if (error) {
+      console.error("즐겨찾기 조회 에러:", error);
+      throw new Error("즐겨찾기 목록을 불러오지 못했습니다.");
+    }
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    console.time(`Favorites_NextSchedules_Query_${userId}`);
+    const streamerIds = data.map(f => (f.streamers as any)?.id).filter(Boolean);
+
+    const { data: schedules } = await supabase
+      .from("streamer_next_schedules")
+      .select("id, streamer_id, start_time, is_all_day")
+      .in("streamer_id", streamerIds);
+    console.timeEnd(`Favorites_NextSchedules_Query_${userId}`);
+
+    console.time(`Favorites_Merge_Time_${userId}`);
+    const nextBroadcastsByStreamer = (schedules || []).reduce((acc: any, sch: any) => {
+      acc[sch.streamer_id] = sch;
+      return acc;
+    }, {});
+
+    const mergedData = data.map(f => {
+      const sId = (f.streamers as any)?.id;
+      return {
+        ...f,
+        next_broadcast: sId && nextBroadcastsByStreamer[sId] ? nextBroadcastsByStreamer[sId] : null
+      };
+    });
+    console.timeEnd(`Favorites_Merge_Time_${userId}`);
+
+    return mergedData;
+  },
+  ["favorites-cache"],
+  { revalidate: 15, tags: ["favorites"] }
+);
+
+/**
  * 현재 사용자의 즐겨찾기 목록을 조회한다.
- * favorites 테이블과 streamers 테이블을 JOIN하여 스트리머 정보를 포함한다.
+ * 캐시(15초 TTL)를 적용하여 잦은 탭 이동 시의 DB 부하를 줄인다.
  */
 export async function getMyFavorites() {
-  const supabase = await createClient();
+  console.time("Favorites_Total");
   const user = await getServerUser();
 
   if (!user) {
+    console.timeEnd("Favorites_Total");
     return { data: null, error: "로그인이 필요합니다." };
   }
 
-  // favorites + streamers 조인 조회
-  const { data, error } = await supabase
-    .from("favorites")
-    .select(`
-      id,
-      created_at,
-      streamers (
-        id,
-        channel_id,
-        name,
-        image_url,
-        verified_mark,
-        follower_count
-      )
-    `)
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("즐겨찾기 조회 에러:", error);
-    return { data: null, error: "즐겨찾기 목록을 불러오지 못했습니다." };
+  try {
+    const mergedData = await getCachedMyFavoritesData(user.id);
+    console.timeEnd("Favorites_Total");
+    return { data: mergedData, error: null };
+  } catch (err: any) {
+    console.timeEnd("Favorites_Total");
+    return { data: null, error: err.message };
   }
-  
-  if (!data || data.length === 0) {
-    return { data: [], error: null };
-  }
-
-  console.time("Favorites_NextSchedules_Query");
-  // 2차 쿼리: View 테이블을 통해 각 스트리머별 가장 가까운 미래 일정 단 1개씩만 조회
-  const streamerIds = data.map(f => (f.streamers as any)?.id).filter(Boolean);
-  
-  const { data: schedules } = await supabase
-    .from("streamer_next_schedules")
-    .select("id, streamer_id, start_time, is_all_day")
-    .in("streamer_id", streamerIds);
-  console.timeEnd("Favorites_NextSchedules_Query");
-
-  const nextBroadcastsByStreamer = (schedules || []).reduce((acc: any, sch: any) => {
-    acc[sch.streamer_id] = sch;
-    return acc;
-  }, {});
-
-  // 데이터 병합
-  const mergedData = data.map(f => {
-    const sId = (f.streamers as any)?.id;
-    return {
-      ...f,
-      next_broadcast: sId && nextBroadcastsByStreamer[sId] ? nextBroadcastsByStreamer[sId] : null
-    };
-  });
-
-  return { data: mergedData, error: null };
 }
+
 
 /**
  * 즐겨찾기에 스트리머를 추가한다.
