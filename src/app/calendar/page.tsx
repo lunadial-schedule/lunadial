@@ -27,7 +27,7 @@ import { ChevronLeft, ChevronRight, Loader2, List, Grid, AlertCircle, RefreshCcw
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer"
 import { PageContainer } from "@/components/layout/page-container"
 import { CATEGORY_LIST } from "@/config/categories"
-import { getHomeSchedules, getFavoriteStreamerNamesByUserId } from "@/app/actions/schedules"
+import { getHomeSchedules, getFavoriteStreamerIdsByUserId } from "@/app/actions/schedules"
 import type { HomeSchedule, Schedule } from "@/app/actions/schedules"
 import { isSameDay, parseISO, format, addMonths, subMonths, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfDay, endOfDay } from "date-fns"
 import { ko } from "date-fns/locale"
@@ -88,7 +88,7 @@ function CalendarContent() {
   const [isDetailOpen, setIsDetailOpen] = React.useState(false)
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null)
   const [events, setEvents] = React.useState<HomeSchedule[]>([])
-  const [favoriteStreamerNames, setFavoriteStreamerNames] = React.useState<string[]>([])
+  const [favoriteStreamerIds, setFavoriteStreamerIds] = React.useState<string[]>([])
 
   const hasLoadedOnceRef = React.useRef(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
@@ -165,12 +165,12 @@ function CalendarContent() {
 
   const loadFavorites = React.useCallback(async () => {
     if (!userId) {
-      setFavoriteStreamerNames([]);
+      setFavoriteStreamerIds([]);
       return;
     }
     try {
-      const names = await getFavoriteStreamerNamesByUserId(userId)
-      setFavoriteStreamerNames(names)
+      const ids = await getFavoriteStreamerIdsByUserId(userId)
+      setFavoriteStreamerIds(ids)
     } catch (e) {
       console.error(e)
     }
@@ -257,7 +257,7 @@ function CalendarContent() {
       if (q && !e.title.toLowerCase().includes(q.toLowerCase()) && !e.streamer.toLowerCase().includes(q.toLowerCase())) return false;
 
       // 실제 즐겨찾기 기반 필터링
-      if (scope === 'favorites' && !favoriteStreamerNames.includes(e.streamer)) return false; 
+      if (scope === 'favorites' && (!e.streamer_id || !favoriteStreamerIds.includes(e.streamer_id))) return false;
       return true;
     });
   }
