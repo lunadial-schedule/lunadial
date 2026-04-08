@@ -80,8 +80,8 @@ export function TodayScheduleCard({
     if (isBackground) setIsRefreshing(true);
     else setIsLoading(true);
     
-    const startDate = addDays(currentDate, -2);
-    const endDate = addDays(currentDate, 2);
+    const startDate = addDays(currentDate, -3);
+    const endDate = addDays(currentDate, 3);
     
     try {
       // 일정만 조회 (favorites는 별도 useEffect에서 user 변경 시에만 1회 로드)

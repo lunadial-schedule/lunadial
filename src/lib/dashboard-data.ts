@@ -6,10 +6,10 @@ import { getHomeSchedules, type HomeSchedule } from "@/app/actions/schedules";
 // unstable_cache는 서버 전체 공유 캐시이므로, 날짜 문자열을 키로 사용
 const getCachedSchedulesData = unstable_cache(
   async (dateStr: string) => {
-    // String 형식을 기준으로 -2일 ~ +2일 조회
+    // String 형식을 기준으로 -3일 ~ +3일 조회 (타임존 오차 대비 넉넉히 조회)
     const baseDate = new Date(dateStr);
-    const todayStart = addDays(baseDate, -2);
-    const todayEnd = addDays(baseDate, 2);
+    const todayStart = addDays(baseDate, -3);
+    const todayEnd = addDays(baseDate, 3);
 
     const schedulesRes = await getHomeSchedules(todayStart, todayEnd);
     return schedulesRes.data ?? [];
@@ -27,7 +27,10 @@ const getCachedSchedulesData = unstable_cache(
  */
 export const getCachedSchedules = cache(async () => {
   const now = new Date();
-  const dateStr = format(now, "yyyy-MM-dd"); // 오늘 날짜를 기준으로 캐싱 (정확한 시간 X)
+  
+  // Vercel 등 UTC 서버 환경을 고려하여 KST(+09:00) 기준으로 오늘 날짜 문자열 생성
+  const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const dateStr = kstNow.toISOString().split("T")[0]; // "2026-04-09" 형태
 
   console.time("Dashboard_unstable_cache_overhead");
   const schedules = await getCachedSchedulesData(dateStr);
