@@ -3,11 +3,13 @@
  *
  * 전체 앱에 적용되는 레이아웃. 폰트, 헤더, 토스터, Google AdSense 스크립트를 포함한다.
  */
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { AppHeader } from "@/components/layout/app-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { TopProgressBar } from "@/components/layout/top-progress-bar";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -46,6 +48,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background font-sans`}
       >
         <AuthProvider>
+          <Suspense fallback={null}>
+            <TopProgressBar />
+          </Suspense>
           <AppHeader />
           <main className="flex-1 w-full mx-auto pb-10">
             {children}

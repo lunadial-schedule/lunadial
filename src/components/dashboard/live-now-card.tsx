@@ -93,7 +93,7 @@ export function LiveNowCard() {
       </CardHeader>
       <CardContent className="p-0 flex-1 flex flex-col">
         {isLoading ? (
-          <div className="flex-1 min-h-0 overflow-hidden flex flex-col gap-2.5 p-3">
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-center gap-2.5 p-3">
              {[1,2,3,4,5].map(i => (
                <div key={i} className="flex items-center gap-3 px-2 py-1.5 rounded-lg animate-pulse">
                  <div className="h-8 w-8 bg-muted rounded-full shrink-0" />
