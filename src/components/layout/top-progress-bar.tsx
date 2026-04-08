@@ -88,6 +88,14 @@ export function TopProgressBar() {
   }, [clearAllTimers]);
 
   // --- 1) 이동 "시작" 감지: <a> 클릭 + popstate ---
+  const currentUrlRef = useRef(typeof window !== "undefined" ? window.location.pathname + window.location.search : "");
+  
+  // 라우트가 변경되어 렌더링이 일어날 때마다 현재 URL을 기록
+  useEffect(() => {
+    const searchString = searchParams.toString();
+    currentUrlRef.current = pathname + (searchString ? `?${searchString}` : "");
+  }, [pathname, searchParams]);
+
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const anchor = (e.target as HTMLElement)?.closest("a");
@@ -128,7 +136,13 @@ export function TopProgressBar() {
     };
 
     const handlePopState = () => {
-      startNavigation();
+      // popstate 이벤트 시점에서의 브라우저 네이티브 URL
+      const newUrl = window.location.pathname + window.location.search;
+      // 이전의 Next.js 라우트 기반 URL과 다를 경우에만 이동으로 간주
+      // (모달의 useHistoryDialog 동작처럼 URL 변경 없이 pushState/back 한 경우는 무시)
+      if (newUrl !== currentUrlRef.current) {
+        startNavigation();
+      }
     };
 
     document.addEventListener("click", handleClick, { capture: true });
