@@ -131,36 +131,12 @@ export function TopProgressBar() {
       startNavigation();
     };
 
-    // router.push/replace를 가로채기: Next.js history.pushState/replaceState 래핑
-    const originalPushState = history.pushState.bind(history);
-    const originalReplaceState = history.replaceState.bind(history);
-
-    history.pushState = function (...args: Parameters<typeof history.pushState>) {
-      const currentUrl = window.location.pathname + window.location.search;
-      originalPushState(...args);
-      const newUrl = window.location.pathname + window.location.search;
-      if (currentUrl !== newUrl) {
-        startNavigation();
-      }
-    };
-
-    history.replaceState = function (...args: Parameters<typeof history.replaceState>) {
-      const currentUrl = window.location.pathname + window.location.search;
-      originalReplaceState(...args);
-      const newUrl = window.location.pathname + window.location.search;
-      if (currentUrl !== newUrl) {
-        startNavigation();
-      }
-    };
-
     document.addEventListener("click", handleClick, { capture: true });
     window.addEventListener("popstate", handlePopState);
 
     return () => {
       document.removeEventListener("click", handleClick, { capture: true });
       window.removeEventListener("popstate", handlePopState);
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
       clearAllTimers();
     };
   }, [startNavigation, clearAllTimers]);
