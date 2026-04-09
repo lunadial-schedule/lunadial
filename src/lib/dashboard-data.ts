@@ -32,9 +32,11 @@ export const getCachedSchedules = cache(async () => {
   const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
   const dateStr = kstNow.toISOString().split("T")[0]; // "2026-04-09" 형태
 
-  console.time("Dashboard_unstable_cache_overhead");
+  // 매 요청마다 타이머 이름이 고유하게 생성 (중복 방지)
+  const timerLabel = `Dashboard_unstable_cache_overhead_${Math.random().toString(36).slice(2, 7)}`;
+  console.time(timerLabel);
   const schedules = await getCachedSchedulesData(dateStr);
-  console.timeEnd("Dashboard_unstable_cache_overhead");
+  console.timeEnd(timerLabel);
 
   return {
     schedules,

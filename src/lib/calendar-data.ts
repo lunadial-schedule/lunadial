@@ -10,7 +10,10 @@ import { parseISO, endOfMonth, endOfDay, addDays, startOfWeek, endOfWeek, startO
  */
 export const getCachedCalendarMonthSchedules = unstable_cache(
   async (monthStr: string) => {
-    console.time("Calendar_Month_Cache_Overhead");
+    
+    // 매 요청마다 타이머 이름이 고유하게 생성 (중복 방지)
+    const timerLabel = `Calendar_Month_Cache_Overhead_${Math.random().toString(36).slice(2, 7)}`;
+    console.time(timerLabel);
     const date = parseISO(`${monthStr}-01`);
     const monthStart = startOfMonth(date);
     const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -23,7 +26,7 @@ export const getCachedCalendarMonthSchedules = unstable_cache(
     const gridEnd = endOfDay(addDays(gridStart, (numRows * 7) - 1));
 
     const result = await getCalendarMonthSchedules(gridStart, gridEnd);
-    console.timeEnd("Calendar_Month_Cache_Overhead");
+    console.timeEnd(timerLabel);
     return result;
   },
   ["calendar-month-schedules"],
@@ -38,13 +41,16 @@ export const getCachedCalendarMonthSchedules = unstable_cache(
  */
 export const getCachedCalendarDaySchedules = unstable_cache(
   async (dayStr: string) => {
-    console.time(`Calendar_Day_Cache_Overhead_${dayStr}`);
+    
+    // 매 요청마다 타이머 이름이 고유하게 생성 (중복 방지)
+    const timerLabel = `Calendar_Day_Cache_Overhead_${dayStr}_${Math.random().toString(36).slice(2, 7)}`;
+    console.time(timerLabel);
     const date = parseISO(dayStr);
     const start = startOfDay(date);
     const end = endOfDay(date);
 
     const result = await getCalendarDaySchedules(start, end);
-    console.timeEnd(`Calendar_Day_Cache_Overhead_${dayStr}`);
+    console.timeEnd(timerLabel);
     return result;
   },
   ["calendar-day-schedules"],

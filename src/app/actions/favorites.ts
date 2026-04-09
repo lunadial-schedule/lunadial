@@ -18,7 +18,10 @@ import { getServerUser } from "@/lib/auth/server-user";
  */
 const getCachedMyFavoritesData = unstable_cache(
   async (userId: string) => {
-    console.time(`Favorites_List_Query_${userId}`);
+    
+    // 매 요청마다 타이머 이름이 고유하게 생성 (중복 방지)
+    const queryTimer = `Favorites_List_Query_${userId}_${Math.random().toString(36).slice(2, 7)}`;
+    console.time(queryTimer);
     const supabase = createAdminClient();
 
     // favorites + streamers 조인 조회 (follower_count, channel_id 제거)
@@ -37,7 +40,7 @@ const getCachedMyFavoritesData = unstable_cache(
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
-    console.timeEnd(`Favorites_List_Query_${userId}`);
+    console.timeEnd(queryTimer);
 
     if (error) {
       console.error("즐겨찾기 조회 에러:", error);
@@ -48,16 +51,18 @@ const getCachedMyFavoritesData = unstable_cache(
       return [];
     }
 
-    console.time(`Favorites_NextSchedules_Query_${userId}`);
+    const nextSchTimer = `Favorites_NextSchedules_Query_${userId}_${Math.random().toString(36).slice(2, 7)}`;
+    console.time(nextSchTimer);
     const streamerIds = data.map(f => (f.streamers as any)?.id).filter(Boolean);
 
     const { data: schedules } = await supabase
       .from("streamer_next_schedules")
       .select("id, streamer_id, start_time, is_all_day")
       .in("streamer_id", streamerIds);
-    console.timeEnd(`Favorites_NextSchedules_Query_${userId}`);
+    console.timeEnd(nextSchTimer);
 
-    console.time(`Favorites_Merge_Time_${userId}`);
+    const mergeTimer = `Favorites_Merge_Time_${userId}_${Math.random().toString(36).slice(2, 7)}`;
+    console.time(mergeTimer);
     const nextBroadcastsByStreamer = (schedules || []).reduce((acc: any, sch: any) => {
       acc[sch.streamer_id] = sch;
       return acc;
@@ -70,7 +75,7 @@ const getCachedMyFavoritesData = unstable_cache(
         next_broadcast: sId && nextBroadcastsByStreamer[sId] ? nextBroadcastsByStreamer[sId] : null
       };
     });
-    console.timeEnd(`Favorites_Merge_Time_${userId}`);
+    console.timeEnd(mergeTimer);
 
     return mergedData;
   },
@@ -83,20 +88,21 @@ const getCachedMyFavoritesData = unstable_cache(
  * 캐시(15초 TTL)를 적용하여 잦은 탭 이동 시의 DB 부하를 줄인다.
  */
 export async function getMyFavorites() {
-  console.time("Favorites_Total");
+  const totalTimer = `Favorites_Total_${Math.random().toString(36).slice(2, 7)}`;
+  console.time(totalTimer);
   const user = await getServerUser();
 
   if (!user) {
-    console.timeEnd("Favorites_Total");
+    console.timeEnd(totalTimer);
     return { data: null, error: "로그인이 필요합니다." };
   }
 
   try {
     const mergedData = await getCachedMyFavoritesData(user.id);
-    console.timeEnd("Favorites_Total");
+    console.timeEnd(totalTimer);
     return { data: mergedData, error: null };
   } catch (err: any) {
-    console.timeEnd("Favorites_Total");
+    console.timeEnd(totalTimer);
     return { data: null, error: err.message };
   }
 }

@@ -26,7 +26,10 @@ export default async function CalendarPage({
   const view = (rawView === 'day' || rawView === 'month') ? rawView : (rawView === 'week' ? 'day' : 'month');
 
   let initialEvents = [];
-  console.time("Calendar_Server_Initial_Data");
+  
+  // 매 요청마다 타이머 이름이 고유하게 생성 (중복 방지)
+  const timerLabel = `Calendar_Server_Initial_Data_${Math.random().toString(36).slice(2, 7)}`;
+  console.time(timerLabel);
   if (view === 'month') {
     const monthStr = format(date, 'yyyy-MM');
     const res = await getCachedCalendarMonthSchedules(monthStr);
@@ -44,7 +47,7 @@ export default async function CalendarPage({
     const res = await getCachedCalendarDaySchedules(dayStr);
     initialEvents = res.data || [];
   }
-  console.timeEnd("Calendar_Server_Initial_Data");
+  console.timeEnd(timerLabel);
 
   // 즐겨찾기 필터 모드일 경우 로그인 유저의 즐겨찾기 ID 목록을 서버에서 미리 주입
   let initialFavoriteIds: string[] = [];

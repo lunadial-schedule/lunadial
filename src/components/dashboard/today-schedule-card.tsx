@@ -113,10 +113,13 @@ export function TodayScheduleCard({
       setFavoriteStreamerIds([]);
       return;
     }
-    console.time("Dashboard_Favorite_IDs_Fetch");
+    
+    // 매 요청마다 타이머 이름이 고유하게 생성 (중복 방지)
+    const timerLabel = `Dashboard_Favorite_IDs_Fetch_${Math.random().toString(36).slice(2, 7)}`;
+    console.time(timerLabel);
     getFavoriteStreamerIdsByUserId(userId).then(ids => {
       setFavoriteStreamerIds(ids);
-      console.timeEnd("Dashboard_Favorite_IDs_Fetch");
+      console.timeEnd(timerLabel);
     }).catch(() => {});
   }, [userId]);
 
@@ -281,7 +284,7 @@ export function TodayScheduleCard({
                         {dayEvents.map((event, idx) => {
                           const eventTime = parseISO(event.start_time);
                           const diffMinutes = (eventTime.getTime() - new Date().getTime()) / 60000;
-                          const isUpNext = diffMinutes > 0 && diffMinutes <= 60 && !event.is_all_day;
+                          const isUpNext = event.status !== "canceled" && diffMinutes > 0 && diffMinutes <= 60 && !event.is_all_day;
                           
                           const isFirstUpNext = isTodayDate && isUpNext && dayEvents.findIndex(e => {
                             const d = (parseISO(e.start_time).getTime() - new Date().getTime()) / 60000;

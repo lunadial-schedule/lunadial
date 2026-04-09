@@ -46,7 +46,7 @@ export function UpNextCard({ initialEvents = [] }: UpNextCardProps) {
       const end = addHours(now, 24);
       const { data } = await getHomeSchedules(now, end);
       if (data) {
-        const upcoming = data.filter(e => isAfter(parseISO(e.start_time), now)).slice(0, 5);
+        const upcoming = data.filter(e => isAfter(parseISO(e.start_time), now) && e.status !== "canceled").slice(0, 5);
         setEvents(upcoming);
       }
     };
@@ -82,7 +82,7 @@ export function UpNextCard({ initialEvents = [] }: UpNextCardProps) {
             <div className="flex-1 flex flex-col p-2.5 md:p-3 gap-1.5 min-h-0">
               {events.map((event) => {
                 const now = new Date();
-                const isWithinOneHour = isAfter(parseISO(event.start_time), now) && isAfter(addHours(now, 1), parseISO(event.start_time));
+                const isWithinOneHour = event.status !== "canceled" && isAfter(parseISO(event.start_time), now) && isAfter(addHours(now, 1), parseISO(event.start_time));
                 return (
                   <div 
                     key={event.id} 

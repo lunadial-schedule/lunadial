@@ -372,7 +372,7 @@ export function CalendarClient({
                    return dayEvents.map(event => {
                      const eventTime = parseISO(event.start_time);
                      const diffMinutes = (eventTime.getTime() - new Date().getTime()) / 60000;
-                     const isUpNext = diffMinutes > 0 && diffMinutes <= 60 && !event.is_all_day;
+                     const isUpNext = event.status !== "canceled" && diffMinutes > 0 && diffMinutes <= 60 && !event.is_all_day;
 
                      return (
                        <div 
