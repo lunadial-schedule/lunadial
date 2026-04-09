@@ -212,7 +212,6 @@ export default function AccountSettingsPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">계정 설정</h1>
-          <p className="text-muted-foreground">내 프로필과 계정 정보를 관리하세요.</p>
         </div>
 
         <Card>

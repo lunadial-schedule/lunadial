@@ -335,7 +335,9 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
   // unstable_cache 스코프 안이므로 쿠키 조회가 불가능. PublicClient 사용.
   const supabase = createPublicClient();
   
-  console.time("HomeSchedules_Query");
+  // 매 요청마다 타이머 이름이 고유하게 생성 (중복 방지)
+  const timerLabel = `HomeSchedules_Query_${Math.random().toString(36).slice(2, 7)}`;
+  console.time(timerLabel);
   const { data, error } = await supabase
     .from("schedules")
     .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark)")
@@ -343,7 +345,7 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())
     .order("start_time", { ascending: true });
-  console.timeEnd("HomeSchedules_Query");
+  console.timeEnd(timerLabel);
   
   if (error) {
     console.error("홈 일정 조회 에러:", error);
@@ -446,7 +448,8 @@ export async function checkDuplicateSchedule(
 export async function getCalendarMonthSchedules(startDate: Date, endDate: Date) {
   const supabase = createPublicClient();
   
-  console.time("Calendar_Month_Query_DB_Raw");
+  const timerLabel = `Calendar_Month_Query_DB_Raw_${Math.random().toString(36).slice(2, 7)}`;
+  console.time(timerLabel);
   const { data, error } = await supabase
     .from("schedules")
     .select("id, title, start_time, is_all_day, streamer_id, streamer, status, categories")
@@ -454,7 +457,7 @@ export async function getCalendarMonthSchedules(startDate: Date, endDate: Date) 
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())
     .order("start_time", { ascending: true });
-  console.timeEnd("Calendar_Month_Query_DB_Raw");
+  console.timeEnd(timerLabel);
   
   if (error) {
     console.error("월간 캘린더 일정 조회 에러:", error);
@@ -471,7 +474,8 @@ export async function getCalendarMonthSchedules(startDate: Date, endDate: Date) 
 export async function getCalendarDaySchedules(startDate: Date, endDate: Date) {
   const supabase = createPublicClient();
   
-  console.time("Calendar_Day_Query_DB_Raw");
+  const timerLabel = `Calendar_Day_Query_DB_Raw_${Math.random().toString(36).slice(2, 7)}`;
+  console.time(timerLabel);
   const { data, error } = await supabase
     .from("schedules")
     .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark)")
@@ -479,7 +483,7 @@ export async function getCalendarDaySchedules(startDate: Date, endDate: Date) {
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())
     .order("start_time", { ascending: true });
-  console.timeEnd("Calendar_Day_Query_DB_Raw");
+  console.timeEnd(timerLabel);
   
   if (error) {
     console.error("일간 캘린더 일정 조회 에러:", error);

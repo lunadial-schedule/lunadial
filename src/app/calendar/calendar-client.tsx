@@ -199,11 +199,16 @@ export function CalendarClient({
       <Card className="flex-1 w-full lg:w-auto border-border/50 lg:shadow-sm flex flex-col min-w-0 bg-card overflow-hidden rounded-none border-x-0 lg:border-x lg:rounded-xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b px-3 py-2.5 md:px-4 md:py-3 gap-2 bg-muted/5 shrink-0">
           <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
-            <h2 className="text-[26px] md:text-[30px] font-bold tracking-tight shrink-0 whitespace-nowrap flex items-center gap-2">
-              {initialView === 'month' ? format(initialDate, "yyyy년 M월") : format(initialDate, "M월 d일")}
-              {isPending && (
-                <Loader2 className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground animate-spin" />
-              )}
+            <h2 className="text-[26px] md:text-[30px] font-bold tracking-tight shrink-0 whitespace-nowrap flex items-center gap-1 md:gap-2">
+              <div className={cn(
+                "tabular-nums text-left",
+                initialView === 'month' ? "w-[150px] md:w-[175px]" : "w-[120px] md:w-[140px]"
+              )}>
+                {initialView === 'month' ? format(initialDate, "yyyy년 M월") : format(initialDate, "M월 d일")}
+              </div>
+              <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                <Loader2 className={cn("w-4 h-4 md:w-5 md:h-5 text-muted-foreground animate-spin transition-opacity", isPending ? "opacity-100" : "opacity-0")} />
+              </div>
             </h2>
             <div className="flex items-center bg-muted/50 rounded-full p-0.5 ml-auto sm:ml-0">
               <Button variant="ghost" size="icon" className="h-6.5 w-6.5 md:h-7 md:w-7 rounded-full" onClick={goPrev} disabled={isPending}><ChevronLeft className="h-4 w-4 md:h-5 md:w-5" /></Button>
