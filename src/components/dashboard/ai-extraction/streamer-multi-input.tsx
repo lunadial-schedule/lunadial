@@ -63,6 +63,8 @@ export function StreamerMultiInput({ value, onChange, placeholder, inputValue: e
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
   const performSearch = React.useCallback(async (query: string) => {
     if (!query.trim()) {
       setResults([])
@@ -78,22 +80,8 @@ export function StreamerMultiInput({ value, onChange, placeholder, inputValue: e
       
       if (data) {
         setResults(data)
-
-        // Exact Match 체크 및 자동 추가
-        const normalizedQuery = normalizeStreamerName(query)
-        const exactMatches = data.filter(s => normalizeStreamerName(s.name) === normalizedQuery)
-        
-        if (exactMatches.length === 1) {
-          const streamer = exactMatches[0]
-          const { value: currentValue, onChange: currentOnChange, setInputValue: currentSetInputValue } = latestProps.current
-          
-          if (!currentValue.find(s => s.id === streamer.id)) {
-            currentOnChange([...currentValue, { id: streamer.id, name: streamer.name }])
-          }
-          currentSetInputValue("")
-          setIsOpen(false)
-          setResults([])
-        }
+        // 비동기 Exact Match 자동 추가 기능 제거 
+        // (한글 IME 입력 중 state가 비워지면 composition buffer에 마지막 글자가 남아 중복 입력되는 버그가 발생하므로, 능동적 조작(엔터/클릭)으로만 추가되도록 변경)
       }
     } catch (e) {
       if (currentSearchId === searchIdRef.current) console.error(e)
@@ -114,6 +102,14 @@ export function StreamerMultiInput({ value, onChange, placeholder, inputValue: e
     }
     setInputValue("")
     setIsOpen(false)
+    
+    // 한글 IME 버퍼 강제 초기화 및 연속 입력을 위한 재포커스
+    if (inputRef.current) {
+      inputRef.current.blur()
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 10)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -163,6 +159,7 @@ export function StreamerMultiInput({ value, onChange, placeholder, inputValue: e
           </span>
         ))}
         <input
+          ref={inputRef}
           className="flex-1 bg-transparent outline-none min-w-[80px] text-base md:text-sm placeholder:text-muted-foreground"
           placeholder={value.length === 0 ? placeholder : ""}
           value={inputValue}
