@@ -3,18 +3,16 @@
 /**
  * 계정 설정 페이지
  *
- * 프로필(닉네임, 이메일, 아바타), 구독 정보(Free/Pro),
- * 즐겨찾기 현황, 치지직 계정 연동/해제를 관리한다.
+ * 구독 정보(Free/Pro), 즐겨찾기 현황,
+ * 치지직 계정 연동/해제, 계정 삭제를 관리한다.
  */
 import { PageContainer } from "@/components/layout/page-container"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { createClient } from "@/lib/supabase/client"
-import { useEffect, useState, useRef, useMemo } from "react"
-import { User } from "@supabase/supabase-js"
+import { useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
 import { Crown, Star, ArrowRight } from "lucide-react"
 import Link from "next/link"
@@ -25,9 +23,7 @@ import { useAuth } from "@/components/providers/auth-provider"
 import { ENABLE_CHZZK_CONNECT } from "@/config/env"
 
 export default function AccountSettingsPage() {
-  const { user, profile, refreshProfile, isLoading: isAuthLoading } = useAuth()
-  const [nickname, setNickname] = useState("")
-  const isInitialized = useRef(false)
+  const { user, isLoading: isAuthLoading } = useAuth()
   const supabase = useMemo(() => createClient(), [])
   
   const [favorites, setFavorites] = useState<any[]>([])
@@ -35,18 +31,7 @@ export default function AccountSettingsPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [userRole, setUserRole] = useState<string>("user")
   const [chzzkAccount, setChzzkAccount] = useState<any | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [isRoleLoaded, setIsRoleLoaded] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    // Only initialized once when auth completes loading
-    if (!isAuthLoading && !isInitialized.current && user) {
-      setNickname(profile?.nickname || user.user_metadata?.name || "")
-      isInitialized.current = true
-    }
-  }, [isAuthLoading, user, profile])
 
   useEffect(() => {
     if (!user) return
@@ -107,102 +92,6 @@ export default function AccountSettingsPage() {
     }
   }, [supabase])
 
-  const handleSave = async () => {
-    if (!nickname.trim()) {
-      toast.error("닉네임을 입력해주세요.")
-      return
-    }
-
-    if (!user) return
-
-    try {
-      setIsSaving(true)
-      // 1. Auth 메타데이터 업데이트
-      const { error } = await supabase.auth.updateUser({
-        data: { name: nickname.trim() }
-      })
-      if (error) throw error
-
-      // 2. 전용 프로필 테이블(public.profiles)에 저장 (영구적)
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert({
-          id: user.id,
-          nickname: nickname.trim(),
-          avatar_url: profile?.avatar_url || null // 기존 아바타 유지
-        })
-      if (profileError) throw profileError
-
-      await refreshProfile()
-      toast.success("프로필 정보가 저장되었습니다.")
-    } catch (error: any) {
-      console.error('Error saving profile:', error)
-      toast.error(`프로필 변경 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !user) return
-
-    if (!file.type.startsWith('image/')) {
-      toast.error("이미지 파일만 업로드 가능합니다.")
-      return
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("이미지 크기는 2MB를 넘을 수 없습니다.")
-      return
-    }
-
-    try {
-      setUploading(true)
-      
-      const fileExt = file.name.split('.').pop()
-      const filePath = `${user.id}/${Date.now()}.${fileExt}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath)
-
-      // 1. Auth 메타데이터 업데이트
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { 
-          avatar_url: publicUrl,
-          picture: publicUrl 
-        }
-      })
-      if (updateError) throw updateError
-
-      // 2. 전용 프로필 테이블(public.profiles)에 저장 (영구적)
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert({
-          id: user.id,
-          nickname: nickname.trim() || profile?.nickname || null, // 현재 입력된 닉네임 또는 기존 닉네임 유지
-          avatar_url: publicUrl,
-        })
-      if (profileError) throw profileError
-
-      await refreshProfile()
-      toast.success("프로필 이미지가 성공적으로 변경되었습니다.")
-    } catch (error: any) {
-      console.error('Error uploading image:', error)
-      toast.error(`이미지 업로드 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`)
-    } finally {
-      setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ""
-    }
-  }
-
   const isPro = isAdmin || userRole === 'pro'
   const isProOrAdmin = isPro || isAdmin
   const maxFavorites = !isRoleLoaded ? "-" : (isPro ? "무제한" : 10)
@@ -213,75 +102,6 @@ export default function AccountSettingsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">계정 설정</h1>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>프로필</CardTitle>
-            <CardDescription>
-              서비스에서 표시될 프로필 정보입니다.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center gap-6">
-              <Avatar className="h-20 w-20 border">
-                <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ""} />
-                <AvatarFallback className="text-2xl">
-                  {profile?.nickname ? profile.nickname.slice(0,1).toUpperCase() : (user?.user_metadata?.name ? user.user_metadata.name.slice(0,1).toUpperCase() : "U")}
-                </AvatarFallback>
-                {uploading && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
-                  </div>
-                )}
-              </Avatar>
-              <div className="flex flex-col gap-2">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  ref={fileInputRef} 
-                  onChange={handleImageUpload}
-                  disabled={uploading}
-                />
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                >
-                  {uploading ? "업로드 중..." : "이미지 변경"}
-                </Button>
-                <p className="text-[10px] text-muted-foreground">
-                  JPG, PNG, GIF (최대 2MB)
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="nickname">닉네임</Label>
-              <Input 
-                id="nickname" 
-                value={nickname} 
-                onChange={(e) => setNickname(e.target.value)} 
-                placeholder="닉네임을 입력하세요"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">이메일</Label>
-              <Input 
-                id="email" 
-                value={user?.email || "로그인이 필요합니다."} 
-                disabled 
-                className="bg-muted/50"
-              />
-            </div>
-            
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? "저장 중..." : "변경사항 저장"}
-            </Button>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>

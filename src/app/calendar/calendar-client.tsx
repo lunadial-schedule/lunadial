@@ -4,7 +4,7 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight, Loader2, List, Grid } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2, List, Grid, SlidersHorizontal, Plus } from "lucide-react"
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer"
 import { PageContainer } from "@/components/layout/page-container"
 import { CATEGORY_LIST } from "@/config/categories"
@@ -16,6 +16,14 @@ import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dia
 import { useAuth } from "@/components/providers/auth-provider"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useIsOverlayOpen } from "@/hooks/use-is-overlay-open"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet"
 
 interface CalendarClientProps {
   initialEvents: HomeSchedule[];
@@ -57,8 +65,15 @@ export function CalendarClient({
   const q = searchParams.get('q') || ''
   const [selectedCats, setSelectedCats] = React.useState<string[]>(CATEGORY_LIST.map(c => c.id))
 
+  // 모바일 필터 시트 상태
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = React.useState(false)
+  const [tempSelectedCats, setTempSelectedCats] = React.useState<string[]>(selectedCats)
+
   const [isDetailOpen, setIsDetailOpen] = React.useState(false)
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null)
+  const [isSpeedDialOpen, setIsSpeedDialOpen] = React.useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
+  const isOverlayOpen = useIsOverlayOpen()
 
   const handleEventClick = (event: HomeSchedule) => {
     setSelectedEvent(event as unknown as Schedule)
@@ -150,53 +165,130 @@ export function CalendarClient({
     updateUrlParam('date', format(new Date(), 'yyyy-MM-dd'))
   }
 
+  // 모바일 필터 시트 열기 — history 상태 연동으로 뒤로가기 시 시트 닫기 지원
+  const openFilterSheet = () => {
+    setTempSelectedCats([...selectedCats])
+    setIsFilterSheetOpen(true)
+    // Sheet 오픈 시 히스토리 스택에 상태 추가
+    window.history.pushState({ filterSheetOpen: true }, '')
+  }
+
+  // Sheet가 닫힐 때(바깥 탭, X 버튼 등 onOpenChange) 히스토리 정리
+  const handleFilterSheetChange = (open: boolean) => {
+    if (!open && isFilterSheetOpen) {
+      // 뒤로가기가 아닌 다른 방법으로 닫힌 경우, 추가된 히스토리 엔트리 제거
+      if (window.history.state?.filterSheetOpen) {
+        window.history.back()
+      }
+    }
+    setIsFilterSheetOpen(open)
+  }
+
+  // popstate 이벤트 리스너: 뒤로가기 시 Sheet 닫기
+  React.useEffect(() => {
+    const handlePopState = () => {
+      if (isFilterSheetOpen) {
+        setIsFilterSheetOpen(false)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [isFilterSheetOpen])
+
+  // 모바일 필터 적용
+  const applyMobileFilter = () => {
+    setSelectedCats(tempSelectedCats)
+    setIsFilterSheetOpen(false)
+  }
+
+  // 모바일 필터 초기화
+  const resetMobileFilter = () => {
+    setTempSelectedCats(CATEGORY_LIST.map(c => c.id))
+  }
+
+  const activeFilterCount = selectedCats.length
+  const totalFilterCount = CATEGORY_LIST.length
+  const isAllSelected = activeFilterCount === totalFilterCount
+
+  // 공통 필터 UI 렌더링 함수
+  const renderFilterContent = (cats: string[], setCats: React.Dispatch<React.SetStateAction<string[]>>, isMobile = false) => (
+    <>
+      <div>
+        <div className={cn("flex bg-muted/60 p-1 rounded-lg", isMobile && "mb-4")}>
+          <Button variant="ghost" size="sm" className={`flex-1 text-[11px] sm:text-xs h-7 sm:h-8 ${initialScope === 'all' ? 'bg-foreground shadow-sm text-background font-bold hover:bg-foreground/90 hover:text-background' : 'text-muted-foreground hover:text-foreground/80'}`} onClick={() => updateUrlParam('scope', 'all')}>전체</Button>
+          <Button variant="ghost" size="sm" className={`flex-1 text-[11px] sm:text-xs h-7 sm:h-8 ${initialScope === 'favorites' ? 'bg-foreground shadow-sm text-background font-bold hover:bg-foreground/90 hover:text-background' : 'text-muted-foreground hover:text-foreground/80'}`} onClick={handleFavoritesScope}>즐겨찾기</Button>
+        </div>
+      </div>
+      
+      <div>
+        <div className="flex items-center justify-between mb-2.5">
+          <h3 className="text-[13px] font-semibold tracking-tight text-foreground/90">카테고리</h3>
+          <div className="flex items-center gap-2 md:gap-1.5">
+            <Button variant="ghost" size="sm" className={cn("bg-muted/50 rounded-md hover:bg-muted font-medium text-foreground/80", isMobile ? "h-9 px-4 text-[13px]" : "h-9 md:h-6 px-4 md:px-2 text-[13px] md:text-[11px]")} onClick={() => setCats(CATEGORY_LIST.map(c => c.id))}>전체 선택</Button>
+            <Button variant="ghost" size="sm" className={cn("bg-muted/50 rounded-md hover:bg-muted font-medium text-foreground/80", isMobile ? "h-9 px-4 text-[13px]" : "h-9 md:h-6 px-4 md:px-2 text-[13px] md:text-[11px]")} onClick={() => setCats([])}>해제</Button>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {CATEGORY_LIST.map((cat) => {
+            const isSelected = cats.includes(cat.id);
+            return (
+              <div 
+                key={cat.id} 
+                className={cn(
+                  "flex items-center gap-1.5 px-3 rounded-full border text-xs font-semibold cursor-pointer transition-colors leading-none shrink-0",
+                  isMobile ? "h-[36px]" : "h-[28px]",
+                  isSelected ? "border-primary bg-primary/10 text-primary" : "border-border/60 bg-background text-muted-foreground hover:bg-muted/50"
+                )}
+                onClick={() => {
+                    if (isSelected) setCats(prev => prev.filter(c => c !== cat.id))
+                    else setCats(prev => [...prev, cat.id])
+                }}
+              >
+                <span className={cn("w-1.5 h-1.5 rounded-full", cat.color)} />
+                {cat.label}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </>
+  )
+
   return (
     <PageContainer className="min-h-[calc(100vh-4rem)] bg-background lg:py-4 flex flex-col lg:flex-row gap-4 lg:gap-5 items-start pb-20 lg:pb-6">
-      {/* Left Sidebar Filter */}
-      <Card className="w-full lg:w-64 flex-col flex shrink-0 border-border/50 shadow-sm h-fit rounded-none border-x-0 lg:border-x lg:rounded-[12px]">
+      {/* Left Sidebar Filter — 데스크톱: sticky, 모바일: hidden */}
+      <Card className="hidden lg:flex w-full lg:w-64 flex-col shrink-0 border-border/50 h-fit lg:sticky lg:top-[80px] lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:rounded-[12px]">
         <div className="p-3 md:p-3.5 flex flex-col gap-4">
-          <div>
-            <div className="flex bg-muted/60 p-1 rounded-lg">
-              <Button variant="ghost" size="sm" className={`flex-1 text-[11px] sm:text-xs h-7 sm:h-8 ${initialScope === 'all' ? 'bg-foreground shadow-sm text-background font-bold hover:bg-foreground/90 hover:text-background' : 'text-muted-foreground hover:text-foreground/80'}`} onClick={() => updateUrlParam('scope', 'all')}>전체</Button>
-              <Button variant="ghost" size="sm" className={`flex-1 text-[11px] sm:text-xs h-7 sm:h-8 ${initialScope === 'favorites' ? 'bg-foreground shadow-sm text-background font-bold hover:bg-foreground/90 hover:text-background' : 'text-muted-foreground hover:text-foreground/80'}`} onClick={handleFavoritesScope}>즐겨찾기</Button>
-            </div>
-          </div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <h3 className="text-[13px] font-semibold tracking-tight text-foreground/90">카테고리</h3>
-              <div className="flex items-center gap-2 md:gap-1.5">
-                <Button variant="ghost" size="sm" className="h-9 md:h-6 bg-muted/50 px-4 md:px-2 rounded-md hover:bg-muted font-medium text-[13px] md:text-[11px] text-foreground/80" onClick={() => setSelectedCats(CATEGORY_LIST.map(c => c.id))}>전체 선택</Button>
-                <Button variant="ghost" size="sm" className="h-9 md:h-6 bg-muted/50 px-4 md:px-2 rounded-md hover:bg-muted font-medium text-[13px] md:text-[11px] text-foreground/80" onClick={() => setSelectedCats([])}>해제</Button>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {CATEGORY_LIST.map((cat) => {
-                const isSelected = selectedCats.includes(cat.id);
-                return (
-                  <div 
-                    key={cat.id} 
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 h-[28px] rounded-full border text-xs font-semibold cursor-pointer transition-colors leading-none shrink-0",
-                      isSelected ? "border-primary bg-primary/10 text-primary" : "border-border/60 bg-background text-muted-foreground hover:bg-muted/50"
-                    )}
-                    onClick={() => {
-                        if (isSelected) setSelectedCats(prev => prev.filter(c => c !== cat.id))
-                        else setSelectedCats(prev => [...prev, cat.id])
-                    }}
-                  >
-                    <span className={cn("w-1.5 h-1.5 rounded-full", cat.color)} />
-                    {cat.label}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+          {renderFilterContent(selectedCats, setSelectedCats)}
         </div>
       </Card>
 
+      {/* 모바일 필터 Bottom Sheet */}
+      <Sheet open={isFilterSheetOpen} onOpenChange={handleFilterSheetChange}>
+        <SheetContent side="bottom" showCloseButton={false} className="rounded-t-2xl max-h-[85vh] flex flex-col">
+          <SheetHeader className="pb-2 border-b">
+            <SheetTitle className="text-base">필터 설정</SheetTitle>
+            <SheetDescription className="sr-only">캘린더 카테고리 필터를 설정합니다</SheetDescription>
+          </SheetHeader>
+          
+          <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-5">
+            {renderFilterContent(tempSelectedCats, setTempSelectedCats, true)}
+          </div>
+
+          {/* 하단 고정 버튼 */}
+          <div className="shrink-0 flex items-center gap-3 px-4 py-4 border-t bg-background" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
+            <Button variant="outline" className="flex-1 h-11" onClick={resetMobileFilter}>
+              초기화
+            </Button>
+            <Button className="flex-1 h-11 font-bold" onClick={applyMobileFilter}>
+              적용
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {/* Main Calendar Area */}
-      <Card className="flex-1 w-full lg:w-auto border-border/50 lg:shadow-sm flex flex-col min-w-0 bg-card overflow-hidden rounded-none border-x-0 lg:border-x lg:rounded-xl">
+      <Card className="flex-1 w-full lg:w-auto border-border/50 flex flex-col min-w-0 bg-card overflow-hidden rounded-none border-x-0 lg:border-x lg:rounded-xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b px-3 py-2.5 md:px-4 md:py-3 gap-2 bg-muted/5 shrink-0">
           <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
             <h2 className="text-[26px] md:text-[30px] font-bold tracking-tight shrink-0 whitespace-nowrap flex items-center gap-1 md:gap-2">
@@ -277,7 +369,7 @@ export function CalendarClient({
                  return (
                    <div key={i} className={`border-r border-b flex flex-col overflow-hidden transition-colors ${!isCurrentMonth ? 'bg-muted/10 opacity-70' : 'bg-background hover:bg-muted/5'} ${isToday ? 'bg-primary/5 hover:bg-primary/10' : ''}`}>
                       <div className="flex justify-between items-center px-1 py-0.5 md:px-1.5 md:py-1 shrink-0 border-b border-border/30">
-                        <div className={`text-[11px] md:text-xs inline-flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-sm ${isToday ? 'bg-primary text-primary-foreground font-bold shadow-sm' : 'text-foreground/70 font-medium'} ${date.getDay()===0 && !isToday ? 'text-red-500' : ''} ${date.getDay()===6 && !isToday ? 'text-blue-500' : ''}`}>
+                        <div className={`text-[11px] md:text-xs inline-flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-sm ${isToday ? 'bg-primary text-primary-foreground font-bold' : 'text-foreground/70 font-medium'} ${date.getDay()===0 && !isToday ? 'text-red-500' : ''} ${date.getDay()===6 && !isToday ? 'text-blue-500' : ''}`}>
                           {date.getDate()}
                         </div>
                       </div>
@@ -378,7 +470,7 @@ export function CalendarClient({
                        <div 
                          key={event.id}
                          className={cn(
-                           "group flex flex-col gap-1 p-3 rounded-lg border border-border/60 bg-card hover:border-primary/50 hover:shadow-sm transition-all cursor-pointer relative shrink-0",
+                           "group flex flex-col gap-1 p-3 rounded-lg border border-border/60 bg-card hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer relative shrink-0",
                            isUpNext && "bg-amber-500/5 dark:bg-amber-500/10"
                          )}
                          onClick={() => handleEventClick(event)}
@@ -461,9 +553,79 @@ export function CalendarClient({
         schedule={selectedEvent}
       />
 
-      <div className="lg:hidden">
-        <CreateScheduleDialog isMobileTrigger />
+      {/* 모바일 Speed Dial FAB — 일정 추가 + 필터 */}
+      <div className={`fixed z-[100] lg:hidden ${isOverlayOpen ? 'hidden' : 'flex'} flex-col items-end gap-3`}
+        style={{ 
+          bottom: 'calc(1.5rem + env(safe-area-inset-bottom))', 
+          right: 'calc(1.5rem + env(safe-area-inset-right))' 
+        }}
+      >
+        {/* Speed Dial 확장 액션들 */}
+        <div className={`flex flex-col items-end gap-2.5 transition-all duration-200 ${isSpeedDialOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+          {/* 일정 추가 버튼 */}
+          <button
+            type="button"
+            className="flex items-center gap-2.5 h-11 pl-4 pr-3 rounded-full bg-card border border-border/60 shadow-lg text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors active:scale-95"
+            onClick={() => {
+              setIsSpeedDialOpen(false)
+              if (!user) {
+                if (window.confirm("로그인이 필요한 서비스입니다. 로그인 하시겠습니까?")) {
+                  router.push("/login")
+                }
+                return
+              }
+              // CreateScheduleDialog 내부 open 상태로 전달
+              setIsCreateDialogOpen(true)
+            }}
+          >
+            <span>일정 추가</span>
+            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+              <Plus className="h-4 w-4 text-primary-foreground" />
+            </div>
+          </button>
+
+          {/* 필터 버튼 */}
+          <button
+            type="button"
+            className="flex items-center gap-2.5 h-11 pl-4 pr-3 rounded-full bg-card border border-border/60 shadow-lg text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors active:scale-95"
+            onClick={() => {
+              setIsSpeedDialOpen(false)
+              openFilterSheet()
+            }}
+          >
+            <span>필터{!isAllSelected ? ` (${activeFilterCount})` : ''}</span>
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <SlidersHorizontal className="h-4 w-4 text-primary" />
+            </div>
+          </button>
+        </div>
+
+        {/* 메인 FAB 버튼 */}
+        <button
+          type="button"
+          aria-label="빠른 메뉴"
+          className={`h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95 ${isSpeedDialOpen ? 'bg-muted-foreground' : 'bg-primary'}`}
+          onClick={() => setIsSpeedDialOpen(prev => !prev)}
+        >
+          <div className={`transition-transform duration-200 ${isSpeedDialOpen ? 'rotate-45' : ''}`}>
+            <Plus className={`h-6 w-6 ${isSpeedDialOpen ? 'text-background' : 'text-primary-foreground'}`} />
+          </div>
+        </button>
       </div>
+
+      {/* Speed Dial 배경 오버레이 */}
+      {isSpeedDialOpen && (
+        <div 
+          className="fixed inset-0 z-[99] bg-black/20 lg:hidden" 
+          onClick={() => setIsSpeedDialOpen(false)} 
+        />
+      )}
+
+      {/* Speed Dial에서 열리는 일정 추가 다이얼로그 (모바일) */}
+      <CreateScheduleDialog 
+        externalOpen={isCreateDialogOpen} 
+        onExternalOpenChange={setIsCreateDialogOpen} 
+      />
     </PageContainer>
   )
 }

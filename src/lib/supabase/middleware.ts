@@ -20,7 +20,6 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/updates') ||
     pathname.startsWith('/notices') ||
     pathname.startsWith('/api/chzzk/live/top') ||
-    pathname.startsWith('/api/trending-categories') ||
     pathname.startsWith('/_next')
 
   if (isPublicPath) {

@@ -51,7 +51,7 @@ export default async function NoticeDetailPage(props: Props) {
         </Link>
       </div>
 
-      <article className="border border-border/50 bg-card rounded-xl overflow-hidden shadow-sm">
+      <article className="border border-border/50 bg-card rounded-xl overflow-hidden">
         <header className="p-6 sm:p-8 bg-muted/20 border-b border-border/50">
           <div className="flex flex-wrap gap-2 mb-3">
             {notice.is_pinned && <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20"><Pin className="w-3 h-3 mr-1" /> 고정</Badge>}

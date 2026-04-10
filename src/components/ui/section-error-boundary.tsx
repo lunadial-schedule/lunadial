@@ -37,7 +37,7 @@ export class SectionErrorBoundary extends Component<Props, State> {
   public override render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center p-6 bg-card border border-border/50 rounded-xl text-center shadow-sm min-h-[200px] w-full h-full">
+        <div className="flex flex-col items-center justify-center p-6 bg-card border border-border/50 rounded-xl text-center min-h-[200px] w-full h-full">
           <div className="bg-destructive/10 p-2.5 rounded-full mb-3">
             <AlertCircle className="w-6 h-6 text-destructive/80" />
           </div>

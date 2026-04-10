@@ -37,7 +37,7 @@ export default async function NoticesPage() {
             <Link 
               key={notice.id} 
               href={`/notices/${notice.id}`}
-              className={`group flex flex-col gap-2 p-4 rounded-lg border bg-card transition-all hover:border-primary/50 hover:shadow-sm ${notice.is_pinned ? 'border-primary/20 bg-primary/5' : ''}`}
+              className={`group flex flex-col gap-2 p-4 rounded-lg border bg-card transition-all hover:border-primary/50 hover:bg-muted/30 ${notice.is_pinned ? 'border-primary/20 bg-primary/5' : ''}`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex flex-col gap-1.5 flex-1">

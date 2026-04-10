@@ -59,7 +59,7 @@ export function UpdateLogList({ initialLogs, isAdminView = false }: Props) {
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+      <div className="flex flex-wrap gap-4 p-4 rounded-lg border bg-card text-card-foreground">
         <div className="flex items-center gap-2">
           <label className="text-xs font-semibold text-muted-foreground whitespace-nowrap">액션</label>
           <select 
@@ -95,7 +95,7 @@ export function UpdateLogList({ initialLogs, isAdminView = false }: Props) {
           </div>
         ) : (
           initialLogs.map((log) => (
-            <div key={log.id} className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm space-y-3 relative overflow-hidden">
+            <div key={log.id} className="p-4 rounded-lg border bg-card text-card-foreground space-y-3 relative overflow-hidden">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-border/50 pb-3">
                 <div className="flex items-start gap-2 flex-wrap flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mt-0.5">

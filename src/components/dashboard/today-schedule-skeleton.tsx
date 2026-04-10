@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
  */
 export function TodayScheduleSkeleton() {
   return (
-    <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden h-[700px] lg:h-[1420px]">
+    <Card className="flex flex-col border-border/50 bg-card overflow-hidden h-[700px] lg:h-[1420px]">
       <CardHeader className="h-9 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
         <CardTitle className="text-[18px] font-bold flex items-center gap-1.5 m-0 p-0">
           <CalendarIcon className="h-4 w-4 text-primary" />
@@ -40,7 +40,7 @@ export function TodayScheduleSkeleton() {
             <div 
               key={colIndex} 
               className={cn(
-                "relative flex-shrink-0 w-full lg:w-auto snap-center flex flex-col bg-background border border-border/50 rounded-xl shadow-sm p-2.5 md:p-3 h-full overflow-hidden",
+                "relative flex-shrink-0 w-full lg:w-auto snap-center flex flex-col bg-background border border-border/50 rounded-xl p-2.5 md:p-3 h-full overflow-hidden",
                 colIndex !== 1 && "hidden lg:flex"
               )}
             >

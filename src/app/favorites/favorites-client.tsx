@@ -24,7 +24,7 @@ export function FavoritesClient({ initialFavorites }: { initialFavorites: any[] 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
         {/* Left Side: My Favorites */}
         <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
-          <Card className="border-border/50 shadow-sm overflow-hidden flex flex-col h-full">
+          <Card className="border-border/50 overflow-hidden flex flex-col h-full">
             <CardHeader className="h-10 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
               <div className="flex items-center gap-3">
                 <CardTitle className="text-lg">내 즐겨찾기</CardTitle>
@@ -70,7 +70,7 @@ export function FavoritesClient({ initialFavorites }: { initialFavorites: any[] 
 
         {/* Right Side: Search & Add (Desktop Only) */}
         <div className="hidden lg:flex lg:col-span-5 xl:col-span-4 flex-col gap-4 lg:sticky lg:top-[80px]">
-          <Card className="border-border/50 shadow-sm">
+          <Card className="border-border/50">
             <CardHeader className="h-9 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
               <CardTitle className="text-lg">스트리머 찾기</CardTitle>
             </CardHeader>

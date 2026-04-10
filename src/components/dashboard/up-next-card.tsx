@@ -46,7 +46,7 @@ export function UpNextCard({ initialEvents = [] }: UpNextCardProps) {
       const end = addHours(now, 24);
       const { data } = await getHomeSchedules(now, end);
       if (data) {
-        const upcoming = data.filter(e => isAfter(parseISO(e.start_time), now) && e.status !== "canceled").slice(0, 5);
+        const upcoming = data.filter(e => isAfter(parseISO(e.start_time), now) && e.status !== "canceled").slice(0, 10);
         setEvents(upcoming);
       }
     };
@@ -57,7 +57,7 @@ export function UpNextCard({ initialEvents = [] }: UpNextCardProps) {
 
   return (
     <>
-      <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden h-[480px]">
+      <Card className="flex flex-col border-border/50 bg-card overflow-hidden lg:h-[810px]">
         <CardHeader className="h-10 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
           <CardTitle className="text-[15px] font-bold flex items-center gap-1.5 m-0 hover:text-primary transition-colors cursor-pointer" onClick={() => window.location.href = "/calendar"}>
             <Clock className="h-4 w-4 text-primary" />

@@ -15,7 +15,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch('https://openapi.chzzk.naver.com/open/v1/lives?size=5', {
+    const res = await fetch('https://openapi.chzzk.naver.com/open/v1/lives?size=10', {
       headers: {
         'Client-Id': CHZZK_CLIENT_ID,
         'Client-Secret': CHZZK_CLIENT_SECRET,

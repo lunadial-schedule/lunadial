@@ -28,13 +28,22 @@ import { useHistoryDialog } from "@/hooks/use-history-dialog";
 
 interface CreateScheduleDialogProps {
   isMobileTrigger?: boolean;
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
 }
 
-export function CreateScheduleDialog({ isMobileTrigger = false }: CreateScheduleDialogProps = {}) {
+export function CreateScheduleDialog({ isMobileTrigger = false, externalOpen, onExternalOpenChange }: CreateScheduleDialogProps = {}) {
   const isOverlayOpen = useIsOverlayOpen();
   const router = useRouter();
   const { user } = useAuth();
-  const [open, setOpen] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  
+  // 외부에서 제어하는 경우 외부 상태를, 아니면 내부 상태 사용
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (onExternalOpenChange) onExternalOpenChange(value);
+    setInternalOpen(value);
+  };
   
   useHistoryDialog(open, setOpen, "create-schedule");
   

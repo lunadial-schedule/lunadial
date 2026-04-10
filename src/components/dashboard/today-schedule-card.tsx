@@ -191,7 +191,7 @@ export function TodayScheduleCard({
 
   return (
     <>
-      <Card className="flex flex-col border-border/50 shadow-sm bg-card overflow-hidden h-[700px] lg:h-[1418px]">
+      <Card className="flex flex-col border-border/50 bg-card overflow-hidden h-[700px] lg:h-[1484px]">
         {/* Header & Controls */}
         <CardHeader className="h-9 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0">
           <CardTitle className="text-[18px] font-bold flex items-center gap-1.5 m-0 p-0 relative">
@@ -242,7 +242,7 @@ export function TodayScheduleCard({
                 <div 
                   key={colIndex} 
                   className={cn(
-                    "relative flex-shrink-0 w-full lg:w-auto snap-center flex flex-col bg-background border border-border/50 rounded-xl shadow-sm p-2.5 md:p-3 transition-all h-full overflow-hidden",
+                    "relative flex-shrink-0 w-full lg:w-auto snap-center flex flex-col bg-background border border-border/50 rounded-xl p-2.5 md:p-3 transition-all h-full overflow-hidden",
                     colIndex !== 1 && "hidden lg:flex"
                   )}
                 >

@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * 현재 라이브 카드 — 치지직 인기 라이브 스트림 TOP 5 표시
+ * 현재 라이브 카드 — 치지직 인기 라이브 스트림 TOP 10 표시
  */
 
 import { useEffect, useState } from "react"
@@ -68,7 +68,7 @@ export function LiveNowCard() {
   }, [updatedAt])
 
   return (
-    <Card className="h-[380px] border-border/50 shadow-sm flex flex-col">
+    <Card className="border-border/50 flex flex-col lg:h-[650px]">
       <CardHeader className="h-10 px-3 py-1.5 flex flex-row items-center justify-between border-b shrink-0 space-y-0">
         <div className="flex items-center justify-between gap-2 w-full">
           <CardTitle className="text-[15px] font-bold flex items-center gap-1.5 whitespace-nowrap m-0">
@@ -94,7 +94,7 @@ export function LiveNowCard() {
       <CardContent className="p-0 flex-1 flex flex-col">
         {isLoading ? (
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-center gap-2.5 p-3">
-             {[1,2,3,4,5].map(i => (
+             {[1,2,3,4,5,6,7,8,9,10].map(i => (
                <div key={i} className="flex items-center gap-3 px-2 py-1.5 rounded-lg animate-pulse">
                  <div className="h-8 w-8 bg-muted rounded-full shrink-0" />
                  <div className="flex-1 space-y-1.5 py-0.5">

@@ -14,7 +14,7 @@ export async function UpNextSection() {
   const upNextEnd = addHours(now, 24);
   const upNextEvents = schedules
     .filter(e => isAfter(parseISO(e.start_time), now) && !isAfter(parseISO(e.start_time), upNextEnd))
-    .slice(0, 5);
+    .slice(0, 10);
     
   return <UpNextCard initialEvents={upNextEvents} />;
 }

@@ -5,10 +5,9 @@
  * 데이터 의존성이 있는 컴포넌트는 Suspense로 묶어 별도로 스트리밍(Chunking)되도록 처리한다.
  *
  * - 좌측: 오늘의 일정(TodayScheduleSection)
- * - 우측: 곧 시작(UpNextSection), 현재 라이브(LiveNowCard), 트렌딩 카테고리(TrendingCategoriesCard)
+ * - 우측: 곧 시작(UpNextSection), 현재 라이브(LiveNowCard)
  */
 import { LiveNowCard } from "@/components/dashboard/live-now-card";
-import { TrendingCategoriesCard } from "@/components/dashboard/trending-categories-card";
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog";
 import { OAuthCallbackHandler } from "@/components/oauth-callback-handler";
 import { PageContainer } from "@/components/layout/page-container";
@@ -49,13 +48,8 @@ export default function Home() {
               </Suspense>
             </SectionErrorBoundary>
             
-            {/* 이 아래는 클라이언트 마운트 후 자체 상태(fetch)로 데이터를 로드하므로 차단 없음 */}
             <SectionErrorBoundary fallbackMessage="현재 라이브 정보를 불러오지 못했습니다.">
               <LiveNowCard />
-            </SectionErrorBoundary>
-
-            <SectionErrorBoundary fallbackMessage="트렌딩 카테고리를 불러오지 못했습니다.">
-              <TrendingCategoriesCard />
             </SectionErrorBoundary>
           </div>
         </div>

@@ -252,7 +252,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
       {/* List */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {drafts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 border border-dashed rounded-xl shadow-sm h-[300px]">
+          <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 border border-dashed rounded-xl h-[300px]">
             <AlertCircle className="w-10 h-10 text-muted-foreground/50 mb-3" />
             <h3 className="text-sm font-bold mb-1">일정을 추출하지 못했어요</h3>
             <p className="text-xs text-muted-foreground mb-6 max-w-[250px]">
@@ -265,7 +265,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
         ) : (
           <>
             {drafts.map((draft, idx) => (
-              <div key={draft.id} className={`p-4 border rounded-xl shadow-sm transition-colors ${draft.isSelected ? 'border-primary ring-1 ring-primary/20' : 'bg-muted/30 border-dashed opacity-80'}`}>
+              <div key={draft.id} className={`p-4 border rounded-xl transition-colors ${draft.isSelected ? 'border-primary ring-1 ring-primary/20' : 'bg-muted/30 border-dashed opacity-80'}`}>
                 <div className="flex items-start gap-3">
                   <Checkbox 
                     id={`chk-${draft.id}`} 

@@ -31,19 +31,3 @@ export interface ChzzkLivesResponse {
   }
 }
 
-/** 프론트에 내려줄 트렌딩 카테고리 카드 데이터 */
-export interface TrendingCategoryCard {
-  categoryId: string
-  categoryName: string
-  categoryImageUrl: string | null
-  liveCount: number
-  totalViewerCount: number
-  updatedAt: string
-}
-
-/** /api/trending-categories 응답 형태 */
-export interface TrendingCategoriesResponse {
-  categories: TrendingCategoryCard[]
-  updatedAt: string
-  cached: boolean
-}
