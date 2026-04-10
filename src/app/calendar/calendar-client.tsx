@@ -623,6 +623,7 @@ export function CalendarClient({
 
       {/* Speed Dial에서 열리는 일정 추가 다이얼로그 (모바일) */}
       <CreateScheduleDialog 
+        hideTrigger={true}
         externalOpen={isCreateDialogOpen} 
         onExternalOpenChange={setIsCreateDialogOpen} 
       />

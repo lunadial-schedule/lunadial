@@ -28,11 +28,12 @@ import { useHistoryDialog } from "@/hooks/use-history-dialog";
 
 interface CreateScheduleDialogProps {
   isMobileTrigger?: boolean;
+  hideTrigger?: boolean;
   externalOpen?: boolean;
   onExternalOpenChange?: (open: boolean) => void;
 }
 
-export function CreateScheduleDialog({ isMobileTrigger = false, externalOpen, onExternalOpenChange }: CreateScheduleDialogProps = {}) {
+export function CreateScheduleDialog({ isMobileTrigger = false, hideTrigger = false, externalOpen, onExternalOpenChange }: CreateScheduleDialogProps = {}) {
   const isOverlayOpen = useIsOverlayOpen();
   const router = useRouter();
   const { user } = useAuth();
@@ -190,31 +191,33 @@ export function CreateScheduleDialog({ isMobileTrigger = false, externalOpen, on
 
   return (
     <>
-      {isMobileTrigger ? (
-        <Button 
-          type="button"
-          aria-label="새 일정 등록"
-          className={`fixed z-[100] h-14 lg:hidden rounded-full px-5 shadow-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-transform active:scale-95 items-center justify-center gap-2 ${isOverlayOpen ? 'hidden' : 'flex'}`}
-          style={{ 
-            bottom: 'calc(1.5rem + env(safe-area-inset-bottom))', 
-            right: 'calc(1.5rem + env(safe-area-inset-right))' 
-          }}
-          onClick={handleOpenClick}
-        >
-          <Plus className="h-5 w-5" />
-          일정 추가
-        </Button>
-      ) : (
-        <Button 
-          type="button"
-          variant="outline" 
-          size="sm" 
-          className="rounded-full gap-1" 
-          onClick={handleOpenClick}
-        >
-          <Plus className="h-4 w-4" />
-          <span>일정 추가</span>
-        </Button>
+      {!hideTrigger && (
+        isMobileTrigger ? (
+          <Button 
+            type="button"
+            aria-label="새 일정 등록"
+            className={`fixed z-[100] h-14 lg:hidden rounded-full px-5 shadow-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-transform active:scale-95 items-center justify-center gap-2 ${isOverlayOpen ? 'hidden' : 'flex'}`}
+            style={{ 
+              bottom: 'calc(1.5rem + env(safe-area-inset-bottom))', 
+              right: 'calc(1.5rem + env(safe-area-inset-right))' 
+            }}
+            onClick={handleOpenClick}
+          >
+            <Plus className="h-5 w-5" />
+            일정 추가
+          </Button>
+        ) : (
+          <Button 
+            type="button"
+            variant="outline" 
+            size="sm" 
+            className="rounded-full gap-1" 
+            onClick={handleOpenClick}
+          >
+            <Plus className="h-4 w-4" />
+            <span>일정 추가</span>
+          </Button>
+        )
       )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[425px] flex flex-col p-0 gap-0 max-h-[90dvh] md:max-h-[85vh] overflow-hidden">
