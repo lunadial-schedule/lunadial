@@ -206,14 +206,14 @@ export function CalendarClient({
               )}>
                 {initialView === 'month' ? format(initialDate, "yyyy년 M월") : format(initialDate, "M월 d일")}
               </div>
-              <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                <Loader2 className={cn("w-4 h-4 md:w-5 md:h-5 text-muted-foreground animate-spin transition-opacity", isPending ? "opacity-100" : "opacity-0")} />
-              </div>
             </h2>
-            <div className="flex items-center bg-muted/50 rounded-full p-0.5 ml-auto sm:ml-0">
+            <div className="flex items-center bg-muted/50 rounded-full p-0.5">
               <Button variant="ghost" size="icon" className="h-6.5 w-6.5 md:h-7 md:w-7 rounded-full" onClick={goPrev} disabled={isPending}><ChevronLeft className="h-4 w-4 md:h-5 md:w-5" /></Button>
               <Button variant="ghost" size="sm" className="h-6.5 md:h-7 px-2.5 md:px-3 text-[11px] md:text-xs" onClick={goToday} disabled={isPending}>오늘</Button>
               <Button variant="ghost" size="icon" className="h-6.5 w-6.5 md:h-7 md:w-7 rounded-full" onClick={goNext} disabled={isPending}><ChevronRight className="h-4 w-4 md:h-5 md:w-5" /></Button>
+            </div>
+            <div className="w-5 h-5 flex items-center justify-center shrink-0 ml-auto sm:ml-0">
+              <Loader2 className={cn("w-4 h-4 md:w-5 md:h-5 text-muted-foreground animate-spin transition-opacity", isPending ? "opacity-100" : "opacity-0")} />
             </div>
           </div>
           <div className="flex items-center bg-muted/60 p-0.5 rounded-full w-full sm:w-auto">

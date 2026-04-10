@@ -24,8 +24,10 @@ export const getCachedCalendarMonthSchedules = unstable_cache(
     const numRows = Math.max(5, Math.ceil(totalCells / 7));
     
     const gridEnd = endOfDay(addDays(gridStart, (numRows * 7) - 1));
+    const safeStart = addDays(gridStart, -2);
+    const safeEnd = addDays(gridEnd, 2);
 
-    const result = await getCalendarMonthSchedules(gridStart, gridEnd);
+    const result = await getCalendarMonthSchedules(safeStart, safeEnd);
     console.timeEnd(timerLabel);
     return result;
   },
@@ -46,8 +48,8 @@ export const getCachedCalendarDaySchedules = unstable_cache(
     const timerLabel = `Calendar_Day_Cache_Overhead_${dayStr}_${Math.random().toString(36).slice(2, 7)}`;
     console.time(timerLabel);
     const date = parseISO(dayStr);
-    const start = startOfDay(date);
-    const end = endOfDay(date);
+    const start = addDays(startOfDay(date), -2); // 타임존 오차 대비 넉넉히 양쪽 범위 확대
+    const end = addDays(endOfDay(date), 2);
 
     const result = await getCalendarDaySchedules(start, end);
     console.timeEnd(timerLabel);
