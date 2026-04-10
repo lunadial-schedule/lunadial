@@ -241,7 +241,6 @@ export function UpdateScheduleDialog({ schedule, open, onOpenChange, onSuccess }
                  <label className="text-sm font-medium">진행 상태 *</label>
                  <select name="status" required defaultValue={schedule.status} className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-1 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                    <option value="scheduled">예정 (정상)</option>
-                   <option value="changed">일정 변경됨</option>
                    <option value="canceled">일정 취소됨</option>
                  </select>
               </div>
