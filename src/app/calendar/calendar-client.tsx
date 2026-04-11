@@ -31,6 +31,8 @@ interface CalendarClientProps {
   initialDate: Date;
   initialView: 'month' | 'day';
   initialScope: 'all' | 'favorites';
+  topAd?: React.ReactNode;
+  filterAd?: React.ReactNode;
 }
 
 export function CalendarClient({
@@ -38,7 +40,9 @@ export function CalendarClient({
   initialFavoriteIds,
   initialDate,
   initialView,
-  initialScope
+  initialScope,
+  topAd,
+  filterAd
 }: CalendarClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -258,9 +262,11 @@ export function CalendarClient({
     <PageContainer className="min-h-[calc(100vh-4rem)] bg-background lg:py-4 flex flex-col lg:flex-row gap-4 lg:gap-5 items-start pb-20 lg:pb-6">
       {/* Left Sidebar Filter — 데스크톱: sticky, 모바일: hidden */}
       <Card className="hidden lg:flex w-full lg:w-64 flex-col shrink-0 border-border/50 h-fit lg:sticky lg:top-[80px] lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:rounded-[12px]">
-        <div className="p-3 md:p-3.5 flex flex-col gap-4">
+        <div className="p-3 md:p-3.5 flex flex-col gap-4 flex-1">
           {renderFilterContent(selectedCats, setSelectedCats)}
         </div>
+        {/* 사이드바 하단 광고 영역 */}
+        {filterAd}
       </Card>
 
       {/* 모바일 필터 Bottom Sheet */}
@@ -319,6 +325,9 @@ export function CalendarClient({
             </Button>
           </div>
         </div>
+
+        {/* 캘린더 상단 광고 영역 */}
+        {topAd}
 
         <CardContent className="flex-1 p-0 flex flex-col relative h-[500px] lg:h-auto min-h-[500px]">
           {/* Calendar Header Row */}

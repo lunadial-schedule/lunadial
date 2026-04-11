@@ -83,10 +83,15 @@ export function SiteFooter() {
          * Lunadial은 NAVER Chzzk의 공식 서비스가 아니며, NAVER Corp의 승인 또는 보증을 받지 않았습니다.
          */}
 
-        {/* 저작권 */}
-        <p className="mt-6 text-center text-xs md:text-left">
-          © 2026 LUNA DIAL. All rights reserved.
-        </p>
+        {/* 저작권 및 기타 고지 */}
+        <div className="mt-6 flex flex-col md:flex-row items-center md:items-start justify-between text-xs md:text-left gap-4">
+          <p>
+            © 2026 LUNA DIAL. All rights reserved.
+          </p>
+          <p className="text-muted-foreground/60 text-center md:text-right max-w-sm">
+            이 페이지에는 제휴 마케팅이 포함되어 있으며, 이에 따른 일정액의 수수료를 제공받을 수 있습니다.
+          </p>
+        </div>
       </div>
     </footer>
   );

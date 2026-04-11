@@ -21,6 +21,7 @@ import { UpNextSection } from "@/components/dashboard/up-next-section";
 import { TodayScheduleSkeleton } from "@/components/dashboard/today-schedule-skeleton";
 import { UpNextSkeleton } from "@/components/dashboard/up-next-skeleton";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
+import { CoupangBanner } from "@/components/ads/CoupangBanner";
 
 export default function Home() {
   return (
@@ -29,6 +30,10 @@ export default function Home() {
         <OAuthCallbackHandler />
       </Suspense>
       <PageContainer className="pt-6 md:pt-8 min-h-screen lg:py-4">
+        
+        {/* 상단 광고 (검색창 아래, 메인 콘텐츠 위) */}
+        <CoupangBanner placementKey="home_top" />
+
         <div className="flex flex-col lg:grid lg:grid-cols-10 gap-4 lg:gap-6 w-full items-start">
           {/* Left Column wrapper (Desktop: 70%, Mobile: Full width) */}
           <div className="flex flex-col w-full lg:col-span-7 h-full min-w-0 order-1 lg:order-none">
@@ -38,6 +43,9 @@ export default function Home() {
                 <TodayScheduleSection />
               </Suspense>
             </SectionErrorBoundary>
+
+            {/* 하단 광고 (데스크톱: 오늘의 일정 카드 하단 / 모바일: 오늘의 일정 카드 하단) */}
+            <CoupangBanner placementKey="home_bottom" className="mt-4" />
           </div>
 
           {/* Right Column wrapper (Desktop: 30%, Mobile: Full width) */}

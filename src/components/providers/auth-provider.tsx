@@ -14,6 +14,7 @@
 import * as React from "react"
 import { createClient } from "@/lib/supabase/client"
 import { User } from "@supabase/supabase-js"
+import { useRouter } from "next/navigation"
 
 interface AuthContextValue {
   user: User | null
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null)
   const [profile, setProfile] = React.useState<AuthContextValue['profile']>(null)
   const [isLoading, setIsLoading] = React.useState(true)
+  const router = useRouter()
   const supabase = React.useMemo(() => createClient(), [])
 
   // 마지막으로 profile fetch한 user id를 추적하여 중복 호출 방지
@@ -74,6 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (_event, session) => {
         const currentUser = session?.user ?? null
         setUser(currentUser)
+        
+        if (_event === 'SIGNED_IN' || _event === 'SIGNED_OUT') {
+           router.refresh()
+        }
+
         if (currentUser) {
           // 동일 유저에 대한 중복 profile fetch 방지
           if (lastProfileUserIdRef.current !== currentUser.id) {
