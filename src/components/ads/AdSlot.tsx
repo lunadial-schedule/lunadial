@@ -41,7 +41,7 @@ export function AdSlot({
       }
     >
       <span className="text-[9px] font-semibold text-muted-foreground/40 self-end mr-4 mb-2 tracking-wider">
-        AD
+        광고
       </span>
 
       <div

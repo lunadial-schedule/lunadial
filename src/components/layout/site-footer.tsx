@@ -80,7 +80,7 @@ export function SiteFooter() {
 
         {/*
          * [선택 구현] 비공식 서비스 고지 (치지직 연동 시 주석 해제)
-         * Lunadial은 NAVER Chzzk의 공식 서비스가 아니며, NAVER Corp의 승인 또는 보증을 받지 않았습니다.
+         * LUNA DIAL은 NAVER Chzzk의 공식 서비스가 아니며, NAVER Corp의 승인 또는 보증을 받지 않았습니다.
          */}
 
         {/* 저작권 및 기타 고지 */}
@@ -88,9 +88,11 @@ export function SiteFooter() {
           <p>
             © 2026 LUNA DIAL. All rights reserved.
           </p>
-          <p className="text-muted-foreground/60 text-center md:text-right max-w-sm">
-            이 페이지에는 제휴 마케팅이 포함되어 있으며, 이에 따른 일정액의 수수료를 제공받을 수 있습니다.
-          </p>
+          <div className="flex flex-col items-center md:items-end gap-0.5">
+            <p className="text-muted-foreground/60 whitespace-nowrap">
+              LUNA DIAL은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
