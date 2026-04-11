@@ -88,11 +88,6 @@ export function SiteFooter() {
           <p>
             © 2026 LUNA DIAL. All rights reserved.
           </p>
-          <div className="flex flex-col items-center md:items-end gap-0.5">
-            <p className="text-muted-foreground/60 whitespace-nowrap">
-              LUNA DIAL은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.
-            </p>
-          </div>
         </div>
       </div>
     </footer>
