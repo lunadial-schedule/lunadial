@@ -122,10 +122,6 @@ export default function ProPage() {
                 <Check className="h-4 w-4 text-amber-500" />
                 <span>서비스 내 모든 <strong>광고 제거</strong></span>
               </li>
-              <li className="flex items-center gap-3">
-                <Check className="h-4 w-4 text-amber-500" />
-                <span>개인 캘린더 앱(Google, Apple) 연동 (예정)</span>
-              </li>
             </ul>
             {isLoading ? (
               <Button className="w-full" disabled>로딩 중...</Button>

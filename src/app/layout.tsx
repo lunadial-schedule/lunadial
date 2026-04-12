@@ -27,6 +27,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LUNA DIAL - 스트리머 일정",
   description: "Streamer Calendar",
+  verification: {
+    google: "M-4hkpR42Rtc0HGmEO-Sfo1tn-YKcjgNHQQIKrwYsxE",
+  },
 };
 
 export default function RootLayout({
