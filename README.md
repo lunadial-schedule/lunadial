@@ -13,8 +13,6 @@
   - 자신이 생성한 일정의 추가 / 수정 / 삭제
 * **관리자 기능**:
   - 공지사항 및 시스템 로그 관리
-  - 대량 스트리머 백필(Backfill) 및 관리 스크립트 도구 지원 (`/api/admin/system/*`)
-  - 치지직 세션 유지(Keep-alive) 관리 기능
 
 ### 🛠 기술 스택
 * **Front-end**: Next.js (App Router), React, TypeScript, Tailwind CSS, shadcn/ui
@@ -49,14 +47,13 @@ npx tsc --noEmit
 - **`/calendar`** : 달력 형태의 전체 뷰
 - **`/settings/account`** : 계정 관리 및 삭제
 - **`/admin/logs`** : (관리자 한정) 시스템 로그 및 액션 히스토리
-- **`/admin/system/chzzk-session`** : (관리자 한정) 치지직 시스템 세션 관리
 
 ---
 
 ## 🔐 3. 환경변수 설정 (`.env.local`)
 
 이 프로젝트는 Supabase 및 여러 연동 키를 필요로 합니다. 
-최상위에 `.env.local` 파일을 생성하여 아래 항목들을 채워넣어야 정상 동작합니다. *(같이 생성된 `.env.example` 템플릿을 참고하세요)*
+최상위에 `.env.local` 파일을 생성하여 아래 항목들을 채워넣어야 정상 동작합니다.
 
 ### 핵심 환견변수 설명
 1. **`NEXT_PUBLIC_APP_URL`**: 
@@ -68,8 +65,6 @@ npx tsc --noEmit
    - `SUPABASE_SECRET_KEY` (또는 `SERVICE_ROLE_KEY`): RLS를 우회할 수 있는 최고 권한 키 (`supabase/admin.ts`에서 시스템/백필 처리용으로만 사용)
 4. **`ADMIN_OPS_TOKEN`**:
    - `api/admin/system/*` 하위의 내부 백엔드 스크립트를 클라이언트 브라우저가 함부로 찌르지 못하게 차단(Authorization Header)하는 내부 암호 토큰입니다.
-
-*(치지직이나 AI 관련 환경변수는 해당 기능을 동작시킬 때만 추가로 세팅합니다.)*
 
 ---
 
@@ -93,7 +88,7 @@ src/
 │   └── supabase/         # [주의] client.ts / server.ts / admin.ts 클라이언트 분리 명시
 │
 ├── services/             # API 통신 또는 복잡한 서드파티 컨트롤 로직
-│   └── admin/            # 백필 동작 등 시스템 관리 목적의 서비스
+│   └── admin/            # 시스템 관리 목적의 서비스
 └── hooks/                # 클라이언트 사이드 공통 로직 (예: use-history-dialog 등)
 ```
 
@@ -116,32 +111,3 @@ src/
 * **Supabase 분리 규칙**:
   - 클라이언트 로직: `lib/supabase/client.ts`
   - 서버 액션, API: `lib/supabase/server.ts` (현재 요청한 유저 쿠키의 RLS에 따름)
-  - 아주 예외적인 백필 스크립트: `lib/supabase/admin.ts` (Service Role - 강제 실행)
-
----
-
-## 📦 7. 현재 비활성 또는 보관 중인 기능
-
-청소(Refactoring) 과정 중 지금은 전면 개방되지 않거나 비활성화되었으나, 향후 재도입을 감안하여 **안전하게 격리되어 남아있는** 기능들입니다.
-
-1. **치지직(Chzzk) OAuth 로그인 및 연동 로직**: 
-   - `src/app/api/auth/chzzk/*`
-   - 현재는 사용자 계정 연동에 쓰이지 않으나, 플랫폼 확장을 위해 로직(콜백 처리 등) 자체는 보관 중입니다.
-2. **치지직/스트리머 대량 백필 및 정리 도구**: 
-   - `src/app/api/admin/system/maintenance/*`
-   - 시스템상 일괄 입력이나 스파이더링이 필요할 때 쓸 수 있도록 구조를 남겨두었으며, 일반 동작과 섞이지 않도록 완벽히 Admin System 하위로 격리했습니다.
-
----
-
-## 🚨 8. 개발 시 필수 주의사항
-
-1. **`lib/supabase/admin.ts` 무분별 사용 절대 금지**: 
-   - 이건 데이터베이스의 모든 잠금장치(RLS)를 박살내고 프리패스하는 마스터키입니다. 일반 사용자 대상 Server Action(`schedules.ts` 등)에 실수로 이 클라이언트를 import 할 경우, 인증되지 않은 해커가 남의 글을 전부 삭제할 가능성이 생깁니다.
-2. **모바일 뒤로가기 모달 제어 (`use-history-dialog`)**: 
-   - 모바일 편의를 위해 모달이 뜰 때 임의의 History를 `pushState`로 쌓았다가 뒤로가기(`popstate`) 시 소거하는 훅입니다. 이 컴포넌트 렌더 제어 타이밍이 어긋나면 무한 뒤로가기 늪에 빠질 수 있으므로, 관련된 화면을 수정할 경우 모바일 크롬 개발자 도구에서 집중 테스트해야 합니다.
-3. **낙관적 락(Optimistic Locking)**: 
-   - `actions/schedules.ts` 내 일정 수정은 동시 수정을 막기 위해 `updated_at` 타임스탬프를 비교합니다. 클라이언트에서 업데이트 시 이 값을 실수로 누락하면 무조건 에러가 납니다.
-4. **로컬 테스트 시 OAuth 리다이렉트**: 
-   - 로컬 구아웃 로그인 테스트를 위해 Supabase 설정(Authentication -> URL Configuration) 내에 `http://localhost:3000/**` 리다이렉트가 Allow list에 포함되어 있어야 합니다.
-5. **CI 파이프라인 (GitHub Actions)**:
-   - PR 및 Push 시 자동으로 `lint`, `typecheck`, `build` 검증을 수행합니다. 푸시 전에 미리 `npm run lint` 및 `npm run typecheck`를 실행하여 통과 여부를 확인하는 것을 권장합니다.
