@@ -14,7 +14,7 @@
 * **관리자 기능**:
   - 공지사항 및 시스템 로그 관리
 
-### 🛠 기술 스택
+### ⌨️ 기술 스택
 * **Front-end**: Next.js (App Router), React, TypeScript, Tailwind CSS, shadcn/ui
 * **Back-end & DB**: Supabase (PostgreSQL, Auth, RLS Policies)
 * **CI / 자동화**: GitHub Actions (Lint, Typecheck, Build 사전 검증)
