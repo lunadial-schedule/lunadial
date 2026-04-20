@@ -1,55 +1,19 @@
 import { NextResponse } from 'next/server';
-import { createClient } from "@supabase/supabase-js";
-import crypto from "crypto"
-
-export const dynamic = "force-dynamic"
+import { getCachedSchedules } from '@/lib/dashboard-data';
+import { getHomeSchedules } from '@/app/actions/schedules';
 
 export async function GET() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
-
-  const { data: account, error } = await supabase
-    .from("connected_accounts")
-    .select("*")
-    .eq("provider", "chzzk")
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .single()
-
-  if (error || !account) {
-    return NextResponse.json({ error: "no account" })
-  }
-
-  const keyStr = process.env.ENCRYPTION_KEY || "";
-  const result = {
-    keyLen: keyStr.length,
-    keyLastChar: keyStr.charCodeAt(keyStr.length - 1),
-    accountStrLen: account.refresh_token_encrypted?.length,
-    accountStrStart: account.refresh_token_encrypted?.substring(0, 10),
-    decrypted: "false",
-    errMessage: "",
-  }
-
   try {
-    const key = crypto.createHash('sha256').update(keyStr).digest()
-    const encryptedData = account.refresh_token_encrypted!
-    
-    const parts = encryptedData.split(":")
-    const iv = Buffer.from(parts[0], "base64")
-    const authTag = Buffer.from(parts[1], "base64")
-    const encryptedText = parts[2]
-    
-    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv)
-    decipher.setAuthTag(authTag)
-    
-    let decrypted = decipher.update(encryptedText, "base64", "utf8")
-    decrypted += decipher.final("utf8")
-    result.decrypted = "true"
-  } catch (e: any) {
-    result.errMessage = e.message
-  }
+    const cached = await getCachedSchedules();
+    const directRes = await getHomeSchedules(new Date('2026-04-17'), new Date('2026-04-23'));
 
-  return NextResponse.json(result)
+    return NextResponse.json({
+      cachedSchedulesLength: cached.schedules.length,
+      directSchedulesLength: directRes.data?.length,
+      firstCached: cached.schedules[0] || null,
+      firstDirect: directRes.data?.[0] || null,
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message });
+  }
 }

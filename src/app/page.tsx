@@ -23,6 +23,8 @@ import { UpNextSkeleton } from "@/components/dashboard/up-next-skeleton";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 import { CoupangBanner } from "@/components/ads/CoupangBanner";
 
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   return (
     <>
