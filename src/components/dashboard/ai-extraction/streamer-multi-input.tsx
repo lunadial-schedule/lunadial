@@ -4,7 +4,7 @@ import { searchStreamers } from "@/app/actions/streamers"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2, X, Check } from "lucide-react"
 import { normalizeStreamerName } from "@/lib/utils"
-import { StreamerShortInfo } from "@/types/streamer"
+import type { StreamerShortInfo } from "@/types/streamer"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 
 function useDebounce<T>(value: T, delay: number = 500): T {

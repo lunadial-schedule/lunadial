@@ -1,6 +1,6 @@
 "use server"
 
-import { ExtractedScheduleDraft } from "@/components/dashboard/ai-extraction/ai-extraction-form"
+import type { ExtractedScheduleDraft } from "@/components/dashboard/ai-extraction/ai-extraction-form"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { getCategoryByLabel, CATEGORIES } from "@/config/categories"
 

@@ -8,7 +8,7 @@ import { CoupangBanner } from "@/components/ads/CoupangBanner"
 export default async function FavoritesPage() {
 
   // 매 요청마다 타이머 이름이 고유하게 생성 (중복 방지)
-  const timerLabel = `Favorites_Server_Initial_Data_${Math.random().toString(36).slice(2, 7)}`;
+  const timerLabel = `Favorites_Server_Initial_Data_${crypto.randomUUID().slice(0, 5)}`;
   console.time(timerLabel)
   const user = await getServerUser();
   if (!user) {

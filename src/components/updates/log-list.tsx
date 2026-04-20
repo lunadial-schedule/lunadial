@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ScheduleUpdateLog } from "@/app/actions/logs";
+import type { ScheduleUpdateLog } from "@/app/actions/logs";
 
 interface Props {
   initialLogs: ScheduleUpdateLog[];

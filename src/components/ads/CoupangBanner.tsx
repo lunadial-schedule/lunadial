@@ -1,5 +1,6 @@
 import { isAdFree } from "@/lib/subscription/isAdFree";
-import { placements, AdPlacementKey } from "@/lib/ads/placements";
+import type { AdPlacementKey } from "@/lib/ads/placements";
+import { placements } from "@/lib/ads/placements";
 import { AdSlot } from "./AdSlot";
 
 interface Props {

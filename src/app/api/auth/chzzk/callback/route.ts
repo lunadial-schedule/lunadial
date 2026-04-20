@@ -9,7 +9,8 @@
  * 4. 토큰 암호화 후 connected_accounts 테이블에 upsert
  * 5. 설정 페이지로 리다이렉트 (성공/실패)
  */
-import { NextRequest, NextResponse } from "next/server"
+import type { NextRequest} from "next/server";
+import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { authorizeChzzkToken, getChzzkProfile } from "@/lib/server/chzzk"
 import { verifyChzzkState } from "@/lib/server/chzzk-oauth"

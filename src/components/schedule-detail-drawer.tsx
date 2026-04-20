@@ -21,7 +21,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UpdateScheduleDialog } from "@/components/dashboard/update-schedule-dialog"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 
-import { Schedule, deleteSchedule, getScheduleById } from "@/app/actions/schedules"
+import type { Schedule} from "@/app/actions/schedules";
+import { deleteSchedule, getScheduleById } from "@/app/actions/schedules"
 import { CATEGORY_LIST } from "@/config/categories"
 import { format, parseISO } from "date-fns"
 import { ko } from "date-fns/locale"

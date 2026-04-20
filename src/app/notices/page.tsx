@@ -1,5 +1,5 @@
 import { getNotices } from "@/app/actions/notices";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";

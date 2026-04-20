@@ -4,7 +4,8 @@
  * 앱 헤더 — 네비게이션, 로그인/로그아웃, 모바일 메뉴
  */
 
-import { useState, useMemo, useEffect, KeyboardEvent } from "react"
+import type { KeyboardEvent } from "react";
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { PageContainer } from "@/components/layout/page-container"

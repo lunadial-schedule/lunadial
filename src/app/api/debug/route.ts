@@ -23,7 +23,7 @@ export async function GET() {
   }
 
   const keyStr = process.env.ENCRYPTION_KEY || "";
-  let result = {
+  const result = {
     keyLen: keyStr.length,
     keyLastChar: keyStr.charCodeAt(keyStr.length - 1),
     accountStrLen: account.refresh_token_encrypted?.length,

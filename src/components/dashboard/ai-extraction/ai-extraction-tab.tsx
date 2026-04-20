@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { AiExtractionForm, ExtractedScheduleDraft } from "./ai-extraction-form"
+import type { ExtractedScheduleDraft } from "./ai-extraction-form";
+import { AiExtractionForm } from "./ai-extraction-form"
 import { AiExtractionResults } from "./ai-extraction-results"
-import { StreamerShortInfo } from "@/types/streamer"
+import type { StreamerShortInfo } from "@/types/streamer"
 
 interface AiExtractionTabProps {
   onOpenChange: (open: boolean) => void

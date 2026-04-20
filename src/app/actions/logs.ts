@@ -12,7 +12,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
-import { Database } from "@/types/supabase";
+import type { Database } from "@/types/supabase";
 
 export type ScheduleUpdateLog = Database["public"]["Tables"]["schedule_update_logs"]["Row"];
 

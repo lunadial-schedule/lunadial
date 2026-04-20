@@ -15,7 +15,7 @@
  * ⚠️ 수정 위치 알림: 일정 중복 정책, 권한 검사 조건 변경 시 이 파일의 로직을 가장 먼저 확인해야 합니다.
  */
 import { createClient, createPublicClient } from "@/lib/supabase/server";
-import { Database } from "@/types/supabase";
+import type { Database } from "@/types/supabase";
 import { revalidatePath } from "next/cache";
 import { getActorDetails } from "@/lib/actor";
 

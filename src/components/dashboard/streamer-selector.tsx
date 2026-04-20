@@ -5,7 +5,7 @@ import { Check, Loader2, Search, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn, normalizeStreamerName } from "@/lib/utils"
 import { searchStreamers } from "@/app/actions/streamers"
-import { StreamerShortInfo } from "@/types/streamer"
+import type { StreamerShortInfo } from "@/types/streamer"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
 import Image from "next/image"
 

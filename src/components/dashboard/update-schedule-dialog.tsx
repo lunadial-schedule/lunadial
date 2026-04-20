@@ -18,7 +18,7 @@ import { format, parseISO } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { StreamerSelector } from "./streamer-selector";
-import { StreamerShortInfo } from "@/types/streamer";
+import type { StreamerShortInfo } from "@/types/streamer";
 import { useHistoryDialog } from "@/hooks/use-history-dialog";
 
 interface UpdateScheduleDialogProps {

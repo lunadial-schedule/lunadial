@@ -2,7 +2,7 @@ import { getNoticeById, updateNotice, deleteNotice } from "@/app/actions/notices
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Trash2 } from "lucide-react";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "공지 수정 - 관리자 대시보드",

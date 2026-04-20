@@ -29,7 +29,7 @@ export default async function CalendarPage({
   let initialEvents = [];
   
   // 매 요청마다 타이머 이름이 고유하게 생성 (중복 방지)
-  const timerLabel = `Calendar_Server_Initial_Data_${Math.random().toString(36).slice(2, 7)}`;
+  const timerLabel = `Calendar_Server_Initial_Data_${crypto.randomUUID().slice(0, 5)}`;
   console.time(timerLabel);
   if (view === 'month') {
     const monthStr = format(date, 'yyyy-MM');

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { Database } from "@/types/supabase";
+import type { Database } from "@/types/supabase";
 import { revalidatePath } from "next/cache";
 
 export type Notice = Database["public"]["Tables"]["notices"]["Row"];

@@ -8,7 +8,7 @@
 import { getScheduleUpdateLogs } from "@/app/actions/logs";
 import { UpdateLogList } from "@/components/updates/log-list";
 import { PaginationControls } from "@/components/updates/pagination-controls";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "업데이트 로그 - LUNA DIAL",

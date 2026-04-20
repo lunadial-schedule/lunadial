@@ -64,7 +64,7 @@ export async function POST(req: Request) {
   }
 
   // URI 길이가 너무 길어지는 것(16KB 이상)을 방지하기 위해 100개씩 Chunk
-  let existingStreamers: any[] = [];
+  const existingStreamers: any[] = [];
   for (let i = 0; i < channelIds.length; i += 100) {
     const chunkIds = channelIds.slice(i, i + 100);
     const { data, error } = await supabase
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
       
       let finalAliases: string[] = [];
       let finalNormalizedAliases: string[] = [];
-      let wouldUpdateFields: string[] = [];
+      const wouldUpdateFields: string[] = [];
 
       if (existing) {
         // 기존 정보 병합 로직

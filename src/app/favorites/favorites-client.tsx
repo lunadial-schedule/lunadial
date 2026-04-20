@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { PageContainer } from "@/components/layout/page-container"
-import { FavoriteList, SortOption } from "@/components/favorites/favorite-list"
+import type { SortOption } from "@/components/favorites/favorite-list";
+import { FavoriteList } from "@/components/favorites/favorite-list"
 import { StreamerSearchSection } from "@/components/favorites/streamer-search"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"

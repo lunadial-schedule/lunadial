@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server"
+import type { NextRequest} from "next/server";
+import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { refreshChzzkToken, getChzzkProfile } from "@/lib/server/chzzk"
 import { decryptString, encryptString } from "@/lib/server/crypto"

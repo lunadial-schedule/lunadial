@@ -20,7 +20,7 @@ import Link from "next/link";
 import { TITLE_PLACEHOLDERS, STREAMER_PLACEHOLDERS } from "@/config/placeholders";
 import { findOrCreateStreamer } from "@/app/actions/streamers";
 import { StreamerSelector } from "./streamer-selector";
-import { StreamerShortInfo } from "@/types/streamer";
+import type { StreamerShortInfo } from "@/types/streamer";
 import { useIsOverlayOpen } from "@/hooks/use-is-overlay-open";
 import { AiExtractionTab } from "./ai-extraction/ai-extraction-tab";
 import { useAuth } from "@/components/providers/auth-provider";
