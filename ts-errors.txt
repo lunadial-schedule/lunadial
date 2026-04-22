@@ -1,2 +1,0 @@
-﻿src/components/dashboard/ai-extraction/ai-extraction-tab.tsx(35,11): error TS2322: Type '{ streamers: string[]; link: string; } | null' is not assignable to type '{ streamers: string[]; link: string; }'.
-  Type 'null' is not assignable to type '{ streamers: string[]; link: string; }'.
