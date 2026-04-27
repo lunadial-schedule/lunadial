@@ -3,7 +3,7 @@ import { FavoritesClient } from "./favorites-client"
 import { getMyFavorites } from "@/app/actions/favorites"
 import { getServerUser } from "@/lib/auth/server-user"
 import { redirect } from "next/navigation"
-import { CoupangBanner } from "@/components/ads/CoupangBanner"
+
 
 export default async function FavoritesPage() {
 
@@ -22,7 +22,7 @@ export default async function FavoritesPage() {
   return (
     <FavoritesClient 
       initialFavorites={initialFavorites || []}
-      topAd={<CoupangBanner placementKey="favorites_top" />}
+
     />
   )
 }

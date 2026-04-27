@@ -335,24 +335,39 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
   // unstable_cache 스코프 안이므로 쿠키 조회가 불가능. PublicClient 사용.
   const supabase = createPublicClient();
   
-  // 매 요청마다 타이머 이름이 고유하게 생성 (중복 방지)
   const timerLabel = `HomeSchedules_Query_${Math.random().toString(36).slice(2, 7)}`;
   console.time(timerLabel);
-  const { data, error } = await supabase
-    .from("schedules")
-    .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark)")
-    .eq("is_deleted", false)
-    .gte("start_time", startDate.toISOString())
-    .lte("start_time", endDate.toISOString())
-    .order("start_time", { ascending: true });
+
+  // Supabase API max_rows(기본 1000) 제한을 우회하기 위해 range 기반 페이지네이션 사용
+  const PAGE_SIZE = 1000;
+  let allData: any[] = [];
+  let from = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from("schedules")
+      .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark)")
+      .eq("is_deleted", false)
+      .gte("start_time", startDate.toISOString())
+      .lte("start_time", endDate.toISOString())
+      .order("start_time", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      console.timeEnd(timerLabel);
+      console.error("홈 일정 조회 에러:", error);
+      return { data: null, error: error.message };
+    }
+
+    allData = allData.concat(data || []);
+    hasMore = (data?.length ?? 0) === PAGE_SIZE;
+    from += PAGE_SIZE;
+  }
+
   console.timeEnd(timerLabel);
   
-  if (error) {
-    console.error("홈 일정 조회 에러:", error);
-    return { data: null, error: error.message };
-  }
-  
-  return { data: data as any as HomeSchedule[], error: null };
+  return { data: allData as HomeSchedule[], error: null };
 }
 
 
@@ -450,21 +465,37 @@ export async function getCalendarMonthSchedules(startDate: Date, endDate: Date) 
   
   const timerLabel = `Calendar_Month_Query_DB_Raw_${Math.random().toString(36).slice(2, 7)}`;
   console.time(timerLabel);
-  const { data, error } = await supabase
-    .from("schedules")
-    .select("id, title, start_time, is_all_day, streamer_id, streamer, status, categories")
-    .eq("is_deleted", false)
-    .gte("start_time", startDate.toISOString())
-    .lte("start_time", endDate.toISOString())
-    .order("start_time", { ascending: true });
+
+  // Supabase API max_rows(기본 1000) 제한을 우회하기 위해 range 기반 페이지네이션 사용
+  const PAGE_SIZE = 1000;
+  let allData: any[] = [];
+  let from = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from("schedules")
+      .select("id, title, start_time, is_all_day, streamer_id, streamer, status, categories")
+      .eq("is_deleted", false)
+      .gte("start_time", startDate.toISOString())
+      .lte("start_time", endDate.toISOString())
+      .order("start_time", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      console.timeEnd(timerLabel);
+      console.error("월간 캘린더 일정 조회 에러:", error);
+      return { data: null, error: error.message };
+    }
+
+    allData = allData.concat(data || []);
+    hasMore = (data?.length ?? 0) === PAGE_SIZE;
+    from += PAGE_SIZE;
+  }
+
   console.timeEnd(timerLabel);
   
-  if (error) {
-    console.error("월간 캘린더 일정 조회 에러:", error);
-    return { data: null, error: error.message };
-  }
-  
-  return { data: data as any as HomeSchedule[], error: null };
+  return { data: allData as HomeSchedule[], error: null };
 }
 
 /**
@@ -482,7 +513,8 @@ export async function getCalendarDaySchedules(startDate: Date, endDate: Date) {
     .eq("is_deleted", false)
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())
-    .order("start_time", { ascending: true });
+    .order("start_time", { ascending: true })
+    .limit(5000);
   console.timeEnd(timerLabel);
   
   if (error) {

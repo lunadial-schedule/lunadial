@@ -4,7 +4,7 @@ import { getCachedCalendarMonthSchedules, getCachedCalendarDaySchedules } from "
 import { getFavoriteStreamerIdsByUserId } from "@/app/actions/schedules"
 import { getServerUser } from "@/lib/auth/server-user"
 import { parseISO, format } from "date-fns"
-import { CoupangBanner } from "@/components/ads/CoupangBanner"
+
 
 export default async function CalendarPage({
   searchParams,
@@ -66,8 +66,7 @@ export default async function CalendarPage({
       initialDate={date}
       initialView={view}
       initialScope={scope}
-      topAd={<CoupangBanner placementKey="calendar_top" />}
-      filterAd={<CoupangBanner placementKey="calendar_filter_bottom" className="hidden lg:flex" />}
+
     />
   )
 }

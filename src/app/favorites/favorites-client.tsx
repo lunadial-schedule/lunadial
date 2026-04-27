@@ -11,7 +11,7 @@ import { Plus } from "lucide-react"
 import { FavoriteSearchSheet } from "@/components/favorites/favorite-search-sheet"
 import { AddFavoriteFloatingButton } from "@/components/favorites/add-favorite-floating-button"
 
-export function FavoritesClient({ initialFavorites, topAd }: { initialFavorites: any[], topAd?: React.ReactNode }) {
+export function FavoritesClient({ initialFavorites }: { initialFavorites: any[] }) {
   const [sortOption, setSortOption] = React.useState<SortOption>('next_broadcast')
   
   React.useEffect(() => {
@@ -63,7 +63,6 @@ export function FavoritesClient({ initialFavorites, topAd }: { initialFavorites:
             </div>
           </CardHeader>
           <CardContent className="pt-1 pb-3 bg-muted/5 flex flex-col">
-            {topAd}
             <FavoriteList sortOption={sortOption} initialFavorites={initialFavorites} />
           </CardContent>
         </Card>
