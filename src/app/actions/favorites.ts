@@ -4,7 +4,7 @@
  * 즐겨찾기(Favorites) Server Actions
  *
  * 사용자의 즐겨찾기 스트리머 목록을 관리한다.
- * 인증된 사용자만 사용 가능하며, Free 플랜은 최대 10명으로 제한된다.
+ * 인증된 사용자만 사용 가능하며, 최대 100명으로 제한된다.
  */
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -110,7 +110,7 @@ export async function getMyFavorites() {
 
 /**
  * 즐겨찾기에 스트리머를 추가한다.
- * Free 플랜은 최대 10명까지 제한된다.
+ * 최대 100명까지 제한된다.
  * @param streamerId - 추가할 스트리머 ID
  */
 export async function addFavorite(streamerId: string) {
@@ -121,25 +121,20 @@ export async function addFavorite(streamerId: string) {
     return { data: null, error: "로그인이 필요합니다." };
   }
 
-  // 관리자 또는 Pro 유저인 경우 무제한 즐겨찾기 허용
-  const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle();
-  const isPro = roleData?.role === 'admin' || roleData?.role === 'pro';
-  const maxFavorites = 10;
+  const maxFavorites = 100;
 
-  if (!isPro) {
-    const { count, error: countError } = await supabase
-      .from("favorites")
-      .select("*", { count: 'exact', head: true })
-      .eq("user_id", user.id);
+  const { count, error: countError } = await supabase
+    .from("favorites")
+    .select("*", { count: 'exact', head: true })
+    .eq("user_id", user.id);
 
-    if (countError) {
-      console.error("즐겨찾기 수 확인 에러:", countError);
-      return { data: null, error: "즐겨찾기 상태를 확인하지 못했습니다." };
-    }
+  if (countError) {
+    console.error("즐겨찾기 수 확인 에러:", countError);
+    return { data: null, error: "즐겨찾기 상태를 확인하지 못했습니다." };
+  }
 
-    if (count !== null && count >= maxFavorites) {
-      return { data: null, error: `Free 플랜은 즐겨찾기를 최대 ${maxFavorites}명까지만 추가할 수 있습니다.` };
-    }
+  if (count !== null && count >= maxFavorites) {
+    return { data: null, error: `즐겨찾기는 최대 ${maxFavorites}명까지 추가할 수 있습니다.` };
   }
 
   const { data, error } = await supabase

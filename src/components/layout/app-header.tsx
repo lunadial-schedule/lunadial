@@ -9,7 +9,7 @@ import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { PageContainer } from "@/components/layout/page-container"
-import { Search, Plus, Calendar as CalendarIcon, Star, Crown, X } from "lucide-react"
+import { Search, Plus, Calendar as CalendarIcon, Star, X } from "lucide-react"
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog"
 
 import { cn } from "@/lib/utils"
@@ -85,10 +85,7 @@ export function AppHeader() {
               <Star className="h-4 w-4" />
               <span className="hidden lg:inline">즐겨찾기</span>
             </Link>
-            <Link href="/pro" className={cn("flex items-center gap-1.5 transition-colors", pathname === "/pro" ? "text-amber-700 dark:text-amber-400 font-semibold" : "text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400")}>
-              <Crown className="h-4 w-4" />
-              <span className="hidden lg:inline">Pro</span>
-            </Link>
+
           </nav>
         </div>
 

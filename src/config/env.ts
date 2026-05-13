@@ -20,13 +20,6 @@ export const CHZZK_OPENAPI_BASE_URL = process.env.CHZZK_OPENAPI_BASE_URL || 'htt
 /** 치지직 계정 연동 기능 활성화 여부 (공개) */
 export const ENABLE_CHZZK_CONNECT = process.env.NEXT_PUBLIC_ENABLE_CHZZK_CONNECT === 'true'
 
-/** 포트원 결제 API 시크릿 (서버 전용) */
-export const PORTONE_API_SECRET = process.env.PORTONE_API_SECRET || ''
-/** 포트원 스토어 ID (공개) */
-export const PORTONE_STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID || ''
-/** 포트원 채널 키 (공개) */
-export const PORTONE_CHANNEL_KEY = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY || ''
-
 /** Gemini AI API 키 (서버 전용) */
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 

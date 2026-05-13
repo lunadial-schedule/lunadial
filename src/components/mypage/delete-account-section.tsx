@@ -4,7 +4,6 @@
  * 계정 삭제 섹션
  *
  * 계정 설정 페이지 하단에 위치하는 "위험 구역" 카드.
- * Pro / admin 활성 상태이면 삭제 버튼을 비활성화하고 안내 문구를 표시한다.
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,14 +12,7 @@ import { Trash2 } from "lucide-react"
 import { useState } from "react"
 import { DeleteAccountDialog } from "./delete-account-dialog"
 
-interface DeleteAccountSectionProps {
-  /** Pro 또는 admin 구독 활성 여부 */
-  isProOrAdmin: boolean
-  /** 사용자 권한 정보가 로드되었는지 여부 */
-  isRoleLoaded: boolean
-}
-
-export function DeleteAccountSection({ isProOrAdmin, isRoleLoaded }: DeleteAccountSectionProps) {
+export function DeleteAccountSection() {
   const [dialogOpen, setDialogOpen] = useState(false)
 
   return (
@@ -44,24 +36,12 @@ export function DeleteAccountSection({ isProOrAdmin, isRoleLoaded }: DeleteAccou
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!isRoleLoaded ? (
-            <div className="flex items-center text-sm text-muted-foreground mb-3">
-              <span className="flex h-5 items-center">
-                권한 정보를 확인 중입니다...
-              </span>
-            </div>
-          ) : isProOrAdmin ? (
-            <p className="text-sm text-amber-600 dark:text-amber-400 mb-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-              현재 Pro 구독이 활성화되어 있어 먼저 구독 해지가 필요합니다.
-            </p>
-          ) : null}
           <Button
             variant="destructive"
-            disabled={!isRoleLoaded || isProOrAdmin}
             onClick={() => setDialogOpen(true)}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            {isRoleLoaded ? "계정 삭제" : "확인 중"}
+            계정 삭제
           </Button>
         </CardContent>
       </Card>

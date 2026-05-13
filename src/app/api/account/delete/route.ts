@@ -59,12 +59,10 @@ export async function POST() {
     const userNickname = user.user_metadata?.name || null
 
     // ──────────────────────────────────────────
-    // 2. Pro / admin 구독 상태 재검증
-    //    public.users 테이블은 사용하지 않으므로 user_roles.role만 확인한다.
+    // 2. 사용자 역할 조회 (운영 로그용)
     // ──────────────────────────────────────────
     const adminSupabase = createAdminClient()
 
-    // user_roles.role 확인
     const { data: roleData } = await adminSupabase
       .from("user_roles")
       .select("role")
@@ -73,18 +71,6 @@ export async function POST() {
 
     const role = roleData?.role || "user"
     const subscriptionStatus = `role:${role}`
-
-    const isProOrAdmin = role === "pro" || role === "admin"
-
-    if (isProOrAdmin) {
-      return NextResponse.json(
-        {
-          error:
-            "현재 Pro 구독이 활성화되어 있어 계정 삭제 전에 먼저 구독 해지가 필요합니다.",
-        },
-        { status: 403 }
-      )
-    }
 
     // ──────────────────────────────────────────
     // 3. 공용 데이터 익명화

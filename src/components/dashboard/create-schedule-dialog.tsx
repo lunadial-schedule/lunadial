@@ -232,7 +232,7 @@ export function CreateScheduleDialog({ isMobileTrigger = false, hideTrigger = fa
             <div className="px-6 pt-4 shrink-0">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="manual">직접 입력</TabsTrigger>
-                <TabsTrigger value="ai">일괄 등록(Beta)✨</TabsTrigger>
+                <TabsTrigger value="ai">일괄 등록✨</TabsTrigger>
               </TabsList>
             </div>
 
