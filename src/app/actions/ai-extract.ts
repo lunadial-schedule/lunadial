@@ -25,11 +25,11 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
     }
 
     const genAI = new GoogleGenerativeAI(apiKey)
-    // 사용자 지시사항에 맞추어 모델을 선택합니다. (Gemini 2.5 Flash 기반)
+    // 사용자 지시사항에 맞추어 모델을 선택합니다. (Gemini 3.5 Flash 기반)
     // 운영 안정성 우선: gemini-3.5-flash
     // 최신 성능 우선 : gemini-3.1-pro
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-3.1-pro",
+      model: "gemini-3.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
       }
