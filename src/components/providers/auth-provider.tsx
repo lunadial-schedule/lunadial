@@ -61,14 +61,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, fetchProfile])
 
   React.useEffect(() => {
-    // 초기 사용자 정보 1회 조회
-    supabase.auth.getUser().then(({ data: { user: initialUser } }) => {
-      setUser(initialUser)
-      if (initialUser) {
-        fetchProfile(initialUser.id).finally(() => setIsLoading(false))
+    // 1단계: getSession()으로 로컬 세션을 즉시 읽어 UI를 빠르게 표시
+    // getSession()은 로컬 스토리지/쿠키에서 읽으므로 서버 왕복 불필요 (< 1ms)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const sessionUser = session?.user ?? null
+      if (sessionUser) {
+        setUser(sessionUser)
+        fetchProfile(sessionUser.id).finally(() => setIsLoading(false))
       } else {
         setIsLoading(false)
       }
+
+      // 2단계: 백그라운드에서 getUser()로 서버 검증 (토큰 유효성 확인)
+      // 세션이 만료/무효화된 경우에만 user 상태를 업데이트
+      supabase.auth.getUser().then(({ data: { user: verifiedUser } }) => {
+        const verifiedId = verifiedUser?.id ?? null
+        const sessionId = sessionUser?.id ?? null
+        if (verifiedId !== sessionId) {
+          // 세션과 서버 검증 결과가 다를 때만 상태 업데이트
+          setUser(verifiedUser)
+          if (verifiedUser) {
+            fetchProfile(verifiedUser.id)
+          } else {
+            setProfile(null)
+            lastProfileUserIdRef.current = null
+          }
+        }
+      })
     })
 
     // 인증 상태 변경 구독 (로그인/로그아웃/토큰 갱신)

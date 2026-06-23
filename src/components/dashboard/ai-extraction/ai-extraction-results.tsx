@@ -10,6 +10,7 @@ import { CATEGORY_LIST } from "@/config/categories"
 import { getSchedules, createSchedule } from "@/app/actions/schedules"
 import { findOrCreateStreamer } from "@/app/actions/streamers"
 import { Loader2, ArrowLeft, Plus, AlertCircle, CheckCircle2, Copy } from "lucide-react"
+import { toast } from "sonner"
 import { StreamerSelector } from "../streamer-selector"
 import type { StreamerShortInfo } from "@/types/streamer"
 import { useAuth } from "@/components/providers/auth-provider"
@@ -163,7 +164,7 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
   const handleSubmit = async () => {
     const selected = drafts.filter(d => d.isSelected)
     if (selected.length === 0) {
-      alert("선택된 일정이 없습니다.")
+      toast.warning("선택된 일정이 없습니다.")
       return
     }
 
@@ -171,9 +172,9 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
     const invalid = selected.find(d => !d.title || !d.date || !d.streamerId || !d.categories || d.categories.length === 0)
     if (invalid) {
       if (selected.find(d => !d.streamerId)) {
-        alert("검색 목록에서 등록된 스트리머를 눌러 선택해주세요.")
+        toast.warning("검색 목록에서 등록된 스트리머를 눌러 선택해주세요.")
       } else {
-        alert("선택된 일정 중 필수입력값(제목, 날짜, 카테고리)이 누락된 항목이 있습니다.")
+        toast.warning("선택된 일정 중 필수입력값(제목, 날짜, 카테고리)이 누락된 항목이 있습니다.")
       }
       return
     }
@@ -221,11 +222,19 @@ export function AiExtractionResults({ results, payload, onBack, onComplete }: Ai
     }
 
     setIsSubmitting(false)
-    alert(`${successCount}개의 일정이 등록되었습니다.\n(제외/실패: ${drafts.length - successCount}개)`)
     
-    // Refresh & close
+    // Refresh & close — toast는 root-level Toaster에서 렌더되므로 Dialog 언마운트 후에도 표시됨
     window.dispatchEvent(new Event("schedulesUpdated"))
     onComplete()
+
+    // Dialog 닫힌 후 toast 표시 (마이크로태스크 이후)
+    setTimeout(() => {
+      if (failCount === 0) {
+        toast.success(`${successCount}개의 일정이 등록되었습니다.`)
+      } else {
+        toast.error(`${successCount}개 등록 완료, ${failCount}개 실패`)
+      }
+    }, 100)
   }
 
   const selectedCount = drafts.filter(d => d.isSelected).length

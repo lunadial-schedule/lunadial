@@ -4,6 +4,9 @@ import { getMyFavorites } from "@/app/actions/favorites"
 import { getServerUser } from "@/lib/auth/server-user"
 import { redirect } from "next/navigation"
 
+// 사용자별 데이터(즐겨찾기)이므로 Full Route Cache를 비활성화하여 이전 데이터 잔류 방지
+export const dynamic = 'force-dynamic'
+
 
 export default async function FavoritesPage() {
 

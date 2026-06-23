@@ -106,6 +106,13 @@ export function TodayScheduleCard({
     loadData(false);
   }, [loadData]);
 
+  // SSR 캐시(unstable_cache)가 stale할 수 있으므로 마운트 후 백그라운드에서 최신 데이터 갱신
+  React.useEffect(() => {
+    const timer = setTimeout(() => loadData(true), 500)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // 즐겨찾기: user.id 변경 시에만 1회 조회 (auth 중복 호출 방지)
   const userId = user?.id;
   React.useEffect(() => {

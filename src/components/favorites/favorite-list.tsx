@@ -84,6 +84,13 @@ export function FavoriteList({ sortOption = 'next_broadcast', initialFavorites =
     }
   }, [loadFavorites])
 
+  // 서버 SSR 데이터가 stale할 수 있으므로 마운트 후 백그라운드에서 최신 데이터 갱신
+  React.useEffect(() => {
+    const timer = setTimeout(() => loadFavorites(), 300)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const sortedFavorites = React.useMemo(() => {
     return [...favorites].sort((a, b) => {
       if (sortOption === 'name') {
