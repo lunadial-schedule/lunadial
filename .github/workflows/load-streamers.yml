@@ -2,8 +2,8 @@ name: Load Top Chzzk Streamers
 
 on:
   schedule:
-    # 매일 한국 시간 12:00 (UTC 03:00)에 실행
-    - cron: '0 3 * * *'
+    # 매시간 0분마다 실행 (한국 시간 매시 0분)
+    - cron: '0 * * * *'
   workflow_dispatch: # 수동 트리거 지원
 
 jobs:
