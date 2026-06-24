@@ -12,14 +12,7 @@ export async function getMaintenanceStats() {
     .select("*", { count: "exact", head: true })
     .eq("is_active", true);
 
-  // 2. 채널 ID 누락자 수 (백필 필요)
-  const { count: missingChannelIdCount } = await supabase
-    .from("streamers")
-    .select("*", { count: "exact", head: true })
-    .eq("is_active", true)
-    .is("channel_id", null);
-
-  // 3. 마지막 공식 업데이트 시각
+  // 2. 마지막 공식 업데이트 시각
   const { data: lastUpdatedData } = await supabase
     .from("streamers")
     .select("updated_at")
@@ -30,7 +23,6 @@ export async function getMaintenanceStats() {
 
   return {
     totalActive: totalActiveCount || 0,
-    missingChannelId: missingChannelIdCount || 0,
     lastVerifiedUpdateAt: lastUpdatedData?.updated_at || null,
   };
 }

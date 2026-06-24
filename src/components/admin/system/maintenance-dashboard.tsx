@@ -64,27 +64,11 @@ const MAINTENANCE_TASKS: MaintenanceTask[] = [
     icon: Users,
     endpoint: "/api/admin/system/maintenance/load-streamers",
     color: "text-blue-500",
-  },
-  {
-    id: "backfill-ids",
-    title: "채널 ID 백필 매칭",
-    description: "이름만 있고 채널 ID가 없는 스트리머들을 식별하여 자동 검색 및 채널 ID를 채워 넣습니다.",
-    icon: LinkIcon,
-    endpoint: "/api/admin/system/maintenance/backfill-streamer-channel-ids",
-    color: "text-purple-500",
-  },
-  {
-    id: "clean-streamers",
-    title: "이름 오염/휴방 데이터 정리",
-    description: "미정, - 등 비정상적인 이름의 스트리머를 비활성화하고 본명 변경 및 별칭(Alias)을 정리합니다.",
-    icon: Database,
-    endpoint: "/api/admin/system/maintenance/clean-streamers",
-    color: "text-amber-500",
   }
 ]
 
 export function MaintenanceDashboard() {
-  const [stats, setStats] = useState<{ totalActive: number, missingChannelId: number, lastVerifiedUpdateAt: string | null } | null>(null)
+  const [stats, setStats] = useState<{ totalActive: number, lastVerifiedUpdateAt: string | null } | null>(null)
   const [isStatsLoading, setIsStatsLoading] = useState(true)
   
   // 상태별 캐시 (로컬 스토리지 연동 없이 탭 유지하는 동안이라도 먼저)
@@ -219,14 +203,6 @@ export function MaintenanceDashboard() {
             <div className="bg-background rounded-md border px-4 py-2 flex flex-col items-center">
               <span className="text-xs text-muted-foreground font-semibold">활성 스트리머</span>
               {isStatsLoading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : <span className="font-bold text-lg">{stats?.totalActive || 0}</span>}
-            </div>
-            <div className="bg-background rounded-md border px-4 py-2 flex flex-col items-center">
-              <span className="text-xs text-muted-foreground font-semibold">채널 ID 누락자 (백필 필요)</span>
-              {isStatsLoading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : (
-                <span className={`font-bold text-lg ${stats?.missingChannelId && stats.missingChannelId > 0 ? "text-amber-500" : "text-emerald-500"}`}>
-                  {stats?.missingChannelId || 0}
-                </span>
-              )}
             </div>
             <div className="bg-background rounded-md border px-4 py-2 flex flex-col items-center min-w-[160px]">
               <span className="text-xs text-muted-foreground font-semibold">마지막 공식 업데이트</span>

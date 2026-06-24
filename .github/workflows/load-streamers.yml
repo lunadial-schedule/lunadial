@@ -1,0 +1,53 @@
+name: Load Top Chzzk Streamers
+
+on:
+  schedule:
+    # 매일 한국 시간 12:00 (UTC 03:00)에 실행
+    - cron: '0 3 * * *'
+  workflow_dispatch: # 수동 트리거 지원
+
+jobs:
+  load-streamers:
+    name: Trigger Load Streamers API
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send API Request
+        run: |
+          if [ -z "https://lunadial.app" ]; then
+            echo "Error: Secrets 'APP_URL' is missing."
+            exit 1
+          fi
+          if [ -z "BQmiH4%4?mN.Demia,+XvCFsnhkkecKHyH!k8,%RW*vKmc66QjQ.7XzH/_T!2hm@!,,pMpMTXgU" ]; then
+            echo "Error: Secrets 'ADMIN_OPS_TOKEN' is missing."
+            exit 1
+          fi
+
+          # URL에서 트레일링 슬래시 제거 처리
+          BASE_URL="https://lunadial.app"
+          BASE_URL="${BASE_URL%/}"
+
+          echo "Triggering API: $BASE_URL/api/admin/system/maintenance/load-streamers"
+
+          # 5분(300초) 타임아웃 지정
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            --max-time 300 \
+            -X POST "$BASE_URL/api/admin/system/maintenance/load-streamers" \
+            -H "Content-Type: application/json" \
+            -H "x-admin-token: BQmiH4%4?mN.Demia,+XvCFsnhkkecKHyH!k8,%RW*vKmc66QjQ.7XzH/_T!2hm@!,,pMpMTXgU" \
+            -d '{"dryRun": false}')
+
+          # 응답 바디와 HTTP 상태 코드 분리
+          body=$(echo "$response" | sed '$d')
+          status=$(echo "$response" | tail -n1 | cut -d':' -f2)
+
+          echo "HTTP Status Code: $status"
+          echo "Response Body:"
+          echo "$body"
+
+          if [ "$status" -ne 200 ]; then
+            echo "Error: API request failed with status $status"
+            exit 1
+          fi
+
+          echo "Successfully triggered load-streamers."
