@@ -24,7 +24,7 @@ const getCachedMyFavoritesData = unstable_cache(
     console.time(queryTimer);
     const supabase = createAdminClient();
 
-    // favorites + streamers 조인 조회 (follower_count, channel_id 제거)
+    // favorites + streamers 조인 조회
     const { data, error } = await supabase
       .from("favorites")
       .select(`
@@ -34,7 +34,10 @@ const getCachedMyFavoritesData = unstable_cache(
           id,
           name,
           image_url,
-          verified_mark
+          verified_mark,
+          verified_mark_type,
+          channel_id,
+          channel_url
         )
       `)
       .eq("user_id", userId)

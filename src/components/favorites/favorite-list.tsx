@@ -8,6 +8,10 @@ import * as React from "react"
 import { getMyFavorites, isFavorited } from "@/app/actions/favorites"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
+import { PlatformBadge } from "@/components/ui/platform-badge"
+import { LiveIndicator } from "@/components/ui/live-indicator"
+import { useLiveStatus } from "@/hooks/use-live-status"
+import { getStreamerLiveUrl } from "@/lib/platform"
 import { FavoriteButton } from "./favorite-button"
 import { Loader2, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -53,6 +57,12 @@ export function FavoriteList({ sortOption = 'next_broadcast', initialFavorites =
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [isExpanded, setIsExpanded] = React.useState(false)
+
+  const favoriteChannelIds = React.useMemo(
+    () => favorites.map((f) => f.streamers?.channel_id),
+    [favorites]
+  )
+  const { isChannelLive } = useLiveStatus(favoriteChannelIds)
 
   const loadFavorites = React.useCallback(async () => {
     setIsLoading(true)
@@ -158,10 +168,23 @@ export function FavoriteList({ sortOption = 'next_broadcast', initialFavorites =
                 <AvatarFallback>{streamer.name[0]}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col flex-1 min-w-0 justify-center">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{streamer.name}</span>
-                  {streamer.verified_mark && (
-                    <VerifiedBadge size={14} />
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{streamer.name}</span>
+                    {streamer.verified_mark && (
+                      <VerifiedBadge type={streamer.verified_mark_type} size={14} />
+                    )}
+                  </div>
+                  <PlatformBadge
+                    channelUrl={streamer.channel_url}
+                    channelId={streamer.channel_id}
+                    size={16}
+                  />
+                  {isChannelLive(streamer.channel_id) && (
+                    <LiveIndicator
+                      variant="badge"
+                      href={getStreamerLiveUrl(streamer.channel_url, streamer.channel_id)}
+                    />
                   )}
                 </div>
                 <div className="flex items-center gap-1 mt-0.5">

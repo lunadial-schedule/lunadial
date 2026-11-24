@@ -418,6 +418,7 @@ export type Database = {
           source_type: string
           updated_at: string
           verified_mark: boolean
+          verified_mark_type: string | null
         }
         Insert: {
           channel_id?: string | null
@@ -432,6 +433,7 @@ export type Database = {
           source_type?: string
           updated_at?: string
           verified_mark?: boolean
+          verified_mark_type?: string | null
         }
         Update: {
           channel_id?: string | null
@@ -446,6 +448,7 @@ export type Database = {
           source_type?: string
           updated_at?: string
           verified_mark?: boolean
+          verified_mark_type?: string | null
         }
         Relationships: []
       }

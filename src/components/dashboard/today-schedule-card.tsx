@@ -25,6 +25,8 @@ import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer";
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog";
 import { CATEGORY_LIST } from "@/config/categories";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { LiveIndicator } from "@/components/ui/live-indicator";
+import { useLiveStatus } from "@/hooks/use-live-status";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { Schedule } from "@/app/actions/schedules";
@@ -56,6 +58,12 @@ export function TodayScheduleCard({
     currentDate,
     addDays(currentDate, 1)
   ], [currentDate]);
+
+  const visibleChannelIds = React.useMemo(
+    () => events.map((e) => e.streamers?.channel_id),
+    [events]
+  );
+  const { isChannelLive } = useLiveStatus(visibleChannelIds);
 
   const goNext = () => { initialDateRef.current = false; setCurrentDate(prev => addDays(prev, 1)); };
   const goPrev = () => { initialDateRef.current = false; setCurrentDate(prev => addDays(prev, -1)); };
@@ -333,11 +341,16 @@ export function TodayScheduleCard({
                                    {event.is_all_day ? "하루 종일" : format(eventTime, "HH:mm")}
                                 </div>
                                 <div className={cn(
-                                  "flex-1 text-sm font-semibold truncate group-hover:text-primary transition-colors leading-snug flex items-center gap-1",
+                                  "flex-1 min-w-0 text-sm font-semibold group-hover:text-primary transition-colors leading-snug flex items-center gap-1",
                                   isUpNext && "text-foreground"
                                 )}>
-                                  {event.streamer}
-                                  {event.streamers?.verified_mark && <VerifiedBadge size={14} />}
+                                  <span className="truncate">{event.streamer}</span>
+                                  {event.streamers?.verified_mark && (
+                                    <VerifiedBadge type={event.streamers.verified_mark_type} size={14} />
+                                  )}
+                                  {isChannelLive(event.streamers?.channel_id) && (
+                                    <LiveIndicator variant="dot" className="ml-0.5" />
+                                  )}
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 shrink-0">
                                   {isUpNext && (

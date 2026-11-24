@@ -19,6 +19,8 @@ import type { HomeSchedule } from "@/app/actions/schedules";
 import { ScheduleDetailDrawer } from "@/components/schedule-detail-drawer";
 import { CATEGORY_LIST } from "@/config/categories";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { LiveIndicator } from "@/components/ui/live-indicator";
+import { useLiveStatus } from "@/hooks/use-live-status";
 import { cn } from "@/lib/utils";
 import type { Schedule } from "@/app/actions/schedules";
 
@@ -31,6 +33,12 @@ export function UpNextCard({ initialEvents = [] }: UpNextCardProps) {
   const [isLoading, setIsLoading] = React.useState(initialEvents.length === 0 ? false : false);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [selectedEvent, setSelectedEvent] = React.useState<Schedule | null>(null);
+
+  const channelIds = React.useMemo(
+    () => events.map((e) => e.streamers?.channel_id),
+    [events]
+  );
+  const { isChannelLive } = useLiveStatus(channelIds);
 
   const handleEventClick = (event: HomeSchedule) => {
     setSelectedEvent(event as unknown as Schedule);
@@ -118,13 +126,18 @@ export function UpNextCard({ initialEvents = [] }: UpNextCardProps) {
                       </span>
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-center gap-[2px] pl-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         <span className={cn(
-                          "font-bold text-sm truncate group-hover:text-primary transition-colors flex items-center gap-1",
+                          "font-bold text-sm min-w-0 group-hover:text-primary transition-colors flex items-center gap-1",
                           isWithinOneHour && "text-foreground"
                         )}>
-                          {event.streamer}
-                          {event.streamers?.verified_mark && <VerifiedBadge size={14} />}
+                          <span className="truncate">{event.streamer}</span>
+                          {event.streamers?.verified_mark && (
+                            <VerifiedBadge type={event.streamers.verified_mark_type} size={14} />
+                          )}
+                          {isChannelLive(event.streamers?.channel_id) && (
+                            <LiveIndicator variant="dot" className="ml-0.5" />
+                          )}
                         </span>
                         {event.status === "canceled" && <span className="bg-muted text-muted-foreground shrink-0 text-[10px] px-1.5 py-0.5 rounded-sm font-medium">취소됨</span>}
                         {event.status === "changed" && <span className="bg-primary/10 text-primary shrink-0 text-[10px] px-1.5 py-0.5 rounded-sm font-medium">변경됨</span>}

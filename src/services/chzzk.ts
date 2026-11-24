@@ -14,6 +14,7 @@ interface ChzzkChannelResponse {
       channelImageUrl: string
       followerCount: number
       verifiedMark: boolean
+      verifiedMarkType?: 'PARTNER' | 'CHALLENGER' | string | null
     }[]
   }
 }

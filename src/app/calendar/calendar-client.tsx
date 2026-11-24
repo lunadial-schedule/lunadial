@@ -15,6 +15,8 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { CreateScheduleDialog } from "@/components/dashboard/create-schedule-dialog"
 import { useAuth } from "@/components/providers/auth-provider"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
+import { LiveIndicator } from "@/components/ui/live-indicator"
+import { useLiveStatus } from "@/hooks/use-live-status"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useIsOverlayOpen } from "@/hooks/use-is-overlay-open"
 import {
@@ -74,6 +76,12 @@ export function CalendarClient({
   const [isSpeedDialOpen, setIsSpeedDialOpen] = React.useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
   const isOverlayOpen = useIsOverlayOpen()
+
+  const dayChannelIds = React.useMemo(
+    () => (initialView === "day" ? events.map((e) => e.streamers?.channel_id) : []),
+    [events, initialView]
+  )
+  const { isChannelLive } = useLiveStatus(dayChannelIds, initialView === "day")
 
   const handleEventClick = (event: HomeSchedule) => {
     setSelectedEvent(event as unknown as Schedule)
@@ -513,11 +521,16 @@ export function CalendarClient({
                            <div className="flex-1 min-w-0 flex flex-col">
                              <div className="flex items-center justify-between gap-2">
                                <div className={cn(
-                                 "text-[14px] md:text-[15px] font-bold truncate group-hover:text-primary transition-colors leading-snug flex items-center gap-1",
+                                 "text-[14px] md:text-[15px] font-bold min-w-0 group-hover:text-primary transition-colors leading-snug flex items-center gap-1",
                                  isUpNext && "text-foreground"
                                )}>
-                                 {event.streamer}
-                                 {event.streamers?.verified_mark && <VerifiedBadge size={14} />}
+                                 <span className="truncate">{event.streamer}</span>
+                                 {event.streamers?.verified_mark && (
+                                   <VerifiedBadge type={event.streamers.verified_mark_type} size={14} />
+                                 )}
+                                 {isChannelLive(event.streamers?.channel_id) && (
+                                   <LiveIndicator variant="dot" className="ml-0.5" />
+                                 )}
                                </div>
                                <div className="flex items-center gap-1 shrink-0">
                                  {isUpNext && (

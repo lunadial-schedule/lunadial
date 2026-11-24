@@ -29,11 +29,12 @@ export function LiveNowCard() {
   const [updatedAt, setUpdatedAt] = useState<string | null>(null)
   const [relativeTime, setRelativeTime] = useState<string>('방금 전')
 
-  const fetchLiveStreamers = async () => {
+  const fetchLiveStreamers = async (forceRefresh = false) => {
     setIsLoading(true)
     setIsError(false)
     try {
-      const res = await fetch('/api/chzzk/live/top')
+      const url = forceRefresh ? '/api/chzzk/live/top?refresh=1' : '/api/chzzk/live/top'
+      const res = await fetch(url, { cache: 'no-store' })
       if (!res.ok) throw new Error('Fetch failed')
       const data = await res.json()
       setLiveStreamers(data.items || [])
@@ -50,7 +51,7 @@ export function LiveNowCard() {
   }
 
   useEffect(() => {
-    fetchLiveStreamers()
+    fetchLiveStreamers(false)
   }, [])
 
   useEffect(() => {
@@ -83,7 +84,7 @@ export function LiveNowCard() {
               variant="ghost" 
               size="icon" 
               className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-md shrink-0"
-              onClick={fetchLiveStreamers}
+              onClick={() => fetchLiveStreamers(true)}
               disabled={isLoading}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -107,7 +108,7 @@ export function LiveNowCard() {
         ) : isError ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground p-4">
             <p>라이브 정보를 불러오지 못했어요</p>
-            <Button variant="outline" size="sm" onClick={fetchLiveStreamers}>
+            <Button variant="outline" size="sm" onClick={() => fetchLiveStreamers(true)}>
               재시도
             </Button>
           </div>

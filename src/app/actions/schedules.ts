@@ -34,7 +34,7 @@ export type ScheduleUpdate = Database["public"]["Tables"]["schedules"]["Update"]
 export async function getSchedules(startDate?: Date, endDate?: Date) {
   const supabase = await createClient();
   
-  let query = supabase.from("schedules").select("id, title, start_time, is_all_day, streamer_id, streamer, status, categories, streamers(image_url, verified_mark)").eq("is_deleted", false).order("start_time", { ascending: true });
+  let query = supabase.from("schedules").select("id, title, start_time, is_all_day, streamer_id, streamer, status, categories, streamers(image_url, verified_mark, verified_mark_type, channel_id, channel_url)").eq("is_deleted", false).order("start_time", { ascending: true });
   
   if (startDate) {
     query = query.gte("start_time", startDate.toISOString());
@@ -301,7 +301,7 @@ export async function getScheduleById(id: string) {
   
   const { data, error } = await supabase
     .from("schedules")
-    .select("*, streamers(image_url, verified_mark)")
+    .select("*, streamers(image_url, verified_mark, verified_mark_type, channel_id, channel_url)")
     .eq("id", id)
     .eq("is_deleted", false)
     .single();
@@ -322,6 +322,9 @@ export type HomeSchedule = Pick<
   streamers?: {
     image_url: string | null;
     verified_mark: boolean | null;
+    verified_mark_type?: string | null;
+    channel_id?: string | null;
+    channel_url?: string | null;
   } | null;
 };
 
@@ -347,7 +350,7 @@ export async function getHomeSchedules(startDate: Date, endDate: Date) {
   while (hasMore) {
     const { data, error } = await supabase
       .from("schedules")
-      .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark)")
+      .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark, verified_mark_type, channel_id, channel_url)")
       .eq("is_deleted", false)
       .gte("start_time", startDate.toISOString())
       .lte("start_time", endDate.toISOString())
@@ -509,7 +512,7 @@ export async function getCalendarDaySchedules(startDate: Date, endDate: Date) {
   console.time(timerLabel);
   const { data, error } = await supabase
     .from("schedules")
-    .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark)")
+    .select("id, title, start_time, streamer, streamer_id, status, categories, is_all_day, streamers(image_url, verified_mark, verified_mark_type, channel_id, channel_url)")
     .eq("is_deleted", false)
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())

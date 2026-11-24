@@ -101,6 +101,7 @@ export async function updateStreamer(streamerId: string, input: {
   imageUrl?: string | null;
   followerCount?: number | null;
   verifiedMark?: boolean;
+  verifiedMarkType?: string | null;
   isActive?: boolean;
 }) {
   const supabase = await createClient();
@@ -134,6 +135,7 @@ export async function updateStreamer(streamerId: string, input: {
   if (input.imageUrl !== undefined) updates.image_url = input.imageUrl;
   if (input.followerCount !== undefined) updates.follower_count = input.followerCount;
   if (input.verifiedMark !== undefined) updates.verified_mark = input.verifiedMark;
+  if (input.verifiedMarkType !== undefined) updates.verified_mark_type = input.verifiedMarkType;
   if (input.isActive !== undefined) updates.is_active = input.isActive;
   
   updates.updated_at = new Date().toISOString();

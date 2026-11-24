@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     const chunkIds = channelIds.slice(i, i + 100);
     const { data, error } = await supabase
       .from('streamers')
-      .select('id, channel_id, name, aliases, image_url, follower_count, verified_mark')
+      .select('id, channel_id, name, aliases, image_url, follower_count, verified_mark, verified_mark_type')
       .in('channel_id', chunkIds);
 
     if (error) {
@@ -141,6 +141,9 @@ export async function POST(req: Request) {
         if (existing.image_url !== ch.channelImageUrl) wouldUpdateFields.push('image_url');
         if (existing.follower_count !== ch.followerCount) wouldUpdateFields.push('follower_count');
         if (existing.verified_mark !== ch.verifiedMark) wouldUpdateFields.push('verified_mark');
+        if ((existing.verified_mark_type ?? null) !== (ch.verifiedMarkType ?? null)) {
+          wouldUpdateFields.push('verified_mark_type');
+        }
         // channel_url doesn't exist on select, but we always upsert it.
         // If aliases changed
         if (JSON.stringify(oldAliases) !== JSON.stringify(finalAliases)) wouldUpdateFields.push('aliases');
@@ -162,6 +165,7 @@ export async function POST(req: Request) {
         channel_url: expectedChannelUrl,
         follower_count: ch.followerCount,
         verified_mark: ch.verifiedMark,
+        verified_mark_type: ch.verifiedMark ? (ch.verifiedMarkType ?? null) : null,
         source_type: 'api_verified',
         is_active: true,
         ...(existing && { aliases: finalAliases, normalized_aliases: finalNormalizedAliases }),
@@ -176,6 +180,7 @@ export async function POST(req: Request) {
          channel_url: expectedChannelUrl,
          follower_count: ch.followerCount,
          verified_mark: ch.verifiedMark,
+         verified_mark_type: ch.verifiedMark ? (ch.verifiedMarkType ?? null) : null,
          follower_count_source: ch.followerCountSource || 'unknown',
          profile_hydrated: !!ch.profileHydrated
       };

@@ -6,6 +6,7 @@ export interface ChzzkSearchChannelResult {
   channelName: string;
   channelImageUrl: string;
   verifiedMark: boolean;
+  verifiedMarkType: string | null;
   followerCount: number;
   channelUrl?: string;
   profileHydrated?: boolean;
@@ -39,6 +40,7 @@ export async function searchStreamerChannels(query: string, size: number = 3): P
           channelName: c.channelName,
           channelImageUrl: c.channelImageUrl,
           verifiedMark: c.verifiedMark === true,
+          verifiedMarkType: c.verifiedMark === true ? (c.verifiedMarkType ?? null) : null,
           followerCount: typeof c.followerCount === 'number' ? c.followerCount : 0
         };
       });
@@ -105,6 +107,7 @@ export async function fetchTopChzzkChannels(limit: number = 50, minFollowers: nu
            channelName: item.channel?.channelName || 'Unknown',
            channelImageUrl: item.channel?.channelImageUrl || '',
            verifiedMark: item.channel?.verifiedMark === true,
+           verifiedMarkType: item.channel?.verifiedMark === true ? (item.channel?.verifiedMarkType ?? null) : null,
            followerCount: fc,
            followerCountSource: fc > 0 ? 'live_seed' : 'unknown',
            profileHydrated: false,
@@ -158,6 +161,9 @@ export async function fetchTopChzzkChannels(limit: number = 50, minFollowers: nu
         seed.channelName = hydrated.channelName;
         seed.channelImageUrl = hydrated.channelImageUrl;
         seed.verifiedMark = hydrated.verifiedMark;
+        seed.verifiedMarkType = hydrated.verifiedMark
+          ? (hydrated.verifiedMarkType ?? seed.verifiedMarkType ?? null)
+          : null;
         seed.profileHydrated = true;
         
         if (typeof hydrated.followerCount === 'number' && hydrated.followerCount > 0) {

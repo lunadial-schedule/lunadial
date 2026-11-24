@@ -20,6 +20,10 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UpdateScheduleDialog } from "@/components/dashboard/update-schedule-dialog"
 import { VerifiedBadge } from "@/components/ui/verified-badge"
+import { PlatformBadge } from "@/components/ui/platform-badge"
+import { LiveIndicator } from "@/components/ui/live-indicator"
+import { useLiveStatus } from "@/hooks/use-live-status"
+import { getStreamerLiveUrl } from "@/lib/platform"
 
 import type { Schedule} from "@/app/actions/schedules";
 import { deleteSchedule, getScheduleById } from "@/app/actions/schedules"
@@ -49,6 +53,23 @@ export function ScheduleDetailDrawer({
   
   const [internalSchedule, setInternalSchedule] = React.useState<Schedule | null>(externalSchedule);
   const initialEventId = searchParams.get('event');
+
+  const drawerStreamer = (internalSchedule as any)?.streamers as
+    | {
+        image_url?: string | null;
+        verified_mark?: boolean | null;
+        verified_mark_type?: string | null;
+        channel_id?: string | null;
+        channel_url?: string | null;
+      }
+    | undefined;
+  const drawerChannelIds = React.useMemo(
+    () => (drawerStreamer?.channel_id ? [drawerStreamer.channel_id] : []),
+    [drawerStreamer?.channel_id]
+  );
+  const { isChannelLive } = useLiveStatus(drawerChannelIds, open && drawerChannelIds.length > 0);
+  const isLive = isChannelLive(drawerStreamer?.channel_id);
+  const liveHref = getStreamerLiveUrl(drawerStreamer?.channel_url, drawerStreamer?.channel_id);
 
   // 외부 schedule prop 연동 — HomeSchedule(최소 필드)로 즉시 표시 후, 상세 데이터 fetch
   React.useEffect(() => {
@@ -204,12 +225,20 @@ export function ScheduleDetailDrawer({
             
             <div className="flex items-center gap-2.5 mt-4">
               <Avatar className="h-7 w-7 border border-border/80 shadow-sm">
-                <AvatarImage src={(internalSchedule as any).streamers?.image_url || undefined} />
+                <AvatarImage src={drawerStreamer?.image_url || undefined} />
                 <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">{internalSchedule.streamer.slice(0, 1)}</AvatarFallback>
               </Avatar>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                 <span className="font-bold text-[15px] text-foreground/90">{internalSchedule.streamer}</span>
-                {(internalSchedule as any).streamers?.verified_mark && <VerifiedBadge size={14} />}
+                {drawerStreamer?.verified_mark && (
+                  <VerifiedBadge type={drawerStreamer.verified_mark_type} size={14} />
+                )}
+                <PlatformBadge
+                  channelUrl={drawerStreamer?.channel_url}
+                  channelId={drawerStreamer?.channel_id}
+                  size={18}
+                />
+                {isLive && <LiveIndicator variant="badge" href={liveHref} />}
               </div>
             </div>
           </SheetHeader>

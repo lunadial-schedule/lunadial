@@ -236,7 +236,7 @@ export function StreamerSelector({
                   <div className="font-medium truncate flex items-center gap-1.5">
                     {streamer.name}
                     {streamer.verified_mark && (
-                      <VerifiedBadge size={14} />
+                      <VerifiedBadge type={streamer.verified_mark_type} size={14} />
                     )}
                   </div>
                 </div>

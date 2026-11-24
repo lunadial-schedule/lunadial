@@ -43,6 +43,7 @@ create table public.streamers (
   image_url text,
   follower_count integer,
   verified_mark boolean default false,
+  verified_mark_type text,
   source_type text default 'manual',
   is_active boolean default true,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,

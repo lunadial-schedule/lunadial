@@ -1,0 +1,49 @@
+name: Chzzk API Keep-Alive
+
+on:
+  schedule:
+    # 매주 월요일 09:00 KST (UTC 00:00) 실행
+    # 치지직 Open API 90일 미사용 애플리케이션 자동 삭제 방지 및 OAuth 리프레시 토큰(30일 만료) 주기적 갱신
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # 수동 실행 지원
+
+jobs:
+  keep-alive:
+    name: Ping Chzzk Open API Keep-Alive
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Keep-Alive Endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          ADMIN_OPS_TOKEN: ${{ secrets.ADMIN_OPS_TOKEN }}
+        run: |
+          BASE_URL="${APP_URL:-https://lunadial.app}"
+          BASE_URL="${BASE_URL%/}"
+
+          if [ -z "$ADMIN_OPS_TOKEN" ]; then
+            echo "Error: Repository Secret 'ADMIN_OPS_TOKEN' is missing."
+            exit 1
+          fi
+
+          echo "Triggering Keep-Alive API: $BASE_URL/api/admin/system/chzzk-session/keep-alive"
+
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            --max-time 60 \
+            -X POST "$BASE_URL/api/admin/system/chzzk-session/keep-alive" \
+            -H "Content-Type: application/json" \
+            -H "x-admin-token: $ADMIN_OPS_TOKEN")
+
+          body=$(echo "$response" | sed '$d')
+          status=$(echo "$response" | tail -n1 | cut -d':' -f2)
+
+          echo "HTTP Status Code: $status"
+          echo "Response Body:"
+          echo "$body"
+
+          if [ "$status" -ne 200 ]; then
+            echo "Error: Keep-Alive API failed with status $status"
+            exit 1
+          fi
+
+          echo "Successfully completed Chzzk API Keep-Alive."

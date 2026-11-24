@@ -144,7 +144,7 @@ export function StreamerSearchSection({ autoFocus }: { autoFocus?: boolean }) {
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold text-sm">{streamer.name}</span>
                       {streamer.verified_mark && (
-                        <VerifiedBadge size={14} />
+                        <VerifiedBadge type={streamer.verified_mark_type} size={14} />
                       )}
                     </div>
                     {streamer.follower_count !== null && (

@@ -13,19 +13,21 @@ jobs:
 
     steps:
       - name: Send API Request
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          ADMIN_OPS_TOKEN: ${{ secrets.ADMIN_OPS_TOKEN }}
         run: |
-          if [ -z "https://lunadial.app" ]; then
+          if [ -z "$APP_URL" ]; then
             echo "Error: Secrets 'APP_URL' is missing."
             exit 1
           fi
-          if [ -z "BQmiH4%4?mN.Demia,+XvCFsnhkkecKHyH!k8,%RW*vKmc66QjQ.7XzH/_T!2hm@!,,pMpMTXgU" ]; then
+          if [ -z "$ADMIN_OPS_TOKEN" ]; then
             echo "Error: Secrets 'ADMIN_OPS_TOKEN' is missing."
             exit 1
           fi
 
           # URL에서 트레일링 슬래시 제거 처리
-          BASE_URL="https://lunadial.app"
-          BASE_URL="${BASE_URL%/}"
+          BASE_URL="${APP_URL%/}"
 
           echo "Triggering API: $BASE_URL/api/admin/system/maintenance/load-streamers"
 
@@ -34,7 +36,7 @@ jobs:
             --max-time 300 \
             -X POST "$BASE_URL/api/admin/system/maintenance/load-streamers" \
             -H "Content-Type: application/json" \
-            -H "x-admin-token: BQmiH4%4?mN.Demia,+XvCFsnhkkecKHyH!k8,%RW*vKmc66QjQ.7XzH/_T!2hm@!,,pMpMTXgU" \
+            -H "x-admin-token: $ADMIN_OPS_TOKEN" \
             -d '{"dryRun": false}')
 
           # 응답 바디와 HTTP 상태 코드 분리

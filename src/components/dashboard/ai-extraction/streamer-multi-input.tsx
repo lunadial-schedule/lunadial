@@ -210,7 +210,7 @@ export function StreamerMultiInput({ value, onChange, placeholder, inputValue: e
                   <div className="flex items-center gap-1.5 min-w-0 flex-1">
                     <span className="text-sm font-medium truncate">{streamer.name}</span>
                     {streamer.verified_mark && (
-                      <VerifiedBadge size={14} />
+                      <VerifiedBadge type={streamer.verified_mark_type} size={14} />
                     )}
                   </div>
                   {value.find(s => s.id === streamer.id) && (

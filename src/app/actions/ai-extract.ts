@@ -1,7 +1,7 @@
 "use server"
 
 import type { ExtractedScheduleDraft } from "@/components/dashboard/ai-extraction/ai-extraction-form"
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GoogleGenAI, ThinkingLevel } from "@google/genai"
 import { getCategoryByLabel, CATEGORIES } from "@/config/categories"
 
 /**
@@ -24,25 +24,11 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
       throw new Error("서버 환경 변수에 GEMINI_API_KEY가 설정되지 않았습니다.")
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey)
-    // 사용자 지시사항에 맞추어 모델을 선택합니다. (Gemini 3.5 Flash 기반)
-    // 운영 안정성 우선: gemini-3.5-flash
-    // 최신 성능 우선 : gemini-3.1-pro
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-3.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-      }
-    })
+    const ai = new GoogleGenAI({ apiKey })
 
     const bytes = await image.arrayBuffer()
     const base64Image = Buffer.from(bytes).toString("base64")
-    const imagePart = {
-      inlineData: {
-        data: base64Image,
-        mimeType: image.type
-      }
-    }
+    const imageMimeType = image.type || "image/png"
 
     const now = new Date()
     const currentYear = now.getFullYear()
@@ -117,8 +103,31 @@ export async function extractScheduleFromImage(formData: FormData): Promise<{ da
 ]
 `
 
-    const result = await model.generateContent([prompt, imagePart])
-    const responseText = result.response.text()
+    // Gemini 4 Hydrogen: 기존 Flash 계열을 대체하는 고속 멀티모달 모델
+    const result = await ai.models.generateContent({
+      model: "gemini-4-hydrogen",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                data: base64Image,
+                mimeType: imageMimeType,
+              },
+            },
+          ],
+        },
+      ],
+      config: {
+        responseMimeType: "application/json",
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.LOW,
+        },
+      },
+    })
+    const responseText = result.text || ""
     
     // JSON 응답 파싱
     let parsedData: any[] = []
